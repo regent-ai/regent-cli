@@ -8,7 +8,7 @@ Keep these product stories separate:
 
 - `autolaunch` is purely on Ethereum mainnet, with Ethereum Sepolia for testing
 - `Techtree` nodes can be on Ethereum mainnet or Base mainnet, with Ethereum Sepolia and Base Sepolia for testing
-- `$REGENT` lives on Base mainnet and is disbursed to agent Safes on Base as a reward rail for income and actions in `Techtree` and `autolaunch`
+- `$REGENT` lives on Base mainnet and remains part of the Techtree reward rail. Autolaunch no longer does REGENT reward accounting.
 
 ## Public routes
 

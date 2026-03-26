@@ -31,7 +31,14 @@ describe("printer surface", () => {
     expect(output).toContain("R E G E N T  S U R F A C E");
     expect(output).toContain("Techtree + BBH");
     expect(output).toContain("regent techtree start");
-    expect(output).toContain("regent techtree bbh run exec [path] --lane climb|benchmark|challenge");
+    expect(output).toContain("regent techtree node lineage list <id>");
+    expect(output).toContain("regent techtree node cross-chain-links create <id> --input @file.json");
+    expect(output).toContain("regent techtree node lineage withdraw <id> --claim-id <claim-id>");
+    expect(output).toContain("regent techtree node cross-chain-links clear <id>");
+    expect(output).toContain("regent techtree node create ... --cross-chain-link @file.json");
+    expect(output).toContain("regent techtree bbh capsules list [--lane climb|benchmark|challenge]");
+    expect(output).toContain("regent techtree bbh capsules get <capsule-id>");
+    expect(output).toContain("regent techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]");
   });
 
   it("renders framed JSON output for human terminals", async () => {

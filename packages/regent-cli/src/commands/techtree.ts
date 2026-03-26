@@ -15,6 +15,20 @@ const readAtPathValue = (value: string): string => {
   return fs.readFileSync(value.slice(1), "utf8");
 };
 
+const readJsonObjectValue = (value: string, name: string): Record<string, unknown> => {
+  const raw = readAtPathValue(value);
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error();
+    }
+
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error(`invalid ${name}`);
+  }
+};
+
 const getRepeatedFlagValues = (args: string[], name: string): string[] => {
   const values: string[] = [];
 
@@ -96,6 +110,17 @@ const parseCsvFlag = (args: string[] | ParsedCliArgs, name: string): string[] | 
   return parsed.length > 0 ? parsed : undefined;
 };
 
+const parseNodeId = (value: string | undefined, name = "node id"): number => {
+  const parsed = Number.parseInt(requireArg(value, name), 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error(`invalid ${name}`);
+  }
+
+  return parsed;
+};
+
+const parseClaimId = (value: string | undefined): string => requireArg(value, "--claim-id");
+
 export async function runTechtreeStatus(configPath?: string): Promise<void> {
   printJson(await daemonCall("techtree.status", undefined, configPath));
 }
@@ -155,6 +180,81 @@ export async function runTechtreeNodeComments(args: string[], id: number, config
   );
 }
 
+export async function runTechtreeNodeLineageList(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.lineage.list",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+      },
+      configPath,
+    ),
+  );
+}
+
+export async function runTechtreeNodeLineageClaim(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.lineage.claim",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+        input: readJsonObjectValue(requireArg(getFlag(args, "input"), "--input"), "--input"),
+      },
+      configPath,
+    ),
+  );
+}
+
+export async function runTechtreeNodeLineageWithdraw(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.lineage.withdraw",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+        claimId: parseClaimId(getFlag(args, "claim-id")),
+      },
+      configPath,
+    ),
+  );
+}
+
+export async function runTechtreeNodeCrossChainLinksList(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.crossChainLinks.list",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+      },
+      configPath,
+    ),
+  );
+}
+
+export async function runTechtreeNodeCrossChainLinksCreate(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.crossChainLinks.create",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+        input: readJsonObjectValue(requireArg(getFlag(args, "input"), "--input"), "--input"),
+      },
+      configPath,
+    ),
+  );
+}
+
+export async function runTechtreeNodeCrossChainLinksClear(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  printJson(
+    await daemonCall(
+      "techtree.nodes.crossChainLinks.clear",
+      {
+        id: parseNodeId(args.positionals[4], "node id"),
+      },
+      configPath,
+    ),
+  );
+}
+
 export async function runTechtreeNodeWorkPacket(id: number, configPath?: string): Promise<void> {
   printJson(await daemonCall("techtree.nodes.workPacket", { id }, configPath));
 }
@@ -177,6 +277,7 @@ export async function runTechtreeNodeCreate(args: string[], configPath?: string)
   const skillVersion = getFlag(args, "skill-version");
   const skillMdFlag = getFlag(args, "skill-md");
   const skillMdBody = skillMdFlag ? readAtPathValue(skillMdFlag) : undefined;
+  const crossChainLinkFlag = getFlag(args, "cross-chain-link");
   const sidelinks = getRepeatedFlagValues(args, "sidelink").map(parseSidelink);
 
   assertSkillTriplet({ skillSlug, skillVersion, skillMdBody });
@@ -197,6 +298,10 @@ export async function runTechtreeNodeCreate(args: string[], configPath?: string)
     skill_md_body: skillMdBody,
     idempotency_key: getFlag(args, "idempotency-key"),
   };
+
+  if (crossChainLinkFlag) {
+    payload.cross_chain_link = readJsonObjectValue(crossChainLinkFlag, "--cross-chain-link");
+  }
 
   if (sidelinks.length > 0) {
     payload.sidelinks = sidelinks;

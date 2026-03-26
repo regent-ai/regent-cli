@@ -30,12 +30,26 @@ import { handleGossipsubStatus } from "./handlers/gossipsub.js";
 import { handleRuntimePing, handleRuntimeShutdown, handleRuntimeStatus } from "./handlers/runtime.js";
 import {
   handleTechtreeActivityList,
+  handleTechtreeAutoskillInitEval,
+  handleTechtreeAutoskillInitSkill,
+  handleTechtreeAutoskillListingCreate,
+  handleTechtreeAutoskillPublishEval,
+  handleTechtreeAutoskillPublishResult,
+  handleTechtreeAutoskillPublishSkill,
+  handleTechtreeAutoskillPull,
+  handleTechtreeAutoskillReview,
   handleTechtreeCommentCreate,
   handleTechtreeInboxGet,
   handleTechtreeNodeChildren,
   handleTechtreeNodeComments,
+  handleTechtreeNodeCrossChainLinksCreate,
+  handleTechtreeNodeCrossChainLinksClear,
+  handleTechtreeNodeCrossChainLinksList,
   handleTechtreeNodeCreate,
   handleTechtreeNodeGet,
+  handleTechtreeNodeLineageClaim,
+  handleTechtreeNodeLineageWithdraw,
+  handleTechtreeNodeLineageList,
   handleTechtreeNodeWorkPacket,
   handleTechtreeNodesList,
   handleTechtreeOpportunitiesList,
@@ -49,17 +63,35 @@ import {
   handleTechtreeV1ArtifactInit,
   handleTechtreeV1ArtifactPin,
   handleTechtreeV1ArtifactPublish,
+  handleTechtreeV1BbhCapsulesGet,
+  handleTechtreeV1BbhCapsulesList,
+  handleTechtreeV1BbhDraftApply,
+  handleTechtreeV1BbhDraftCreate,
+  handleTechtreeV1BbhDraftInit,
+  handleTechtreeV1BbhDraftList,
+  handleTechtreeV1BbhDraftProposals,
+  handleTechtreeV1BbhDraftPropose,
+  handleTechtreeV1BbhDraftPull,
+  handleTechtreeV1BbhDraftReady,
   handleTechtreeV1BbhRunExec,
   handleTechtreeV1BbhSubmit,
   handleTechtreeV1BbhValidate,
   handleTechtreeV1BbhLeaderboard,
   handleTechtreeV1BbhSync,
+  handleTechtreeV1CertificateVerify,
   handleTechtreeV1Fetch,
+  handleTechtreeV1ReviewClaim,
   handleTechtreeV1ReviewCompile,
   handleTechtreeV1ReviewExec,
   handleTechtreeV1ReviewInit,
+  handleTechtreeV1ReviewList,
   handleTechtreeV1ReviewPin,
+  handleTechtreeV1ReviewPull,
   handleTechtreeV1ReviewPublish,
+  handleTechtreeV1ReviewSubmit,
+  handleTechtreeV1ReviewerApply,
+  handleTechtreeV1ReviewerOrcidLink,
+  handleTechtreeV1ReviewerStatus,
   handleTechtreeV1RunCompile,
   handleTechtreeV1RunExec,
   handleTechtreeV1RunInit,
@@ -362,6 +394,30 @@ export class RegentRuntime {
         return handleTechtreeNodeChildren(ctx, params as Parameters<typeof handleTechtreeNodeChildren>[1]);
       case "techtree.nodes.comments":
         return handleTechtreeNodeComments(ctx, params as Parameters<typeof handleTechtreeNodeComments>[1]);
+      case "techtree.nodes.lineage.list":
+        return handleTechtreeNodeLineageList(ctx, params as Parameters<typeof handleTechtreeNodeLineageList>[1]);
+      case "techtree.nodes.lineage.claim":
+        return handleTechtreeNodeLineageClaim(ctx, params as Parameters<typeof handleTechtreeNodeLineageClaim>[1]);
+      case "techtree.nodes.lineage.withdraw":
+        return handleTechtreeNodeLineageWithdraw(
+          ctx,
+          params as Parameters<typeof handleTechtreeNodeLineageWithdraw>[1],
+        );
+      case "techtree.nodes.crossChainLinks.list":
+        return handleTechtreeNodeCrossChainLinksList(
+          ctx,
+          params as Parameters<typeof handleTechtreeNodeCrossChainLinksList>[1],
+        );
+      case "techtree.nodes.crossChainLinks.create":
+        return handleTechtreeNodeCrossChainLinksCreate(
+          ctx,
+          params as Parameters<typeof handleTechtreeNodeCrossChainLinksCreate>[1],
+        );
+      case "techtree.nodes.crossChainLinks.clear":
+        return handleTechtreeNodeCrossChainLinksClear(
+          ctx,
+          params as Parameters<typeof handleTechtreeNodeCrossChainLinksClear>[1],
+        );
       case "techtree.activity.list":
         return handleTechtreeActivityList(ctx, params as Parameters<typeof handleTechtreeActivityList>[1]);
       case "techtree.search.query":
@@ -382,6 +438,46 @@ export class RegentRuntime {
         return handleTechtreeStarCreate(ctx, params as Parameters<typeof handleTechtreeStarCreate>[1]);
       case "techtree.stars.delete":
         return handleTechtreeStarDelete(ctx, params as Parameters<typeof handleTechtreeStarDelete>[1]);
+      case "techtree.autoskill.initSkill":
+        return handleTechtreeAutoskillInitSkill(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillInitSkill>[1],
+        );
+      case "techtree.autoskill.initEval":
+        return handleTechtreeAutoskillInitEval(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillInitEval>[1],
+        );
+      case "techtree.autoskill.publishSkill":
+        return handleTechtreeAutoskillPublishSkill(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillPublishSkill>[1],
+        );
+      case "techtree.autoskill.publishEval":
+        return handleTechtreeAutoskillPublishEval(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillPublishEval>[1],
+        );
+      case "techtree.autoskill.publishResult":
+        return handleTechtreeAutoskillPublishResult(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillPublishResult>[1],
+        );
+      case "techtree.autoskill.review":
+        return handleTechtreeAutoskillReview(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillReview>[1],
+        );
+      case "techtree.autoskill.listing.create":
+        return handleTechtreeAutoskillListingCreate(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillListingCreate>[1],
+        );
+      case "techtree.autoskill.pull":
+        return handleTechtreeAutoskillPull(
+          ctx,
+          params as Parameters<typeof handleTechtreeAutoskillPull>[1],
+        );
       case "techtree.inbox.get":
         return handleTechtreeInboxGet(ctx, params as Parameters<typeof handleTechtreeInboxGet>[1]);
       case "techtree.opportunities.list":
@@ -430,6 +526,35 @@ export class RegentRuntime {
         return handleTechtreeV1Verify(ctx, params as Parameters<typeof handleTechtreeV1Verify>[1]);
       case "techtree.v1.bbh.run.exec":
         return handleTechtreeV1BbhRunExec(ctx, params as Parameters<typeof handleTechtreeV1BbhRunExec>[1]);
+      case "techtree.v1.bbh.capsules.list":
+        return handleTechtreeV1BbhCapsulesList(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1BbhCapsulesList>[1],
+        );
+      case "techtree.v1.bbh.capsules.get":
+        return handleTechtreeV1BbhCapsulesGet(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1BbhCapsulesGet>[1],
+        );
+      case "techtree.v1.bbh.draft.init":
+        return handleTechtreeV1BbhDraftInit(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftInit>[1]);
+      case "techtree.v1.bbh.draft.create":
+        return handleTechtreeV1BbhDraftCreate(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftCreate>[1]);
+      case "techtree.v1.bbh.draft.list":
+        return handleTechtreeV1BbhDraftList(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftList>[1]);
+      case "techtree.v1.bbh.draft.pull":
+        return handleTechtreeV1BbhDraftPull(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftPull>[1]);
+      case "techtree.v1.bbh.draft.propose":
+        return handleTechtreeV1BbhDraftPropose(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftPropose>[1]);
+      case "techtree.v1.bbh.draft.proposals":
+        return handleTechtreeV1BbhDraftProposals(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1BbhDraftProposals>[1],
+        );
+      case "techtree.v1.bbh.draft.apply":
+        return handleTechtreeV1BbhDraftApply(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftApply>[1]);
+      case "techtree.v1.bbh.draft.ready":
+        return handleTechtreeV1BbhDraftReady(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftReady>[1]);
       case "techtree.v1.bbh.submit":
         return handleTechtreeV1BbhSubmit(ctx, params as Parameters<typeof handleTechtreeV1BbhSubmit>[1]);
       case "techtree.v1.bbh.validate":
@@ -441,6 +566,28 @@ export class RegentRuntime {
         );
       case "techtree.v1.bbh.sync":
         return handleTechtreeV1BbhSync(ctx, params as Parameters<typeof handleTechtreeV1BbhSync>[1]);
+      case "techtree.v1.reviewer.orcid.link":
+        return handleTechtreeV1ReviewerOrcidLink(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1ReviewerOrcidLink>[1],
+        );
+      case "techtree.v1.reviewer.apply":
+        return handleTechtreeV1ReviewerApply(ctx, params as Parameters<typeof handleTechtreeV1ReviewerApply>[1]);
+      case "techtree.v1.reviewer.status":
+        return handleTechtreeV1ReviewerStatus(ctx);
+      case "techtree.v1.review.list":
+        return handleTechtreeV1ReviewList(ctx, params as Parameters<typeof handleTechtreeV1ReviewList>[1]);
+      case "techtree.v1.review.claim":
+        return handleTechtreeV1ReviewClaim(ctx, params as Parameters<typeof handleTechtreeV1ReviewClaim>[1]);
+      case "techtree.v1.review.pull":
+        return handleTechtreeV1ReviewPull(ctx, params as Parameters<typeof handleTechtreeV1ReviewPull>[1]);
+      case "techtree.v1.review.submit":
+        return handleTechtreeV1ReviewSubmit(ctx, params as Parameters<typeof handleTechtreeV1ReviewSubmit>[1]);
+      case "techtree.v1.certificate.verify":
+        return handleTechtreeV1CertificateVerify(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1CertificateVerify>[1],
+        );
       case "xmtp.status":
         return handleXmtpStatus(ctx);
       case "gossipsub.status":

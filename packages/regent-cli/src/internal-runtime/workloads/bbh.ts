@@ -4,6 +4,12 @@ import path from "node:path";
 
 import type {
   BbhAssignmentResponse,
+  BbhDraftCreateRequest,
+  BbhDraftProposalSubmitRequest,
+  BbhDraftWorkspaceBundle,
+  BbhReviewDecision,
+  BbhReviewPacket,
+  BbhReviewSubmitRequest,
   BbhGenomeSource,
   BbhReviewSource,
   BbhRunExecParams,
@@ -60,6 +66,28 @@ const nowIso = (): string => new Date().toISOString();
 
 const shortHash = (value: unknown): string =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 16);
+
+const fullHash = (value: unknown): string =>
+  `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
+
+const isNonEmptyRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
+
+const requireWorkspaceText = (value: unknown, field: string): string => {
+  if (typeof value !== "string") {
+    throw new Error(`server response missing required workspace field: ${field}`);
+  }
+
+  return value;
+};
+
+const requireWorkspaceJson = <T extends Record<string, unknown>>(value: unknown, field: string): T => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`server response missing required workspace field: ${field}`);
+  }
+
+  return value as T;
+};
 
 const normalizeOriginTransport = (
   origin: RegentResolvedRunMetadata["origin"],
@@ -254,14 +282,259 @@ const buildArtifactSource = (
   };
 };
 
+const draftNotebookTemplate = (): string => `# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "marimo>=0.13.0",
+# ]
+# ///
+import marimo
+
+app = marimo.App()
+
+
+@app.cell
+def _():
+    import marimo as mo
+    return mo
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+# Capsule draft
+
+Use this notebook to shape the draft capsule locally before sending it to TechTree.
+"""
+    )
+    return
+
+
+if __name__ == "__main__":
+    app.run()
+`;
+
+const draftCapsuleSourceTemplate = (): Record<string, unknown> => ({
+  schema_version: "techtree.bbh.capsule-source.v1",
+  kind: "capsule_draft",
+  title: "Untitled BBH capsule",
+  summary: "Draft capsule prepared locally with Regent CLI.",
+  lane: "draft",
+});
+
+const draftGenomeSourceTemplate = (): Record<string, unknown> => ({
+  schema_version: "techtree.bbh.genome-recommendation.v1",
+  recommended_genome_id: null,
+  notes: [],
+});
+
+const reviewSummaryTemplate = (): string => `# Review summary
+
+State the decision, the key evidence, and any edits required before approval.
+`;
+
+const reviewChecklistTemplate = (): Record<string, unknown> => ({
+  completeness: false,
+  reproducibility: false,
+  safety: false,
+  notes: [],
+});
+
+const reviewSuggestedEditsTemplate = (): Record<string, unknown> => ({
+  edits: [],
+});
+
+const reviewDecisionFromChecklist = (value: Record<string, unknown>): BbhReviewDecision => {
+  const decision = value.decision;
+  if (
+    decision === "approve" ||
+    decision === "approve_with_edits" ||
+    decision === "changes_requested" ||
+    decision === "reject"
+  ) {
+    return decision;
+  }
+
+  return "changes_requested";
+};
+
+const draftWorkspaceFiles = [
+  "notebook.py",
+  "hypothesis.md",
+  "protocol.md",
+  "rubric.json",
+  "capsule.source.yaml",
+  "genome/recommended.source.yaml",
+  "genome/notes.md",
+] as const;
+
+const reviewWorkspaceFiles = [
+  "review.request.json",
+  "capsule.json",
+  "notebook.py",
+  "hypothesis.md",
+  "protocol.md",
+  "rubric.json",
+  "genome-recommendation.source.json",
+  "prior-proposals.json",
+  "evidence-pack.json",
+  "review.checklist.json",
+  "suggested-edits.json",
+  "summary.md",
+  "certificate.payload.json",
+] as const;
+
+export const materializeBbhDraftWorkspace = async (
+  workspacePath: string,
+  bundle?: BbhDraftWorkspaceBundle | null,
+): Promise<string[]> => {
+  const resolved = path.resolve(workspacePath);
+  await ensureDir(resolved);
+  await ensureDir(path.join(resolved, "genome"));
+
+  const source = bundle ?? {
+    notebook_py: draftNotebookTemplate(),
+    hypothesis_md: "",
+    protocol_md: "",
+    rubric_json: {},
+    capsule_source: draftCapsuleSourceTemplate(),
+    recommended_genome_source: draftGenomeSourceTemplate(),
+    genome_notes_md: "",
+  };
+
+  await fs.writeFile(path.join(resolved, "notebook.py"), requireWorkspaceText(source.notebook_py, "notebook_py"), "utf8");
+  await fs.writeFile(path.join(resolved, "hypothesis.md"), requireWorkspaceText(source.hypothesis_md, "hypothesis_md"), "utf8");
+  await fs.writeFile(path.join(resolved, "protocol.md"), requireWorkspaceText(source.protocol_md, "protocol_md"), "utf8");
+  await fs.writeFile(path.join(resolved, "rubric.json"), jsonText(requireWorkspaceJson(source.rubric_json, "rubric_json")), "utf8");
+  await fs.writeFile(path.join(resolved, "capsule.source.yaml"), jsonText(requireWorkspaceJson(source.capsule_source, "capsule_source")), "utf8");
+  await fs.writeFile(
+    path.join(resolved, "genome", "recommended.source.yaml"),
+    jsonText(
+      source.recommended_genome_source === undefined || source.recommended_genome_source === null
+        ? draftGenomeSourceTemplate()
+        : requireWorkspaceJson(source.recommended_genome_source, "recommended_genome_source"),
+    ),
+    "utf8",
+  );
+  await fs.writeFile(path.join(resolved, "genome", "notes.md"), source.genome_notes_md ?? "", "utf8");
+
+  return [...draftWorkspaceFiles];
+};
+
+export const loadBbhDraftCreateRequest = async (workspacePath: string, args: {
+  title: string;
+  seed?: string | null;
+  parent_id?: number | null;
+}): Promise<BbhDraftCreateRequest> => {
+  const resolved = path.resolve(workspacePath);
+  const workspace = {
+    notebook_py: await readRequiredTextFile(path.join(resolved, "notebook.py")),
+    hypothesis_md: await readRequiredTextFile(path.join(resolved, "hypothesis.md")),
+    protocol_md: await readRequiredTextFile(path.join(resolved, "protocol.md")),
+    rubric_json: await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "rubric.json")),
+    capsule_source: await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "capsule.source.yaml")),
+    recommended_genome_source: await readRequiredJsonFile<Record<string, unknown>>(
+      path.join(resolved, "genome", "recommended.source.yaml"),
+    ),
+    genome_notes_md: await fs.readFile(path.join(resolved, "genome", "notes.md"), "utf8").catch(() => ""),
+  } satisfies BbhDraftWorkspaceBundle;
+
+  return {
+    title: args.title,
+    ...(args.seed ? { seed: args.seed } : {}),
+    ...(args.parent_id ? { parent_id: args.parent_id } : {}),
+    workspace,
+  };
+};
+
+export const loadBbhDraftProposalRequest = async (
+  workspacePath: string,
+  summary: string,
+): Promise<BbhDraftProposalSubmitRequest> => {
+  const createRequest = await loadBbhDraftCreateRequest(workspacePath, { title: path.basename(path.resolve(workspacePath)) });
+
+  return {
+    summary,
+    workspace: createRequest.workspace,
+    workspace_manifest_hash: fullHash(createRequest.workspace),
+  };
+};
+
+export const materializeBbhReviewWorkspace = async (
+  workspacePath: string,
+  packet: BbhReviewPacket,
+): Promise<string[]> => {
+  const resolved = path.resolve(workspacePath);
+  await ensureDir(resolved);
+
+  await fs.writeFile(path.join(resolved, "review.request.json"), jsonText(packet.request), "utf8");
+  await fs.writeFile(path.join(resolved, "capsule.json"), jsonText(packet.capsule), "utf8");
+  await fs.writeFile(path.join(resolved, "notebook.py"), requireWorkspaceText(packet.workspace.notebook_py, "notebook_py"), "utf8");
+  await fs.writeFile(path.join(resolved, "hypothesis.md"), requireWorkspaceText(packet.workspace.hypothesis_md, "hypothesis_md"), "utf8");
+  await fs.writeFile(path.join(resolved, "protocol.md"), requireWorkspaceText(packet.workspace.protocol_md, "protocol_md"), "utf8");
+  await fs.writeFile(path.join(resolved, "rubric.json"), jsonText(requireWorkspaceJson(packet.workspace.rubric_json, "rubric_json")), "utf8");
+  await fs.writeFile(
+    path.join(resolved, "genome-recommendation.source.json"),
+    jsonText(packet.workspace.recommended_genome_source ?? {}),
+    "utf8",
+  );
+  await fs.writeFile(path.join(resolved, "prior-proposals.json"), jsonText(packet.prior_proposals), "utf8");
+  await fs.writeFile(path.join(resolved, "evidence-pack.json"), jsonText(packet.evidence_pack_summary ?? {}), "utf8");
+  await fs.writeFile(
+    path.join(resolved, "review.checklist.json"),
+    jsonText(packet.checklist_template ?? reviewChecklistTemplate()),
+    "utf8",
+  );
+  await fs.writeFile(path.join(resolved, "suggested-edits.json"), jsonText(reviewSuggestedEditsTemplate()), "utf8");
+  await fs.writeFile(path.join(resolved, "summary.md"), reviewSummaryTemplate(), "utf8");
+  await fs.writeFile(path.join(resolved, "certificate.payload.json"), jsonText(packet.certificate_payload ?? {}), "utf8");
+
+  return [...reviewWorkspaceFiles];
+};
+
+export const loadBbhReviewSubmitRequest = async (workspacePath: string): Promise<BbhReviewSubmitRequest> => {
+  const resolved = path.resolve(workspacePath);
+  const request = await readRequiredJsonFile<{ request_id: string; capsule_id: string }>(path.join(resolved, "review.request.json"));
+  const checklist = await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "review.checklist.json"));
+  const suggestedEdits = await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "suggested-edits.json"));
+  const summary = await readRequiredTextFile(path.join(resolved, "summary.md"));
+  const certificatePayload = await readRequiredJsonFile<Record<string, unknown>>(
+    path.join(resolved, "certificate.payload.json"),
+  ).catch(() => ({}));
+  const genomeRecommendationSource = await readRequiredJsonFile<Record<string, unknown>>(
+    path.join(resolved, "genome-recommendation.source.json"),
+  ).catch(() => null);
+
+  return {
+    request_id: request.request_id,
+    capsule_id: request.capsule_id,
+    checklist_json: checklist,
+    suggested_edits_json: suggestedEdits,
+    decision: reviewDecisionFromChecklist(checklist),
+    summary_md: summary,
+    ...(isNonEmptyRecord(genomeRecommendationSource) ? { genome_recommendation_source: genomeRecommendationSource } : {}),
+    ...(certificatePayload && Object.keys(certificatePayload).length > 0 ? { certificate_payload: certificatePayload } : {}),
+  };
+};
+
 export const materializeBbhWorkspace = async (
   client: TechtreeClient,
   config: RegentConfig,
   params: BbhRunExecParams,
   metadata: RegentResolvedRunMetadata,
 ): Promise<BbhRunExecResponse> => {
-  const assignment = await client.nextBbhAssignment({ split: normalizeSplit(params.split) });
+  const assignment = params.capsule_id
+    ? await client.selectBbhAssignment({ capsule_id: params.capsule_id })
+    : await client.nextBbhAssignment({ split: normalizeSplit(params.split) });
   const assignmentData = assignment.data;
+
+  if (params.capsule_id && params.split && assignmentData.split !== params.split) {
+    throw new Error(
+      `selected capsule ${params.capsule_id} uses lane ${assignmentData.split}, which does not match requested lane ${params.split}`,
+    );
+  }
+
   const genome = defaultGenomeSource(params, metadata);
   const runId = `run_${shortHash({ assignment_ref: assignmentData.assignment_ref, genome_id: genome.genome_id, at: nowIso() })}`;
   const workspacePath =

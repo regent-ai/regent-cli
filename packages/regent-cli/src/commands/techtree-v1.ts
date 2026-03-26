@@ -1,40 +1,11 @@
 import path from "node:path";
 
-import type { BbhGenomeSource, BbhLane, BbhSplit, RegentRunMetadata, TechtreeNodeId, TechtreeTreeName } from "../internal-types/index.js";
+import type { BbhGenomeSource, BbhLane, BbhSplit, RegentRunMetadata, TechtreeTreeName } from "../internal-types/index.js";
 
 import { daemonCall } from "../daemon-client.js";
 import { getFlag, requireArg, type ParsedCliArgs } from "../parse.js";
 import { printJson } from "../printer.js";
-
-const normalizeTree = (value: string): TechtreeTreeName => {
-  if (value === "main" || value === "bbh") {
-    return value;
-  }
-
-  throw new Error("invalid tree; expected `main` or `bbh`");
-};
-
-const normalizeWorkspacePath = (args: ParsedCliArgs, fallbackIndex: number): string => {
-  const explicit = workspaceFlag(args);
-  if (explicit) {
-    return path.resolve(explicit);
-  }
-
-  const positional = args.positionals[fallbackIndex];
-  return positional ? path.resolve(positional) : process.cwd();
-};
-
-const workspaceFlag = (args: ParsedCliArgs): string | undefined => getFlag(args, "workspace") ?? getFlag(args, "path");
-const optionalWorkspacePath = (args: ParsedCliArgs): string | null => workspaceFlag(args) ?? null;
-
-const normalizeNodeId = (value: string | undefined, name = "node id"): TechtreeNodeId => {
-  const required = requireArg(value, name);
-  if (!/^0x[0-9a-f]{64}$/.test(required)) {
-    throw new Error(`invalid ${name}`);
-  }
-
-  return required as TechtreeNodeId;
-};
+import { normalizeNodeId, normalizeTree, normalizeWorkspacePath, optionalWorkspacePath, workspaceFlag } from "./techtree-v1-shared.js";
 
 const readRunMetadata = (args: ParsedCliArgs): RegentRunMetadata | undefined => {
   const executorHarnessKind = getFlag(args, "executor-harness-kind");
@@ -281,6 +252,35 @@ export async function runTechtreeBbhLeaderboard(args: ParsedCliArgs, configPath?
   printJson(mapLeaderboardLane(response));
 }
 
+export async function runTechtreeBbhCapsulesList(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  const lane = readBbhLane(args);
+  const response = await daemonCall(
+    "techtree.v1.bbh.capsules.list",
+    {
+      ...(lane && lane !== "draft" ? { split: lane } : {}),
+    },
+    configPath,
+  );
+
+  printJson(mapCapsuleLane(response));
+}
+
+export async function runTechtreeBbhCapsulesGet(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  const capsuleId = requireArg(getFlag(args, "capsule") ?? args.positionals[4], "capsule id");
+
+  printJson(
+    mapCapsuleLane(
+      await daemonCall(
+        "techtree.v1.bbh.capsules.get",
+        {
+          capsule_id: capsuleId,
+        },
+        configPath,
+      ),
+    ),
+  );
+}
+
 const normalizeBbhLane = (value: string, allowDraft = false): BbhLane => {
   if (value === "climb" || value === "benchmark" || value === "challenge" || (allowDraft && value === "draft")) {
     return value;
@@ -327,19 +327,10 @@ const readBbhLane = (args: ParsedCliArgs, allowDraft = false): BbhLane | undefin
 
 const mapRunExecLane = <T extends object>(payload: T): T & { lane?: BbhLane } => {
   const mapped = { ...payload } as Record<string, unknown>;
-
-  if (typeof mapped.split === "string") {
-    mapped.lane = mapped.split;
-    delete mapped.split;
-  }
+  renameSplitField(mapped);
 
   if (mapped.capsule && typeof mapped.capsule === "object" && !Array.isArray(mapped.capsule)) {
-    const capsule = { ...(mapped.capsule as Record<string, unknown>) };
-    if (typeof capsule.split === "string") {
-      capsule.lane = capsule.split;
-      delete capsule.split;
-    }
-    mapped.capsule = capsule;
+    mapped.capsule = renameSplitField({ ...(mapped.capsule as Record<string, unknown>) });
   }
 
   return mapped as T & { lane?: BbhLane };
@@ -351,15 +342,47 @@ const mapLeaderboardLane = <T extends { data?: Record<string, unknown> }>(payloa
   }
 
   const data = { ...payload.data };
-  if (typeof data.split === "string") {
-    data.lane = data.split;
-    delete data.split;
-  }
+  renameSplitField(data);
 
   return {
     ...payload,
     data,
   };
+};
+
+const mapCapsuleLane = <T extends { data?: unknown }>(payload: T): T => {
+  const data = payload.data;
+
+  if (Array.isArray(data)) {
+    return {
+      ...payload,
+      data: data.map((item) =>
+        item && typeof item === "object" && !Array.isArray(item)
+          ? renameSplitField({ ...(item as Record<string, unknown>) })
+          : item,
+      ),
+    } as T;
+  }
+
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return {
+      ...payload,
+      data: renameSplitField({ ...(data as Record<string, unknown>) }),
+    } as T;
+  }
+
+  return payload;
+};
+
+const renameSplitField = <T extends Record<string, unknown>>(record: T): T & { lane?: BbhLane } => {
+  const mutable = record as Record<string, unknown>;
+
+  if (typeof mutable.split === "string") {
+    mutable.lane = mutable.split;
+    delete mutable.split;
+  }
+
+  return mutable as T & { lane?: BbhLane };
 };
 
 const readBbhGenome = (args: ParsedCliArgs): Partial<BbhGenomeSource> | undefined => {
@@ -393,12 +416,14 @@ export async function runTechtreeBbhRunExec(args: ParsedCliArgs, configPath?: st
   const metadata = readRunMetadata(args);
   const genome = readBbhGenome(args);
   const lane = readBbhLane(args) as Exclude<BbhLane, "draft"> | undefined;
+  const capsuleId = getFlag(args, "capsule");
 
   const response = await daemonCall(
     "techtree.v1.bbh.run.exec",
     {
       workspace_path: normalizeWorkspacePath(args, 4),
       ...(lane ? { split: laneToExecSplit(lane) } : {}),
+      ...(capsuleId ? { capsule_id: capsuleId } : {}),
       ...(metadata ? { metadata } : {}),
       ...(genome ? { genome } : {}),
     },

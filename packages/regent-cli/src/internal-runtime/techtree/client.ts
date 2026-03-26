@@ -2,9 +2,39 @@ import type {
   ActivityListResponse,
   AgentInboxResponse,
   AgentOpportunitiesResponse,
+  AutoskillBundleAccessResponse,
+  AutoskillCreateEvalResponse,
+  AutoskillCreateListingResponse,
+  AutoskillCreateResultResponse,
+  AutoskillCreateReviewResponse,
+  AutoskillCreateSkillResponse,
+  AutoskillEvalPublishInput,
+  AutoskillListingCreateInput,
+  AutoskillResultPublishInput,
+  AutoskillReview,
+  AutoskillReviewCreateInput,
+  AutoskillSkillPublishInput,
+  AutoskillVersionSummary,
   BbhAssignmentResponse,
+  BbhCapsuleGetResponse,
+  BbhCapsuleListResponse,
+  BbhCertificateVerifyResponse,
+  BbhDraftCreateRequest,
+  BbhDraftGetResponse,
+  BbhDraftListResponse,
+  BbhDraftProposalListResponse,
+  BbhDraftProposalSubmitRequest,
   BbhGenomeDetailResponse,
   BbhLeaderboardResponse,
+  BbhReviewerApplyRequest,
+  BbhReviewerApplyResponse,
+  BbhReviewerOrcidLinkResponse,
+  BbhReviewerStatusResponse,
+  BbhReviewListParams,
+  BbhReviewListResponse,
+  BbhReviewPacketResponse,
+  BbhReviewSubmitRequest,
+  BbhReviewSubmitResponse,
   BbhRunDetailResponse,
   BbhRunSubmitRequest,
   BbhRunSubmitResponse,
@@ -155,6 +185,61 @@ export class TechtreeClient {
     );
   }
 
+  async listNodeLineageClaims(id: number): Promise<{ data: Record<string, unknown> | null }> {
+    const session = this.sessionStore.getSiwaSession();
+    const identity = this.stateStore.read().agent;
+    const hasAuthenticatedContext = !!session && !this.sessionStore.isReceiptExpired() && !!identity;
+
+    if (hasAuthenticatedContext) {
+      return this.authedFetchJson<{ data: Record<string, unknown> | null }>(
+        "GET",
+        `/v1/agent/tree/nodes/${id}/lineage`,
+      );
+    }
+
+    return this.getJson<{ data: Record<string, unknown> | null }>(
+      `/v1/tree/nodes/${id}/lineage`,
+      "object-or-null",
+    );
+  }
+
+  async claimNodeLineage(id: number, input: Record<string, unknown>): Promise<{ data: Record<string, unknown> }> {
+    return this.authedFetchJson<{ data: Record<string, unknown> }>(
+      "POST",
+      `/v1/tree/nodes/${id}/lineage/claims`,
+      input,
+    );
+  }
+
+  async withdrawNodeLineageClaim(id: number, claimId: string): Promise<{ ok: true }> {
+    return this.authedFetchJson<{ ok: true }>(
+      "DELETE",
+      `/v1/tree/nodes/${id}/lineage/claims/${encodeURIComponent(claimId)}`,
+    );
+  }
+
+  async listNodeCrossChainLinks(id: number): Promise<{ data: Record<string, unknown>[] }> {
+    return this.authedFetchJson<{ data: Record<string, unknown>[] }>(
+      "GET",
+      `/v1/agent/tree/nodes/${id}/cross-chain-links`,
+    );
+  }
+
+  async createNodeCrossChainLink(id: number, input: Record<string, unknown>): Promise<{ data: Record<string, unknown> }> {
+    return this.authedFetchJson<{ data: Record<string, unknown> }>(
+      "POST",
+      `/v1/tree/nodes/${id}/cross-chain-links`,
+      input,
+    );
+  }
+
+  async clearNodeCrossChainLinks(id: number): Promise<{ ok: true }> {
+    return this.authedFetchJson<{ ok: true }>(
+      "DELETE",
+      `/v1/tree/nodes/${id}/cross-chain-links/current`,
+    );
+  }
+
   async getSidelinks(id: number): Promise<{ data: unknown[] }> {
     return this.getJson<{ data: unknown[] }>(`/v1/tree/nodes/${id}/sidelinks`, "array");
   }
@@ -187,6 +272,16 @@ export class TechtreeClient {
     return this.getJson<BbhLeaderboardResponse>(withQuery("/v1/bbh/leaderboard", params), "object");
   }
 
+  async listBbhCapsules(params?: {
+    split?: "climb" | "benchmark" | "challenge";
+  }): Promise<BbhCapsuleListResponse> {
+    return this.getJson<BbhCapsuleListResponse>(withQuery("/v1/bbh/capsules", params), "array");
+  }
+
+  async getBbhCapsule(capsuleId: string): Promise<BbhCapsuleGetResponse> {
+    return this.getJson<BbhCapsuleGetResponse>(`/v1/bbh/capsules/${encodeURIComponent(capsuleId)}`, "object");
+  }
+
   async getBbhRun(runId: string): Promise<BbhRunDetailResponse> {
     return this.getJson<BbhRunDetailResponse>(`/v1/bbh/runs/${encodeURIComponent(runId)}`, "object");
   }
@@ -206,6 +301,68 @@ export class TechtreeClient {
     return this.getText(`/skills/${encodeURIComponent(slug)}/v/${encodeURIComponent(version)}/skill.md`);
   }
 
+  async listAutoskillSkillVersions(slug: string): Promise<{ data: AutoskillVersionSummary[] }> {
+    return this.getJson<{ data: AutoskillVersionSummary[] }>(
+      `/v1/autoskill/skills/${encodeURIComponent(slug)}/versions`,
+      "array",
+    );
+  }
+
+  async listAutoskillEvalVersions(slug: string): Promise<{ data: AutoskillVersionSummary[] }> {
+    return this.getJson<{ data: AutoskillVersionSummary[] }>(
+      `/v1/autoskill/evals/${encodeURIComponent(slug)}/versions`,
+      "array",
+    );
+  }
+
+  async listAutoskillReviews(nodeId: number): Promise<{ data: AutoskillReview[] }> {
+    return this.getJson<{ data: AutoskillReview[] }>(
+      `/v1/autoskill/versions/${nodeId}/reviews`,
+      "array",
+    );
+  }
+
+  async getAutoskillBundle(
+    nodeId: number,
+    params?: { x402Receipt?: string; mppReceipt?: string },
+  ): Promise<AutoskillBundleAccessResponse> {
+    const headers: Record<string, string> = {};
+
+    if (params?.x402Receipt) {
+      headers["x-payment"] = params.x402Receipt;
+    }
+
+    if (params?.mppReceipt) {
+      headers["x-mpp-payment"] = params.mppReceipt;
+    }
+
+    const res = await this.fetchWithTimeout(`${this.baseUrl}/v1/autoskill/versions/${nodeId}/bundle`, {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) {
+      throw await parseTechtreeErrorResponse(res);
+    }
+
+    return hasDataObject<AutoskillBundleAccessResponse["data"]>(
+      asRecord(await res.json(), "expected autoskill bundle response"),
+    ) as AutoskillBundleAccessResponse;
+  }
+
+  async fetchExternalText(url: string): Promise<string> {
+    const res = await this.fetchWithTimeout(url, { method: "GET" });
+
+    if (!res.ok) {
+      throw new TechtreeApiError(`request to ${url} failed with status ${res.status}`, {
+        code: "techtree_request_failed",
+        status: res.status,
+      });
+    }
+
+    return res.text();
+  }
+
   async siwaNonce(input: SiwaNonceRequest): Promise<SiwaNonceResponse> {
     return this.siwaClient.requestNonce(input);
   }
@@ -222,6 +379,104 @@ export class TechtreeClient {
     split?: "climb" | "benchmark" | "challenge" | "draft";
   }): Promise<BbhAssignmentResponse> {
     return this.authedFetchJson<BbhAssignmentResponse>("POST", "/v1/agent/bbh/assignments/next", input ?? {});
+  }
+
+  async selectBbhAssignment(input: { capsule_id: string }): Promise<BbhAssignmentResponse> {
+    return this.authedFetchJson<BbhAssignmentResponse>("POST", "/v1/agent/bbh/assignments/select", input);
+  }
+
+  async createBbhDraft(input: BbhDraftCreateRequest): Promise<BbhDraftGetResponse> {
+    return this.authedFetchJson<BbhDraftGetResponse>("POST", "/v1/agent/bbh/drafts", input);
+  }
+
+  async listBbhDrafts(): Promise<BbhDraftListResponse> {
+    return this.authedFetchJson<BbhDraftListResponse>("GET", "/v1/agent/bbh/drafts");
+  }
+
+  async getBbhDraft(capsuleId: string): Promise<BbhDraftGetResponse> {
+    return this.authedFetchJson<BbhDraftGetResponse>("GET", `/v1/agent/bbh/drafts/${encodeURIComponent(capsuleId)}`);
+  }
+
+  async createBbhDraftProposal(capsuleId: string, input: BbhDraftProposalSubmitRequest): Promise<{
+    data: {
+      proposal: import("../../internal-types/index.js").BbhDraftProposal;
+    };
+  }> {
+    return this.authedFetchJson("POST", `/v1/agent/bbh/drafts/${encodeURIComponent(capsuleId)}/proposals`, input);
+  }
+
+  async listBbhDraftProposals(capsuleId: string): Promise<BbhDraftProposalListResponse> {
+    return this.authedFetchJson<BbhDraftProposalListResponse>(
+      "GET",
+      `/v1/agent/bbh/drafts/${encodeURIComponent(capsuleId)}/proposals`,
+    );
+  }
+
+  async applyBbhDraftProposal(capsuleId: string, proposalId: string): Promise<BbhDraftGetResponse> {
+    return this.authedFetchJson<BbhDraftGetResponse>(
+      "POST",
+      `/v1/agent/bbh/drafts/${encodeURIComponent(capsuleId)}/proposals/${encodeURIComponent(proposalId)}/apply`,
+      {},
+    );
+  }
+
+  async readyBbhDraft(capsuleId: string): Promise<BbhDraftGetResponse> {
+    return this.authedFetchJson<BbhDraftGetResponse>(
+      "POST",
+      `/v1/agent/bbh/drafts/${encodeURIComponent(capsuleId)}/ready`,
+      {},
+    );
+  }
+
+  async startReviewerOrcidLink(): Promise<BbhReviewerOrcidLinkResponse> {
+    return this.authedFetchJson<BbhReviewerOrcidLinkResponse>("POST", "/v1/agent/reviewer/orcid/link/start", {});
+  }
+
+  async getReviewerOrcidLinkStatus(requestId: string): Promise<BbhReviewerOrcidLinkResponse> {
+    return this.authedFetchJson<BbhReviewerOrcidLinkResponse>(
+      "GET",
+      `/v1/agent/reviewer/orcid/link/status/${encodeURIComponent(requestId)}`,
+    );
+  }
+
+  async applyReviewerProfile(input: BbhReviewerApplyRequest): Promise<BbhReviewerApplyResponse> {
+    return this.authedFetchJson<BbhReviewerApplyResponse>("POST", "/v1/agent/reviewer/apply", input);
+  }
+
+  async getReviewerProfile(): Promise<BbhReviewerStatusResponse> {
+    return this.authedFetchJson<BbhReviewerStatusResponse>("GET", "/v1/agent/reviewer/me");
+  }
+
+  async listBbhReviews(params?: BbhReviewListParams): Promise<BbhReviewListResponse> {
+    return this.authedFetchJson<BbhReviewListResponse>("GET", withQuery("/v1/agent/reviews/open", {
+      ...(params?.kind ? { kind: params.kind } : {}),
+    }));
+  }
+
+  async claimBbhReview(requestId: string): Promise<{ data: import("../../internal-types/index.js").BbhReviewRequest }> {
+    return this.authedFetchJson("POST", `/v1/agent/reviews/${encodeURIComponent(requestId)}/claim`, {});
+  }
+
+  async getBbhReviewPacket(requestId: string): Promise<BbhReviewPacketResponse> {
+    return this.authedFetchJson<BbhReviewPacketResponse>(
+      "GET",
+      `/v1/agent/reviews/${encodeURIComponent(requestId)}/packet`,
+    );
+  }
+
+  async submitBbhReview(requestId: string, input: BbhReviewSubmitRequest): Promise<BbhReviewSubmitResponse> {
+    return this.authedFetchJson<BbhReviewSubmitResponse>(
+      "POST",
+      `/v1/agent/reviews/${encodeURIComponent(requestId)}/submit`,
+      input,
+    );
+  }
+
+  async verifyBbhCertificate(capsuleId: string): Promise<BbhCertificateVerifyResponse> {
+    return this.getJson<BbhCertificateVerifyResponse>(
+      `/v1/bbh/capsules/${encodeURIComponent(capsuleId)}/certificate`,
+      "object",
+    );
   }
 
   async submitBbhRun(input: BbhRunSubmitRequest): Promise<BbhRunSubmitResponse> {
@@ -279,6 +534,35 @@ export class TechtreeClient {
 
   async starNode(nodeId: number): Promise<{ data: NodeStarRecord }> {
     return this.authedFetchJson<{ data: NodeStarRecord }>("POST", `/v1/tree/nodes/${nodeId}/star`, {});
+  }
+
+  async createAutoskillSkill(input: AutoskillSkillPublishInput): Promise<AutoskillCreateSkillResponse> {
+    return this.authedFetchJson<AutoskillCreateSkillResponse>("POST", "/v1/agent/autoskill/skills", input);
+  }
+
+  async createAutoskillEval(input: AutoskillEvalPublishInput): Promise<AutoskillCreateEvalResponse> {
+    return this.authedFetchJson<AutoskillCreateEvalResponse>("POST", "/v1/agent/autoskill/evals", input);
+  }
+
+  async publishAutoskillResult(input: AutoskillResultPublishInput): Promise<AutoskillCreateResultResponse> {
+    return this.authedFetchJson<AutoskillCreateResultResponse>("POST", "/v1/agent/autoskill/results", input);
+  }
+
+  async createAutoskillReview(input: AutoskillReviewCreateInput): Promise<AutoskillCreateReviewResponse> {
+    const route =
+      input.kind === "replicable"
+        ? "/v1/agent/autoskill/reviews/replicable"
+        : "/v1/agent/autoskill/reviews/community";
+
+    return this.authedFetchJson<AutoskillCreateReviewResponse>("POST", route, input);
+  }
+
+  async createAutoskillListing(input: AutoskillListingCreateInput): Promise<AutoskillCreateListingResponse> {
+    return this.authedFetchJson<AutoskillCreateListingResponse>(
+      "POST",
+      `/v1/agent/autoskill/versions/${input.skill_node_id}/listings`,
+      input,
+    );
   }
 
   async unstarNode(nodeId: number): Promise<{ ok: true }> {
@@ -349,7 +633,10 @@ export class TechtreeClient {
     }
   }
 
-  private async getJson<T>(path: string, expectedDataType?: "array" | "object"): Promise<T> {
+  private async getJson<T>(
+    path: string,
+    expectedDataType?: "array" | "object" | "object-or-null",
+  ): Promise<T> {
     const res = await this.fetchWithTimeout(`${this.baseUrl}${path}`, {
       method: "GET",
     });
@@ -366,6 +653,10 @@ export class TechtreeClient {
 
     if (expectedDataType === "object" && "data" in payload) {
       return hasDataObject(payload) as T;
+    }
+
+    if (expectedDataType === "object-or-null" && "data" in payload) {
+      return payload as T;
     }
 
     return payload as T;

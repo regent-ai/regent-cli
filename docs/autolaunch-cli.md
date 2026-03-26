@@ -7,7 +7,6 @@ Chain language for this command group:
 - `autolaunch` is purely on Ethereum mainnet
 - Ethereum Sepolia is the testing path for `autolaunch`
 - this is distinct from `Techtree`, which can target Ethereum mainnet or Base mainnet and uses both Ethereum Sepolia and Base Sepolia for testing
-- `$REGENT` lives on Base mainnet and is a separate reward rail
 
 There is no standalone `autolaunch` binary anymore. The only supported CLI surface is:
 
@@ -77,6 +76,21 @@ regent autolaunch jobs watch <job-id> [--watch] [--interval <seconds>] [--json]
 - `mainnet` -> `1`
 
 Autolaunch launch creation is Ethereum mainnet only. Use Ethereum Sepolia when you are testing the same identity and signing flow without touching mainnet.
+
+Successful launch output now includes the live V2 stack fields:
+
+- `strategy_address`
+- `vesting_wallet_address`
+- `hook_address`
+- `launch_fee_registry_address`
+- `launch_fee_vault_address`
+- `subject_registry_address`
+- `subject_id`
+- `revenue_share_splitter_address`
+- `default_ingress_address`
+- `pool_id`
+
+Autolaunch does not track protocol income for REGENT rewards. The Regent-side fee lane is a direct treasury payout, not a rewards accounting rail.
 
 `launch preview`, `launch create`, and `jobs watch` return a `reputation_prompt` object in the JSON payload. It is the CLI-safe version of the optional follow-up step shown in the web app:
 

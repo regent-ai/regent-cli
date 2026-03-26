@@ -1,10 +1,37 @@
 import type { SiwaSession, SiwaVerifyResponse } from "./auth.js";
 import type {
   BbhAssignmentResponse,
+  BbhCertificateVerifyParams,
+  BbhCertificateVerifyResponse,
+  BbhDraftApplyParams,
+  BbhDraftCreateParams,
+  BbhDraftGetResponse,
+  BbhDraftListResponse,
+  BbhDraftProposalListResponse,
+  BbhDraftProposalSubmitParams,
+  BbhDraftProposalSubmitResponse,
+  BbhDraftPullParams,
+  BbhDraftPullResponse,
+  BbhDraftReadyParams,
+  BbhReviewerApplyParams,
+  BbhReviewerApplyResponse,
+  BbhReviewerOrcidLinkParams,
+  BbhReviewerOrcidLinkResponse,
+  BbhReviewerStatusResponse,
+  BbhReviewListParams,
+  BbhReviewListResponse,
+  BbhReviewPacketResponse,
+  BbhReviewRequest,
+  BbhReviewPullParams,
+  BbhReviewPullResponse,
+  BbhReviewSubmitParams,
+  BbhReviewSubmitResponse,
   BbhSubmitParams,
   BbhValidateParams,
   BbhRunExecParams,
   BbhRunExecResponse,
+  BbhCapsuleGetResponse,
+  BbhCapsuleListResponse,
   BbhLeaderboardResponse,
   BbhRunSubmitResponse,
   BbhSyncParams,
@@ -21,6 +48,17 @@ import type {
   ActivityListResponse,
   AgentInboxResponse,
   AgentOpportunitiesResponse,
+  AutoskillBundleAccessResponse,
+  AutoskillCreateEvalResponse,
+  AutoskillCreateListingResponse,
+  AutoskillCreateResultResponse,
+  AutoskillCreateReviewResponse,
+  AutoskillCreateSkillResponse,
+  AutoskillEvalPublishRequest,
+  AutoskillListingCreateInput,
+  AutoskillResultPublishInput,
+  AutoskillReviewCreateInput,
+  AutoskillSkillPublishRequest,
   CommentCreateInput,
   CommentCreateResponse,
   NodeCreateInput,
@@ -42,7 +80,23 @@ import type {
   TechtreePublishResponse,
   TechtreeVerifyResponse,
   TechtreeV1FetchParams,
+  TechtreeV1BbhDraftApplyParams,
+  TechtreeV1BbhDraftCreateParams,
+  TechtreeV1BbhDraftInitParams,
+  TechtreeV1BbhDraftListParams,
+  TechtreeV1BbhDraftProposalSubmitParams,
+  TechtreeV1BbhDraftPullParams,
+  TechtreeV1BbhDraftReadyParams,
+  TechtreeV1BbhCapsulesGetParams,
+  TechtreeV1BbhCapsulesListParams,
+  TechtreeV1CertificateVerifyParams,
+  TechtreeV1ReviewClaimParams,
   TechtreeV1ReviewInitParams,
+  TechtreeV1ReviewListParams,
+  TechtreeV1ReviewPullParams,
+  TechtreeV1ReviewSubmitParams,
+  TechtreeV1ReviewerApplyParams,
+  TechtreeV1ReviewerOrcidLinkParams,
   TechtreeV1RunInitParams,
   TechtreeV1VerifyParams,
   TechtreeV1WorkspaceParams,
@@ -95,6 +149,12 @@ export type RegentRpcMethod =
   | "techtree.nodes.get"
   | "techtree.nodes.children"
   | "techtree.nodes.comments"
+  | "techtree.nodes.lineage.list"
+  | "techtree.nodes.lineage.claim"
+  | "techtree.nodes.lineage.withdraw"
+  | "techtree.nodes.crossChainLinks.list"
+  | "techtree.nodes.crossChainLinks.create"
+  | "techtree.nodes.crossChainLinks.clear"
   | "techtree.activity.list"
   | "techtree.search.query"
   | "techtree.nodes.workPacket"
@@ -105,6 +165,14 @@ export type RegentRpcMethod =
   | "techtree.watch.list"
   | "techtree.stars.create"
   | "techtree.stars.delete"
+  | "techtree.autoskill.initSkill"
+  | "techtree.autoskill.initEval"
+  | "techtree.autoskill.publishSkill"
+  | "techtree.autoskill.publishEval"
+  | "techtree.autoskill.publishResult"
+  | "techtree.autoskill.review"
+  | "techtree.autoskill.listing.create"
+  | "techtree.autoskill.pull"
   | "techtree.inbox.get"
   | "techtree.opportunities.list"
   | "techtree.trollbox.history"
@@ -126,11 +194,29 @@ export type RegentRpcMethod =
   | "techtree.v1.fetch"
   | "techtree.v1.verify"
   | "techtree.v1.bbh.run.exec"
+  | "techtree.v1.bbh.capsules.list"
+  | "techtree.v1.bbh.capsules.get"
+  | "techtree.v1.bbh.draft.init"
+  | "techtree.v1.bbh.draft.create"
+  | "techtree.v1.bbh.draft.list"
+  | "techtree.v1.bbh.draft.pull"
+  | "techtree.v1.bbh.draft.propose"
+  | "techtree.v1.bbh.draft.proposals"
+  | "techtree.v1.bbh.draft.apply"
+  | "techtree.v1.bbh.draft.ready"
   | "techtree.v1.bbh.assignment.next"
   | "techtree.v1.bbh.submit"
   | "techtree.v1.bbh.validate"
   | "techtree.v1.bbh.leaderboard"
   | "techtree.v1.bbh.sync"
+  | "techtree.v1.reviewer.orcid.link"
+  | "techtree.v1.reviewer.apply"
+  | "techtree.v1.reviewer.status"
+  | "techtree.v1.review.list"
+  | "techtree.v1.review.claim"
+  | "techtree.v1.review.pull"
+  | "techtree.v1.review.submit"
+  | "techtree.v1.certificate.verify"
   | "xmtp.status"
   | "gossipsub.status";
 
@@ -160,6 +246,12 @@ export interface RegentRpcParamsMap {
   "techtree.nodes.get": { id: number };
   "techtree.nodes.children": { id: number; limit?: number };
   "techtree.nodes.comments": { id: number; limit?: number };
+  "techtree.nodes.lineage.list": { id: number };
+  "techtree.nodes.lineage.claim": { id: number; input: Record<string, unknown> };
+  "techtree.nodes.lineage.withdraw": { id: number; claimId: string };
+  "techtree.nodes.crossChainLinks.list": { id: number };
+  "techtree.nodes.crossChainLinks.create": { id: number; input: Record<string, unknown> };
+  "techtree.nodes.crossChainLinks.clear": { id: number };
   "techtree.activity.list": { limit?: number } | undefined;
   "techtree.search.query": { q: string; limit?: number };
   "techtree.nodes.workPacket": { id: number };
@@ -170,6 +262,19 @@ export interface RegentRpcParamsMap {
   "techtree.watch.list": undefined;
   "techtree.stars.create": { nodeId: number };
   "techtree.stars.delete": { nodeId: number };
+  "techtree.autoskill.initSkill": { workspace_path: string };
+  "techtree.autoskill.initEval": { workspace_path: string };
+  "techtree.autoskill.publishSkill": { workspace_path: string; input: AutoskillSkillPublishRequest };
+  "techtree.autoskill.publishEval": { workspace_path: string; input: AutoskillEvalPublishRequest };
+  "techtree.autoskill.publishResult": { workspace_path: string; input: AutoskillResultPublishInput };
+  "techtree.autoskill.review": AutoskillReviewCreateInput;
+  "techtree.autoskill.listing.create": AutoskillListingCreateInput;
+  "techtree.autoskill.pull": {
+    node_id: number;
+    workspace_path: string;
+    x402_receipt?: string;
+    mpp_receipt?: string;
+  };
   "techtree.inbox.get": {
     cursor?: number;
     limit?: number;
@@ -200,11 +305,29 @@ export interface RegentRpcParamsMap {
   "techtree.v1.fetch": TechtreeV1FetchParams;
   "techtree.v1.verify": TechtreeV1VerifyParams;
   "techtree.v1.bbh.run.exec": BbhRunExecParams;
+  "techtree.v1.bbh.capsules.list": TechtreeV1BbhCapsulesListParams | undefined;
+  "techtree.v1.bbh.capsules.get": TechtreeV1BbhCapsulesGetParams;
+  "techtree.v1.bbh.draft.init": TechtreeV1BbhDraftInitParams;
+  "techtree.v1.bbh.draft.create": TechtreeV1BbhDraftCreateParams;
+  "techtree.v1.bbh.draft.list": TechtreeV1BbhDraftListParams | undefined;
+  "techtree.v1.bbh.draft.pull": TechtreeV1BbhDraftPullParams;
+  "techtree.v1.bbh.draft.propose": TechtreeV1BbhDraftProposalSubmitParams;
+  "techtree.v1.bbh.draft.proposals": { capsule_id: string };
+  "techtree.v1.bbh.draft.apply": TechtreeV1BbhDraftApplyParams;
+  "techtree.v1.bbh.draft.ready": TechtreeV1BbhDraftReadyParams;
   "techtree.v1.bbh.assignment.next": { split?: "climb" | "benchmark" | "challenge" | "draft" } | undefined;
   "techtree.v1.bbh.submit": BbhSubmitParams;
   "techtree.v1.bbh.validate": BbhValidateParams;
   "techtree.v1.bbh.leaderboard": { split?: "climb" | "benchmark" | "challenge" | "draft" } | undefined;
   "techtree.v1.bbh.sync": BbhSyncParams | undefined;
+  "techtree.v1.reviewer.orcid.link": TechtreeV1ReviewerOrcidLinkParams | undefined;
+  "techtree.v1.reviewer.apply": TechtreeV1ReviewerApplyParams;
+  "techtree.v1.reviewer.status": undefined;
+  "techtree.v1.review.list": TechtreeV1ReviewListParams | undefined;
+  "techtree.v1.review.claim": TechtreeV1ReviewClaimParams;
+  "techtree.v1.review.pull": TechtreeV1ReviewPullParams;
+  "techtree.v1.review.submit": TechtreeV1ReviewSubmitParams;
+  "techtree.v1.certificate.verify": TechtreeV1CertificateVerifyParams;
   "xmtp.status": undefined;
   "gossipsub.status": undefined;
 }
@@ -235,6 +358,12 @@ export interface RegentRpcResultMap {
   "techtree.nodes.get": { data: TreeNode };
   "techtree.nodes.children": { data: TreeNode[] };
   "techtree.nodes.comments": { data: TreeComment[] };
+  "techtree.nodes.lineage.list": { data: Record<string, unknown> | null };
+  "techtree.nodes.lineage.claim": { data: Record<string, unknown> };
+  "techtree.nodes.lineage.withdraw": { ok: true };
+  "techtree.nodes.crossChainLinks.list": { data: Record<string, unknown>[] };
+  "techtree.nodes.crossChainLinks.create": { data: Record<string, unknown> };
+  "techtree.nodes.crossChainLinks.clear": { ok: true };
   "techtree.activity.list": ActivityListResponse;
   "techtree.search.query": {
     data: {
@@ -250,6 +379,39 @@ export interface RegentRpcResultMap {
   "techtree.watch.list": { data: WatchRecord[] };
   "techtree.stars.create": { data: NodeStarRecord };
   "techtree.stars.delete": { ok: true };
+  "techtree.autoskill.initSkill": {
+    ok: true;
+    entrypoint: "autoskill.init.skill";
+    workspace_path: string;
+    files: string[];
+  };
+  "techtree.autoskill.initEval": {
+    ok: true;
+    entrypoint: "autoskill.init.eval";
+    workspace_path: string;
+    files: string[];
+  };
+  "techtree.autoskill.publishSkill": AutoskillCreateSkillResponse & {
+    workspace_path: string;
+    bundle_hash: string;
+    manifest: Record<string, unknown>;
+  };
+  "techtree.autoskill.publishEval": AutoskillCreateEvalResponse & {
+    workspace_path: string;
+    bundle_hash: string;
+    manifest: Record<string, unknown>;
+  };
+  "techtree.autoskill.publishResult": AutoskillCreateResultResponse;
+  "techtree.autoskill.review": AutoskillCreateReviewResponse;
+  "techtree.autoskill.listing.create": AutoskillCreateListingResponse;
+  "techtree.autoskill.pull": {
+    ok: true;
+    node_id: number;
+    workspace_path: string;
+    files: string[];
+    marimo_entrypoint: string;
+    primary_file: string | null;
+  };
   "techtree.inbox.get": AgentInboxResponse;
   "techtree.opportunities.list": AgentOpportunitiesResponse;
   "techtree.trollbox.history": TrollboxListResponse;
@@ -280,11 +442,29 @@ export interface RegentRpcResultMap {
   "techtree.v1.fetch": TechtreeFetchResponse & { tree: "main" | "bbh" };
   "techtree.v1.verify": TechtreeVerifyResponse & { tree: "main" | "bbh" };
   "techtree.v1.bbh.run.exec": BbhRunExecResponse;
+  "techtree.v1.bbh.capsules.list": BbhCapsuleListResponse;
+  "techtree.v1.bbh.capsules.get": BbhCapsuleGetResponse;
+  "techtree.v1.bbh.draft.init": TechtreeWorkspaceActionResult;
+  "techtree.v1.bbh.draft.create": BbhDraftGetResponse;
+  "techtree.v1.bbh.draft.list": BbhDraftListResponse;
+  "techtree.v1.bbh.draft.pull": BbhDraftPullResponse;
+  "techtree.v1.bbh.draft.propose": BbhDraftProposalSubmitResponse;
+  "techtree.v1.bbh.draft.proposals": BbhDraftProposalListResponse;
+  "techtree.v1.bbh.draft.apply": BbhDraftGetResponse;
+  "techtree.v1.bbh.draft.ready": BbhDraftGetResponse;
   "techtree.v1.bbh.assignment.next": BbhAssignmentResponse;
   "techtree.v1.bbh.submit": BbhRunSubmitResponse;
   "techtree.v1.bbh.validate": BbhValidationSubmitResponse;
   "techtree.v1.bbh.leaderboard": BbhLeaderboardResponse;
   "techtree.v1.bbh.sync": BbhSyncResponse;
+  "techtree.v1.reviewer.orcid.link": BbhReviewerOrcidLinkResponse;
+  "techtree.v1.reviewer.apply": BbhReviewerApplyResponse;
+  "techtree.v1.reviewer.status": BbhReviewerStatusResponse;
+  "techtree.v1.review.list": BbhReviewListResponse;
+  "techtree.v1.review.claim": { data: BbhReviewRequest };
+  "techtree.v1.review.pull": BbhReviewPullResponse;
+  "techtree.v1.review.submit": BbhReviewSubmitResponse;
+  "techtree.v1.certificate.verify": BbhCertificateVerifyResponse;
   "xmtp.status": XmtpStatus;
   "gossipsub.status": GossipsubStatus;
 }

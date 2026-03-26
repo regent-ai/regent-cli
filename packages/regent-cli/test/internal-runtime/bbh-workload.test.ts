@@ -4,7 +4,16 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { buildBbhValidationRequest, loadBbhRunSubmitRequest, materializeBbhWorkspace } from "../../src/internal-runtime/workloads/bbh.js";
+import {
+  buildBbhValidationRequest,
+  loadBbhDraftCreateRequest,
+  loadBbhDraftProposalRequest,
+  loadBbhReviewSubmitRequest,
+  loadBbhRunSubmitRequest,
+  materializeBbhDraftWorkspace,
+  materializeBbhReviewWorkspace,
+  materializeBbhWorkspace,
+} from "../../src/internal-runtime/workloads/bbh.js";
 
 const tempDirs: string[] = [];
 
@@ -19,6 +28,145 @@ afterEach(async () => {
 });
 
 describe("BBH workload lanes", () => {
+  it("scaffolds a deterministic draft workspace and loads create/proposal payloads", async () => {
+    const workspaceRoot = await makeTempDir();
+    const workspacePath = path.join(workspaceRoot, "draft-workspace");
+
+    const files = await materializeBbhDraftWorkspace(workspacePath);
+    expect(files).toEqual([
+      "notebook.py",
+      "hypothesis.md",
+      "protocol.md",
+      "rubric.json",
+      "capsule.source.yaml",
+      "genome/recommended.source.yaml",
+      "genome/notes.md",
+    ]);
+
+    await fs.writeFile(path.join(workspacePath, "hypothesis.md"), "Test hypothesis\n", "utf8");
+    await fs.writeFile(path.join(workspacePath, "protocol.md"), "1. Test protocol\n", "utf8");
+    await fs.writeFile(path.join(workspacePath, "rubric.json"), JSON.stringify({ criteria: ["clarity"] }), "utf8");
+
+    const createRequest = await loadBbhDraftCreateRequest(workspacePath, {
+      title: "Draft capsule",
+      seed: "BBH",
+      parent_id: 42,
+    });
+
+    expect(createRequest.title).toBe("Draft capsule");
+    expect(createRequest.seed).toBe("BBH");
+    expect(createRequest.parent_id).toBe(42);
+    expect(createRequest.workspace.hypothesis_md).toContain("Test hypothesis");
+
+    const proposalRequest = await loadBbhDraftProposalRequest(workspacePath, "tightened rubric");
+    expect(proposalRequest.summary).toBe("tightened rubric");
+    expect(proposalRequest.workspace_manifest_hash).toMatch(/^sha256:/);
+    expect(proposalRequest.workspace.rubric_json).toEqual({ criteria: ["clarity"] });
+  });
+
+  it("materializes a review workspace and loads a review submission payload", async () => {
+    const workspaceRoot = await makeTempDir();
+    const workspacePath = path.join(workspaceRoot, "review-workspace");
+
+    const files = await materializeBbhReviewWorkspace(workspacePath, {
+      request: {
+        request_id: "review_req_test",
+        capsule_id: "capsule_draft_test",
+        review_kind: "certification",
+        visibility: "public_claim",
+        state: "claimed",
+      },
+      capsule: {
+        capsule_id: "capsule_draft_test",
+        title: "Draft capsule",
+        split: "draft",
+        workflow_state: "in_review",
+        owner_wallet_address: "0x1111111111111111111111111111111111111111",
+      },
+      workspace: {
+        notebook_py: "print('draft')\n",
+        hypothesis_md: "Hypothesis",
+        protocol_md: "Protocol",
+        rubric_json: { criteria: [] },
+        capsule_source: { schema_version: "techtree.bbh.capsule-source.v1" },
+        recommended_genome_source: { schema_version: "techtree.bbh.genome-recommendation.v1" },
+        genome_notes_md: "",
+      },
+      prior_proposals: [],
+      evidence_pack_summary: { evidence: [] },
+      checklist_template: { decision: "approve", completeness: true },
+      certificate_payload: { kind: "capsule_certificate" },
+    });
+
+    expect(files).toEqual([
+      "review.request.json",
+      "capsule.json",
+      "notebook.py",
+      "hypothesis.md",
+      "protocol.md",
+      "rubric.json",
+      "genome-recommendation.source.json",
+      "prior-proposals.json",
+      "evidence-pack.json",
+      "review.checklist.json",
+      "suggested-edits.json",
+      "summary.md",
+      "certificate.payload.json",
+    ]);
+
+    await fs.writeFile(
+      path.join(workspacePath, "review.checklist.json"),
+      JSON.stringify({ decision: "approve_with_edits", completeness: true }),
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspacePath, "suggested-edits.json"),
+      JSON.stringify({ edits: [{ path: "protocol.md", note: "clarify step 1" }] }),
+      "utf8",
+    );
+    await fs.writeFile(path.join(workspacePath, "summary.md"), "Approve with edits.\n", "utf8");
+
+    const request = await loadBbhReviewSubmitRequest(workspacePath);
+    expect(request.request_id).toBe("review_req_test");
+    expect(request.capsule_id).toBe("capsule_draft_test");
+    expect(request.decision).toBe("approve_with_edits");
+    expect(request.suggested_edits_json).toEqual({ edits: [{ path: "protocol.md", note: "clarify step 1" }] });
+    expect(request.certificate_payload).toEqual({ kind: "capsule_certificate" });
+  });
+
+  it("fails clearly when the server omits required review workspace fields", async () => {
+    const workspaceRoot = await makeTempDir();
+    const workspacePath = path.join(workspaceRoot, "bad-review-workspace");
+
+    await expect(
+      materializeBbhReviewWorkspace(workspacePath, {
+        request: {
+          request_id: "review_req_test",
+          capsule_id: "capsule_draft_test",
+          review_kind: "certification",
+          visibility: "public_claim",
+          state: "claimed",
+        },
+        capsule: {
+          capsule_id: "capsule_draft_test",
+          title: "Draft capsule",
+          split: "draft",
+          workflow_state: "in_review",
+          owner_wallet_address: "0x1111111111111111111111111111111111111111",
+        },
+        workspace: {
+          notebook_py: undefined as unknown as string,
+          hypothesis_md: "Hypothesis",
+          protocol_md: "Protocol",
+          rubric_json: { criteria: [] },
+          capsule_source: { schema_version: "techtree.bbh.capsule-source.v1" },
+        },
+        prior_proposals: [],
+        checklist_template: { decision: "approve" },
+      }),
+    ).rejects.toThrow("server response missing required workspace field: notebook_py");
+  });
+
   it("materializes artifact.source.yaml with a public BBH lane that submit accepts", async () => {
     const workspaceRoot = await makeTempDir();
     const response = await materializeBbhWorkspace(
@@ -36,7 +184,7 @@ describe("BBH workload lanes", () => {
               split: "climb",
               language: "python",
               mode: "fixed",
-              assignment_policy: "public_next",
+              assignment_policy: "auto",
               title: "Climb capsule",
               hypothesis: "Climb test capsule",
               protocol_md: "1. Run it",
@@ -99,7 +247,7 @@ describe("BBH workload lanes", () => {
               split: "challenge",
               language: "python",
               mode: "family",
-              assignment_policy: "operator_assigned",
+              assignment_policy: "auto_or_select",
               title: "Challenge capsule",
               hypothesis: "Fresh challenge",
               protocol_md: "1. Run it",
@@ -142,6 +290,122 @@ describe("BBH workload lanes", () => {
     expect(runSource.origin.trigger).toBe("validator");
   });
 
+  it("materializes an explicitly selected capsule without defaulting the lane", async () => {
+    const workspaceRoot = await makeTempDir();
+    const response = await materializeBbhWorkspace(
+      {
+        selectBbhAssignment: async () => ({
+          data: {
+            assignment_ref: "asg_select",
+            split: "benchmark",
+            capsule: {
+              capsule_id: "capsule_benchmark",
+              provider: "bbh",
+              provider_ref: "provider/benchmark",
+              family_ref: "family_benchmark",
+              instance_ref: null,
+              split: "benchmark",
+              language: "python",
+              mode: "family",
+              assignment_policy: "auto_or_select",
+              title: "Benchmark capsule",
+              hypothesis: "Selected benchmark capsule",
+              protocol_md: "1. Run it",
+              rubric_json: { items: [] },
+              task_json: { capsule_id: "capsule_benchmark" },
+              data_files: [],
+              artifact_source: null,
+            },
+          },
+        }),
+      } as any,
+      {
+        workloads: {
+          bbh: {
+            workspaceRoot,
+          },
+        },
+      } as any,
+      {
+        workspace_path: path.join(workspaceRoot, "selected-run"),
+        capsule_id: "capsule_benchmark",
+      },
+      {
+        resolved_at: "2026-03-21T00:00:00.000Z",
+        executor_harness: { kind: "hermes", profile: "bbh", entrypoint: "hermes" },
+        origin: { kind: "local", transport: "api", session_id: null, trigger_ref: null },
+        executor_harness_kind: "hermes",
+        executor_harness_profile: "bbh",
+        origin_session_id: null,
+      },
+    );
+
+    expect(response.assignment_ref).toBe("asg_select");
+    expect(response.split).toBe("benchmark");
+
+    const runSource = JSON.parse(
+      await fs.readFile(path.join(response.workspace_path, "run.source.yaml"), "utf8"),
+    ) as Record<string, any>;
+
+    expect(runSource.bbh.split).toBe("benchmark");
+    expect(runSource.bbh.assignment_ref).toBe("asg_select");
+  });
+
+  it("rejects a lane mismatch when the user selects an explicit capsule", async () => {
+    const workspaceRoot = await makeTempDir();
+
+    await expect(
+      materializeBbhWorkspace(
+        {
+          selectBbhAssignment: async () => ({
+            data: {
+              assignment_ref: "asg_select",
+              split: "benchmark",
+              capsule: {
+                capsule_id: "capsule_benchmark",
+                provider: "bbh",
+                provider_ref: "provider/benchmark",
+                family_ref: "family_benchmark",
+                instance_ref: null,
+                split: "benchmark",
+                language: "python",
+                mode: "family",
+                assignment_policy: "auto_or_select",
+                title: "Benchmark capsule",
+                hypothesis: "Selected benchmark capsule",
+                protocol_md: "1. Run it",
+                rubric_json: { items: [] },
+                task_json: { capsule_id: "capsule_benchmark" },
+                data_files: [],
+                artifact_source: null,
+              },
+            },
+          }),
+        } as any,
+        {
+          workloads: {
+            bbh: {
+              workspaceRoot,
+            },
+          },
+        } as any,
+        {
+          workspace_path: path.join(workspaceRoot, "mismatched-run"),
+          capsule_id: "capsule_benchmark",
+          split: "climb",
+        },
+        {
+          resolved_at: "2026-03-21T00:00:00.000Z",
+          executor_harness: { kind: "hermes", profile: "bbh", entrypoint: "hermes" },
+          origin: { kind: "local", transport: "api", session_id: null, trigger_ref: null },
+          executor_harness_kind: "hermes",
+          executor_harness_profile: "bbh",
+          origin_session_id: null,
+        },
+      ),
+    ).rejects.toThrow("does not match requested lane climb");
+  });
+
   it("rejects legacy non-public split values before submit", async () => {
     const workspaceRoot = await makeTempDir();
     const workspacePath = path.join(workspaceRoot, "legacy-run");
@@ -156,7 +420,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/legacy",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "public_next",
+          assignment_policy: "auto",
           mode: "fixed",
         },
       }),
@@ -186,7 +450,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/climb",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "public_next",
+          assignment_policy: "auto",
           mode: "fixed",
         },
       }),
@@ -235,7 +499,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/benchmark",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "validator_assigned",
+          assignment_policy: "auto_or_select",
           mode: "fixed",
         },
       }),
@@ -265,7 +529,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/climb",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "public_next",
+          assignment_policy: "auto",
           mode: "fixed",
         },
       }),
@@ -314,7 +578,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/climb",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "public_next",
+          assignment_policy: "auto",
           mode: "fixed",
         },
       }),
@@ -391,7 +655,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/climb",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "public_next",
+          assignment_policy: "auto",
           mode: "fixed",
         },
       }),
@@ -449,7 +713,7 @@ describe("BBH workload lanes", () => {
           provider_ref: "provider/benchmark",
           family_ref: null,
           instance_ref: "capsule_1",
-          assignment_policy: "validator_assigned",
+          assignment_policy: "auto_or_select",
           mode: "fixed",
         },
       }),

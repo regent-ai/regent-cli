@@ -5,7 +5,45 @@ import type {
   ActivityListResponse,
   AgentInboxResponse,
   AgentOpportunitiesResponse,
+  AutoskillBundleAccessResponse,
+  AutoskillCreateEvalResponse,
+  AutoskillCreateListingResponse,
+  AutoskillCreateResultResponse,
+  AutoskillCreateReviewResponse,
+  AutoskillCreateSkillResponse,
+  AutoskillEvalPublishInput,
+  AutoskillEvalPublishRequest,
+  AutoskillListingCreateInput,
+  AutoskillResultPublishInput,
+  AutoskillReviewCreateInput,
+  AutoskillSkillPublishInput,
+  AutoskillSkillPublishRequest,
+  BbhCapsuleGetResponse,
+  BbhCapsuleListResponse,
+  BbhCertificateVerifyParams,
+  BbhCertificateVerifyResponse,
+  BbhDraftApplyParams,
+  BbhDraftCreateParams,
+  BbhDraftGetResponse,
+  BbhDraftListResponse,
+  BbhDraftProposalListResponse,
+  BbhDraftProposalSubmitParams,
+  BbhDraftProposalSubmitResponse,
+  BbhDraftPullParams,
+  BbhDraftPullResponse,
+  BbhDraftReadyParams,
   BbhLeaderboardResponse,
+  BbhReviewerApplyParams,
+  BbhReviewerApplyResponse,
+  BbhReviewerOrcidLinkParams,
+  BbhReviewerOrcidLinkResponse,
+  BbhReviewerStatusResponse,
+  BbhReviewListParams,
+  BbhReviewListResponse,
+  BbhReviewPullParams,
+  BbhReviewPullResponse,
+  BbhReviewSubmitParams,
+  BbhReviewSubmitResponse,
   BbhRunExecParams,
   BbhRunExecResponse,
   BbhSubmitParams,
@@ -33,6 +71,8 @@ import type {
   TechtreeTreeName,
   TechtreeVerifyResponse,
   TechtreeWorkspaceActionResult,
+  TechtreeV1BbhCapsulesGetParams,
+  TechtreeV1BbhCapsulesListParams,
   WatchRecord,
   WorkPacketResponse,
 } from "../../internal-types/index.js";
@@ -40,10 +80,26 @@ import type {
 import type { RuntimeContext } from "../runtime.js";
 import { runTechtreeCoreJson, type TechtreeCoreEntrypoint } from "../techtree/core.js";
 import {
+  loadBbhDraftCreateRequest,
+  loadBbhDraftProposalRequest,
+  loadBbhReviewSubmitRequest,
   buildBbhValidationRequest,
   loadBbhRunSubmitRequest,
+  materializeBbhDraftWorkspace,
+  materializeBbhReviewWorkspace,
   materializeBbhWorkspace,
 } from "../workloads/bbh.js";
+import {
+  buildAutoskillBundlePayload,
+  defaultSkillSlug,
+  defaultTitle,
+  defaultVersion,
+  initAutoskillEvalWorkspace,
+  initAutoskillSkillWorkspace,
+  loadAutoskillResultPayload,
+  materializeAutoskillBundle,
+  writeDefaultResultFiles,
+} from "../workloads/autoskill.js";
 
 type NodeType = "artifact" | "run" | "review";
 
@@ -406,6 +462,48 @@ export async function handleTechtreeNodeComments(
   return ctx.techtree.getComments(params.id, { limit: params.limit });
 }
 
+export async function handleTechtreeNodeLineageList(
+  ctx: RuntimeContext,
+  params: { id: number },
+): Promise<{ data: Record<string, unknown> | null }> {
+  return ctx.techtree.listNodeLineageClaims(params.id);
+}
+
+export async function handleTechtreeNodeLineageClaim(
+  ctx: RuntimeContext,
+  params: { id: number; input: Record<string, unknown> },
+): Promise<{ data: Record<string, unknown> }> {
+  return ctx.techtree.claimNodeLineage(params.id, params.input);
+}
+
+export async function handleTechtreeNodeLineageWithdraw(
+  ctx: RuntimeContext,
+  params: { id: number; claimId: string },
+): Promise<{ ok: true }> {
+  return ctx.techtree.withdrawNodeLineageClaim(params.id, params.claimId);
+}
+
+export async function handleTechtreeNodeCrossChainLinksList(
+  ctx: RuntimeContext,
+  params: { id: number },
+): Promise<{ data: Record<string, unknown>[] }> {
+  return ctx.techtree.listNodeCrossChainLinks(params.id);
+}
+
+export async function handleTechtreeNodeCrossChainLinksCreate(
+  ctx: RuntimeContext,
+  params: { id: number; input: Record<string, unknown> },
+): Promise<{ data: Record<string, unknown> }> {
+  return ctx.techtree.createNodeCrossChainLink(params.id, params.input);
+}
+
+export async function handleTechtreeNodeCrossChainLinksClear(
+  ctx: RuntimeContext,
+  params: { id: number },
+): Promise<{ ok: true }> {
+  return ctx.techtree.clearNodeCrossChainLinks(params.id);
+}
+
 export async function handleTechtreeNodeWorkPacket(
   ctx: RuntimeContext,
   params: { id: number },
@@ -457,6 +555,224 @@ export async function handleTechtreeStarDelete(
   params: { nodeId: number },
 ): Promise<{ ok: true }> {
   return ctx.techtree.unstarNode(params.nodeId);
+}
+
+export async function handleTechtreeAutoskillInitSkill(
+  _ctx: RuntimeContext,
+  params: { workspace_path: string },
+): Promise<{
+  ok: true;
+  entrypoint: "autoskill.init.skill";
+  workspace_path: string;
+  files: string[];
+}> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const files = await initAutoskillSkillWorkspace(workspacePath);
+  await writeDefaultResultFiles(workspacePath);
+
+  return {
+    ok: true,
+    entrypoint: "autoskill.init.skill",
+    workspace_path: workspacePath,
+    files: [...files, "result.json", "artifacts.json", "repro-manifest.json"],
+  };
+}
+
+export async function handleTechtreeAutoskillInitEval(
+  _ctx: RuntimeContext,
+  params: { workspace_path: string },
+): Promise<{
+  ok: true;
+  entrypoint: "autoskill.init.eval";
+  workspace_path: string;
+  files: string[];
+}> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const files = await initAutoskillEvalWorkspace(workspacePath);
+
+  return {
+    ok: true,
+    entrypoint: "autoskill.init.eval",
+    workspace_path: workspacePath,
+    files,
+  };
+}
+
+export async function handleTechtreeAutoskillPublishSkill(
+  ctx: RuntimeContext,
+  params: { workspace_path: string; input: AutoskillSkillPublishRequest },
+): Promise<AutoskillCreateSkillResponse & {
+  workspace_path: string;
+  bundle_hash: string;
+  manifest: Record<string, unknown>;
+}> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const input = params.input;
+  const bundle = await buildAutoskillBundlePayload(workspacePath, "skill", {
+    accessMode: input.access_mode,
+    marimoEntrypoint: input.marimo_entrypoint,
+    primaryFile: input.primary_file,
+    previewMd: input.preview_md,
+    metadata: {
+      skill_slug: input.skill_slug,
+      skill_version: input.skill_version,
+      title: input.title,
+      slug: input.slug ?? input.skill_slug,
+    },
+  });
+
+  const payload: AutoskillSkillPublishInput = {
+    ...input,
+    title: input.title || defaultTitle(workspacePath),
+    skill_slug: input.skill_slug || defaultSkillSlug(workspacePath),
+    skill_version: input.skill_version || defaultVersion(workspacePath),
+    preview_md: bundle.previewMd ?? "# Preview only",
+    bundle_manifest: bundle.manifest,
+    marimo_entrypoint: bundle.marimoEntrypoint,
+    primary_file: bundle.primaryFile ?? undefined,
+    ...(input.access_mode === "gated_paid"
+      ? {
+          encrypted_bundle_archive_b64: bundle.archiveBase64,
+          encryption_meta: input.encryption_meta ?? {
+            mode: "placeholder",
+            note: "v0.1 structural placeholder",
+          },
+        }
+      : {
+          bundle_archive_b64: bundle.archiveBase64,
+        }),
+  };
+
+  const response = await ctx.techtree.createAutoskillSkill(payload);
+  return {
+    ...response,
+    workspace_path: workspacePath,
+    bundle_hash: bundle.archiveHash,
+    manifest: bundle.manifest,
+  };
+}
+
+export async function handleTechtreeAutoskillPublishEval(
+  ctx: RuntimeContext,
+  params: { workspace_path: string; input: AutoskillEvalPublishRequest },
+): Promise<AutoskillCreateEvalResponse & {
+  workspace_path: string;
+  bundle_hash: string;
+  manifest: Record<string, unknown>;
+}> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const input = params.input;
+  const bundle = await buildAutoskillBundlePayload(workspacePath, "eval", {
+    accessMode: input.access_mode,
+    marimoEntrypoint: input.marimo_entrypoint,
+    primaryFile: input.primary_file,
+    previewMd: input.preview_md,
+    version:
+      typeof input.bundle_manifest?.metadata === "object" && input.bundle_manifest.metadata
+        ? String((input.bundle_manifest.metadata as Record<string, unknown>).version ?? defaultVersion(workspacePath))
+        : defaultVersion(workspacePath),
+    metadata: {
+      slug: input.slug,
+      title: input.title,
+    },
+  });
+
+  const payload: AutoskillEvalPublishInput = {
+    ...input,
+    title: input.title || defaultTitle(workspacePath),
+    slug: input.slug || defaultSkillSlug(workspacePath),
+    preview_md: bundle.previewMd ?? "Autoskill eval preview",
+    bundle_manifest: bundle.manifest,
+    marimo_entrypoint: bundle.marimoEntrypoint,
+    primary_file: bundle.primaryFile ?? undefined,
+    ...(input.access_mode === "gated_paid"
+      ? {
+          encrypted_bundle_archive_b64: bundle.archiveBase64,
+          encryption_meta: input.encryption_meta ?? {
+            mode: "placeholder",
+            note: "v0.1 structural placeholder",
+          },
+        }
+      : {
+          bundle_archive_b64: bundle.archiveBase64,
+        }),
+  };
+
+  const response = await ctx.techtree.createAutoskillEval(payload);
+  return {
+    ...response,
+    workspace_path: workspacePath,
+    bundle_hash: bundle.archiveHash,
+    manifest: bundle.manifest,
+  };
+}
+
+export async function handleTechtreeAutoskillPublishResult(
+  ctx: RuntimeContext,
+  params: { workspace_path: string; input: AutoskillResultPublishInput },
+): Promise<AutoskillCreateResultResponse> {
+  const workspacePayload = await loadAutoskillResultPayload(params.workspace_path);
+
+  return ctx.techtree.publishAutoskillResult({
+    ...workspacePayload,
+    ...params.input,
+  } as AutoskillResultPublishInput);
+}
+
+export async function handleTechtreeAutoskillReview(
+  ctx: RuntimeContext,
+  params: AutoskillReviewCreateInput,
+): Promise<AutoskillCreateReviewResponse> {
+  return ctx.techtree.createAutoskillReview(params);
+}
+
+export async function handleTechtreeAutoskillListingCreate(
+  ctx: RuntimeContext,
+  params: AutoskillListingCreateInput,
+): Promise<AutoskillCreateListingResponse> {
+  return ctx.techtree.createAutoskillListing(params);
+}
+
+export async function handleTechtreeAutoskillPull(
+  ctx: RuntimeContext,
+  params: { node_id: number; workspace_path: string; x402_receipt?: string; mpp_receipt?: string },
+): Promise<{
+  ok: true;
+  node_id: number;
+  workspace_path: string;
+  files: string[];
+  marimo_entrypoint: string;
+  primary_file: string | null;
+}> {
+  const bundle: AutoskillBundleAccessResponse = await ctx.techtree.getAutoskillBundle(params.node_id, {
+    x402Receipt: params.x402_receipt,
+    mppReceipt: params.mpp_receipt,
+  });
+
+  const downloadUrl = bundle.data.download_url ?? bundle.data.bundle_uri;
+
+  if (!downloadUrl || downloadUrl.startsWith("ipfs://")) {
+    throw new Error("autoskill bundle does not expose a fetchable download URL");
+  }
+
+  const bundleText = await ctx.techtree.fetchExternalText(downloadUrl);
+  const workspacePath = path.resolve(params.workspace_path);
+  const files = await materializeAutoskillBundle(workspacePath, bundleText);
+
+  await fs.writeFile(
+    path.join(workspacePath, "bundle.manifest.json"),
+    `${JSON.stringify(bundle.data.manifest, null, 2)}\n`,
+    "utf8",
+  );
+
+  return {
+    ok: true,
+    node_id: params.node_id,
+    workspace_path: workspacePath,
+    files,
+    marimo_entrypoint: bundle.data.marimo_entrypoint,
+    primary_file: bundle.data.primary_file,
+  };
 }
 
 export async function handleTechtreeInboxGet(
@@ -644,12 +960,107 @@ export async function handleTechtreeV1BbhLeaderboard(
   return ctx.techtree.getBbhLeaderboard(params);
 }
 
+export async function handleTechtreeV1BbhCapsulesList(
+  ctx: RuntimeContext,
+  params?: TechtreeV1BbhCapsulesListParams,
+): Promise<BbhCapsuleListResponse> {
+  return ctx.techtree.listBbhCapsules(
+    params?.split === undefined ? undefined : { split: params.split ?? undefined },
+  );
+}
+
+export async function handleTechtreeV1BbhCapsulesGet(
+  ctx: RuntimeContext,
+  params: TechtreeV1BbhCapsulesGetParams,
+): Promise<BbhCapsuleGetResponse> {
+  return ctx.techtree.getBbhCapsule(params.capsule_id);
+}
+
 export async function handleTechtreeV1BbhRunExec(
   ctx: RuntimeContext,
   params: BbhRunExecParams,
 ): Promise<BbhRunExecResponse> {
   const resolvedMetadata = ctx.agentRouter.resolveRunMetadata(params.metadata ?? null);
   return materializeBbhWorkspace(ctx.techtree, ctx.config, params, resolvedMetadata);
+}
+
+export async function handleTechtreeV1BbhDraftInit(
+  _ctx: RuntimeContext,
+  params: { workspace_path: string },
+): Promise<TechtreeWorkspaceActionResult> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const files = await materializeBbhDraftWorkspace(workspacePath);
+
+  return {
+    ok: true,
+    tree: "bbh",
+    entrypoint: "bbh.draft.init",
+    workspace_path: workspacePath,
+    files,
+  };
+}
+
+export async function handleTechtreeV1BbhDraftCreate(
+  ctx: RuntimeContext,
+  params: BbhDraftCreateParams,
+): Promise<BbhDraftGetResponse> {
+  return ctx.techtree.createBbhDraft(await loadBbhDraftCreateRequest(params.workspace_path, params));
+}
+
+export async function handleTechtreeV1BbhDraftList(
+  ctx: RuntimeContext,
+  _params?: Record<string, never>,
+): Promise<BbhDraftListResponse> {
+  return ctx.techtree.listBbhDrafts();
+}
+
+export async function handleTechtreeV1BbhDraftPull(
+  ctx: RuntimeContext,
+  params: BbhDraftPullParams,
+): Promise<BbhDraftPullResponse> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const draft = await ctx.techtree.getBbhDraft(params.capsule_id);
+  const files = await materializeBbhDraftWorkspace(workspacePath, draft.data.workspace);
+
+  return {
+    ok: true,
+    entrypoint: "bbh.draft.pull",
+    workspace_path: workspacePath,
+    capsule_id: params.capsule_id,
+    files,
+    capsule: draft.data.capsule,
+  };
+}
+
+export async function handleTechtreeV1BbhDraftPropose(
+  ctx: RuntimeContext,
+  params: BbhDraftProposalSubmitParams,
+): Promise<BbhDraftProposalSubmitResponse> {
+  return ctx.techtree.createBbhDraftProposal(
+    params.capsule_id,
+    await loadBbhDraftProposalRequest(params.workspace_path, params.summary),
+  );
+}
+
+export async function handleTechtreeV1BbhDraftProposals(
+  ctx: RuntimeContext,
+  params: { capsule_id: string },
+): Promise<BbhDraftProposalListResponse> {
+  return ctx.techtree.listBbhDraftProposals(params.capsule_id);
+}
+
+export async function handleTechtreeV1BbhDraftApply(
+  ctx: RuntimeContext,
+  params: BbhDraftApplyParams,
+): Promise<BbhDraftGetResponse> {
+  return ctx.techtree.applyBbhDraftProposal(params.capsule_id, params.proposal_id);
+}
+
+export async function handleTechtreeV1BbhDraftReady(
+  ctx: RuntimeContext,
+  params: BbhDraftReadyParams,
+): Promise<BbhDraftGetResponse> {
+  return ctx.techtree.readyBbhDraft(params.capsule_id);
 }
 
 export async function handleTechtreeV1BbhSubmit(
@@ -676,4 +1087,76 @@ export async function handleTechtreeV1BbhSync(
   const runIds = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 
   return ctx.techtree.syncBbh({ run_ids: runIds });
+}
+
+export async function handleTechtreeV1ReviewerOrcidLink(
+  ctx: RuntimeContext,
+  params?: BbhReviewerOrcidLinkParams,
+): Promise<BbhReviewerOrcidLinkResponse> {
+  if (params?.request_id) {
+    return ctx.techtree.getReviewerOrcidLinkStatus(params.request_id);
+  }
+
+  return ctx.techtree.startReviewerOrcidLink();
+}
+
+export async function handleTechtreeV1ReviewerApply(
+  ctx: RuntimeContext,
+  params: BbhReviewerApplyParams,
+): Promise<BbhReviewerApplyResponse> {
+  return ctx.techtree.applyReviewerProfile(params);
+}
+
+export async function handleTechtreeV1ReviewerStatus(
+  ctx: RuntimeContext,
+): Promise<BbhReviewerStatusResponse> {
+  return ctx.techtree.getReviewerProfile();
+}
+
+export async function handleTechtreeV1ReviewList(
+  ctx: RuntimeContext,
+  params?: BbhReviewListParams,
+): Promise<BbhReviewListResponse> {
+  return ctx.techtree.listBbhReviews(params);
+}
+
+export async function handleTechtreeV1ReviewClaim(
+  ctx: RuntimeContext,
+  params: { request_id: string },
+): Promise<{ data: import("../../internal-types/index.js").BbhReviewRequest }> {
+  return ctx.techtree.claimBbhReview(params.request_id);
+}
+
+export async function handleTechtreeV1ReviewPull(
+  ctx: RuntimeContext,
+  params: BbhReviewPullParams,
+): Promise<BbhReviewPullResponse> {
+  const workspacePath = path.resolve(params.workspace_path);
+  const packet = await ctx.techtree.getBbhReviewPacket(params.request_id);
+  const files = await materializeBbhReviewWorkspace(workspacePath, packet.data);
+
+  return {
+    ok: true,
+    entrypoint: "bbh.review.pull",
+    workspace_path: workspacePath,
+    request_id: params.request_id,
+    capsule_id: packet.data.request.capsule_id,
+    files,
+    review: packet.data.request,
+  };
+}
+
+export async function handleTechtreeV1ReviewSubmit(
+  ctx: RuntimeContext,
+  params: BbhReviewSubmitParams,
+): Promise<BbhReviewSubmitResponse> {
+  const request = await loadBbhReviewSubmitRequest(params.workspace_path);
+  return ctx.techtree.submitBbhReview(request.request_id, request);
+}
+
+export async function handleTechtreeV1CertificateVerify(
+  ctx: RuntimeContext,
+  params: BbhCertificateVerifyParams,
+): Promise<BbhCertificateVerifyResponse> {
+  return ctx.techtree.verifyBbhCertificate(params.capsule_id);
 }

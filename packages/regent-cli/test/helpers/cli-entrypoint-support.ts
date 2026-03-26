@@ -205,6 +205,7 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
 
     if (method === "techtree.v1.bbh.run.exec") {
       const split = (payload.split as string | undefined) ?? "climb";
+      const assignmentPolicy = split === "climb" ? "auto" : "auto_or_select";
       const metadata = payload.metadata && typeof payload.metadata === "object"
         ? resolveRunMetadataResponse(payload.metadata as Record<string, unknown>)
         : undefined;
@@ -235,7 +236,7 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
           split,
           language: "python",
           mode: "fixed",
-          assignment_policy: "public_next",
+          assignment_policy: assignmentPolicy,
           title: "Test capsule",
           hypothesis: "Hypothesis",
           protocol_md: "Protocol",
@@ -245,6 +246,166 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
           artifact_source: null,
         },
         ...(metadata ? { resolved_metadata: metadata } : {}),
+      };
+    }
+
+    if (method === "techtree.v1.bbh.capsules.list") {
+      const split = (payload.split as string | undefined) ?? "climb";
+      return {
+        data: [
+          {
+            capsule_id: "capsule_test",
+            split,
+            title: "Test capsule",
+            hypothesis: "Hypothesis",
+            provider: "bbh_train",
+            provider_ref: "provider/capsule_test",
+            assignment_policy: split === "climb" ? "auto" : "auto_or_select",
+            published_at: "2026-03-20T00:00:00Z",
+          },
+        ],
+      };
+    }
+
+    if (method === "techtree.v1.bbh.capsules.get") {
+      return {
+        data: {
+          capsule_id: String(payload.capsule_id ?? "capsule_test"),
+          split: "benchmark",
+          title: "Benchmark capsule",
+          hypothesis: "Hypothesis",
+          provider: "bbh",
+          provider_ref: "provider/capsule_test",
+          assignment_policy: "auto_or_select",
+          published_at: "2026-03-20T00:00:00Z",
+          family_ref: "family_test",
+          instance_ref: "instance_test",
+          language: "python",
+          mode: "family",
+          task_summary: { objective: "benchmark" },
+          rubric_summary: { criteria: [] },
+          data_manifest: [
+            {
+              path: "data/example.txt",
+              sha256: `sha256:${"33".repeat(32)}`,
+              bytes: 12,
+            },
+          ],
+          artifact_source: { schema_version: "techtree.bbh.artifact-source.v1" },
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.init") {
+      return {
+        ok: true,
+        tree: "bbh",
+        entrypoint: "bbh.draft.init",
+        workspace_path: workspacePath,
+        files: [
+          "notebook.py",
+          "hypothesis.md",
+          "protocol.md",
+          "rubric.json",
+          "capsule.source.yaml",
+          "genome/recommended.source.yaml",
+          "genome/notes.md",
+        ],
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.create" || method === "techtree.v1.bbh.draft.apply" || method === "techtree.v1.bbh.draft.ready") {
+      return {
+        data: {
+          capsule: {
+            capsule_id: "capsule_draft_test",
+            title: String(payload.title ?? "Draft capsule"),
+            split: "draft",
+            workflow_state: method === "techtree.v1.bbh.draft.ready" ? "review_ready" : "authoring",
+            owner_wallet_address: TEST_WALLET,
+            source_node_id: 42,
+          },
+          workspace: {
+            notebook_py: "print('draft')\n",
+            hypothesis_md: "Hypothesis",
+            protocol_md: "Protocol",
+            rubric_json: {},
+            capsule_source: {},
+            recommended_genome_source: {},
+            genome_notes_md: "",
+          },
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.list") {
+      return {
+        data: [
+          {
+            capsule_id: "capsule_draft_test",
+            title: "Draft capsule",
+            split: "draft",
+            workflow_state: "authoring",
+            owner_wallet_address: TEST_WALLET,
+            source_node_id: 42,
+          },
+        ],
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.pull") {
+      return {
+        ok: true,
+        entrypoint: "bbh.draft.pull",
+        workspace_path: workspacePath,
+        capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+        files: [
+          "notebook.py",
+          "hypothesis.md",
+          "protocol.md",
+          "rubric.json",
+          "capsule.source.yaml",
+          "genome/recommended.source.yaml",
+          "genome/notes.md",
+        ],
+        capsule: {
+          capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+          title: "Draft capsule",
+          split: "draft",
+          workflow_state: "authoring",
+          owner_wallet_address: TEST_WALLET,
+          source_node_id: 42,
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.propose") {
+      return {
+        data: {
+          proposal: {
+            proposal_id: "proposal_test",
+            capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+            proposer_wallet_address: TEST_WALLET,
+            summary: String(payload.summary ?? "summary"),
+            workspace_manifest_hash: `sha256:${"55".repeat(32)}`,
+            status: "open",
+          },
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.draft.proposals") {
+      return {
+        data: [
+          {
+            proposal_id: "proposal_test",
+            capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+            proposer_wallet_address: TEST_WALLET,
+            summary: "summary",
+            workspace_manifest_hash: `sha256:${"55".repeat(32)}`,
+            status: "open",
+          },
+        ],
       };
     }
 
@@ -288,6 +449,126 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
       return {
         data: {
           runs: [],
+        },
+      };
+    }
+
+    if (method === "techtree.v1.reviewer.orcid.link") {
+      return {
+        data: {
+          request_id: "orcid_req_test",
+          state: payload.request_id ? "authenticated" : "pending",
+          start_url: "https://example.com/orcid/start",
+          reviewer: {
+            wallet_address: TEST_WALLET,
+            orcid_id: "0000-0000-0000-0001",
+            orcid_auth_kind: "oauth_authenticated",
+            vetting_status: "pending",
+            domain_tags: ["scrna-seq"],
+            payout_wallet: TEST_WALLET,
+          },
+        },
+      };
+    }
+
+    if (method === "techtree.v1.reviewer.apply" || method === "techtree.v1.reviewer.status") {
+      return {
+        data: {
+          wallet_address: TEST_WALLET,
+          orcid_id: "0000-0000-0000-0001",
+          orcid_auth_kind: "oauth_authenticated",
+          vetting_status: "pending",
+          domain_tags: Array.isArray(payload.domain_tags) ? payload.domain_tags : ["scrna-seq"],
+          payout_wallet: TEST_WALLET,
+          experience_summary: payload.experience_summary ?? null,
+        },
+      };
+    }
+
+    if (method === "techtree.v1.review.list") {
+      return {
+        data: [
+          {
+            request_id: "review_req_test",
+            capsule_id: "capsule_draft_test",
+            review_kind: payload.kind ?? "certification",
+            visibility: "public_claim",
+            state: "open",
+          },
+        ],
+      };
+    }
+
+    if (method === "techtree.v1.review.claim") {
+      return {
+        data: {
+          request_id: String(payload.request_id ?? "review_req_test"),
+          capsule_id: "capsule_draft_test",
+          review_kind: "certification",
+          visibility: "public_claim",
+          state: "claimed",
+          claimed_by_wallet: TEST_WALLET,
+        },
+      };
+    }
+
+    if (method === "techtree.v1.review.pull") {
+      return {
+        ok: true,
+        entrypoint: "bbh.review.pull",
+        workspace_path: workspacePath,
+        request_id: String(payload.request_id ?? "review_req_test"),
+        capsule_id: "capsule_draft_test",
+        files: [
+          "review.request.json",
+          "capsule.json",
+          "notebook.py",
+          "hypothesis.md",
+          "protocol.md",
+          "rubric.json",
+          "genome-recommendation.source.json",
+          "prior-proposals.json",
+          "evidence-pack.json",
+          "review.checklist.json",
+          "suggested-edits.json",
+          "summary.md",
+          "certificate.payload.json",
+        ],
+        review: {
+          request_id: String(payload.request_id ?? "review_req_test"),
+          capsule_id: "capsule_draft_test",
+          review_kind: "certification",
+          visibility: "public_claim",
+          state: "claimed",
+        },
+      };
+    }
+
+    if (method === "techtree.v1.review.submit") {
+      return {
+        data: {
+          submission: {
+            submission_id: "review_sub_test",
+            request_id: "review_req_test",
+            capsule_id: "capsule_draft_test",
+            reviewer_wallet: TEST_WALLET,
+            checklist_json: {},
+            suggested_edits_json: {},
+            decision: "approve",
+            summary_md: "Looks good",
+            review_node_id: "0xreview0000000000000000000000000000000000000000000000000000000000",
+          },
+        },
+      };
+    }
+
+    if (method === "techtree.v1.certificate.verify") {
+      return {
+        data: {
+          capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+          status: "active",
+          certificate_review_id: "0xreview0000000000000000000000000000000000000000000000000000000000",
+          scope: "publication",
         },
       };
     }

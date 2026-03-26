@@ -429,6 +429,80 @@ export interface TechtreeV1FetchParams {
 
 export interface TechtreeV1VerifyParams extends TechtreeV1FetchParams {}
 
+export interface TechtreeV1BbhDraftInitParams {
+  workspace_path: string;
+}
+
+export interface TechtreeV1BbhDraftCreateParams {
+  workspace_path: string;
+  title: string;
+  seed?: string | null;
+  parent_id?: number | null;
+}
+
+export interface TechtreeV1BbhDraftListParams {
+  owner_wallet_address?: `0x${string}` | null;
+}
+
+export interface TechtreeV1BbhDraftPullParams {
+  capsule_id: string;
+  workspace_path: string;
+}
+
+export interface TechtreeV1BbhDraftProposalSubmitParams {
+  workspace_path: string;
+  capsule_id: string;
+  summary: string;
+}
+
+export interface TechtreeV1BbhDraftApplyParams {
+  capsule_id: string;
+  proposal_id: string;
+}
+
+export interface TechtreeV1BbhDraftReadyParams {
+  capsule_id: string;
+}
+
+export interface TechtreeV1BbhCapsulesListParams {
+  split?: "climb" | "benchmark" | "challenge" | null;
+}
+
+export interface TechtreeV1BbhCapsulesGetParams {
+  capsule_id: string;
+}
+
+export interface TechtreeV1ReviewerOrcidLinkParams {
+  request_id?: string | null;
+}
+
+export interface TechtreeV1ReviewerApplyParams {
+  domain_tags: string[];
+  payout_wallet?: `0x${string}` | null;
+  experience_summary?: string | null;
+}
+
+export interface TechtreeV1ReviewListParams {
+  kind?: "design" | "genome" | "certification" | null;
+}
+
+export interface TechtreeV1ReviewClaimParams {
+  request_id: string;
+}
+
+export interface TechtreeV1ReviewPullParams {
+  request_id: string;
+  workspace_path: string;
+}
+
+export interface TechtreeV1ReviewSubmitParams {
+  workspace_path: string;
+}
+
+export interface TechtreeV1CertificateVerifyParams {
+  capsule_id: string;
+}
+
 export interface TechtreeV1BbhLeaderboardEntry {
   node_id: TechtreeNodeId;
   artifact_id: TechtreeNodeId;

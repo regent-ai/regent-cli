@@ -27,6 +27,16 @@ import {
   runAutolaunchLaunchCreate,
   runAutolaunchLaunchPreview,
 } from "./commands/autolaunch.js";
+import {
+  runAutoskillInitEval,
+  runAutoskillInitSkill,
+  runAutoskillListingCreate,
+  runAutoskillPublishEval,
+  runAutoskillPublishResult,
+  runAutoskillPublishSkill,
+  runAutoskillPull,
+  runAutoskillReview,
+} from "./commands/autoskill.js";
 import { runConfigRead, runConfigWrite } from "./commands/config.js";
 import {
   runAgentHarnessList,
@@ -46,7 +56,14 @@ import {
   runTechtreeNodeChildren,
   runTechtreeNodeComments,
   runTechtreeNodeGet,
+  runTechtreeNodeCrossChainLinksCreate,
+  runTechtreeNodeCrossChainLinksClear,
+  runTechtreeNodeCrossChainLinksList,
+  runTechtreeNodeLineageClaim,
+  runTechtreeNodeLineageWithdraw,
+  runTechtreeNodeLineageList,
   runTechtreeNodeWorkPacket,
+  runTechtreeNodeCreate,
   runTechtreeNodesList,
   runTechtreeOpportunities,
   runTechtreeSearch,
@@ -59,6 +76,17 @@ import {
   runTechtreeWatchTail,
 } from "./commands/techtree.js";
 import { runTechtreeStart } from "./commands/techtree-start.js";
+import {
+  runTechtreeBbhDraftApply,
+  runTechtreeBbhDraftCreate,
+  runTechtreeBbhDraftInit,
+  runTechtreeBbhDraftList,
+  runTechtreeBbhDraftProposals,
+  runTechtreeBbhDraftPropose,
+  runTechtreeBbhDraftPull,
+  runTechtreeBbhDraftReady,
+} from "./commands/techtree-v1-bbh-draft.js";
+import { runTechtreeCertificateVerify } from "./commands/techtree-v1-certificate.js";
 import {
   runTechtreeArtifactCompile,
   runTechtreeArtifactInit,
@@ -78,10 +106,23 @@ import {
   runTechtreeRunInit,
   runTechtreeRunPin,
   runTechtreeRunPublish,
+  runTechtreeBbhCapsulesGet,
+  runTechtreeBbhCapsulesList,
   runTechtreeBbhLeaderboard,
   runTechtreeBbhSync,
   runTechtreeVerify,
 } from "./commands/techtree-v1.js";
+import {
+  runTechtreeReviewClaim,
+  runTechtreeReviewList,
+  runTechtreeReviewPull,
+  runTechtreeReviewSubmit,
+} from "./commands/techtree-v1-review.js";
+import {
+  runTechtreeReviewerApply,
+  runTechtreeReviewerOrcidLink,
+  runTechtreeReviewerStatus,
+} from "./commands/techtree-v1-reviewer.js";
 import {
   runXmtpDoctor,
   runXmtpGroupAddMember,
@@ -220,6 +261,46 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
       return result.ready ? 0 : 1;
     }
 
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "init" && maybeFourth === "skill") {
+      await runAutoskillInitSkill(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "init" && maybeFourth === "eval") {
+      await runAutoskillInitEval(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "publish" && maybeFourth === "skill") {
+      await runAutoskillPublishSkill(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "publish" && maybeFourth === "eval") {
+      await runAutoskillPublishEval(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "publish" && maybeFourth === "result") {
+      await runAutoskillPublishResult(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "review") {
+      await runAutoskillReview(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "listing" && maybeFourth === "create") {
+      await runAutoskillListingCreate(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "autoskill" && maybeThird === "pull") {
+      await runAutoskillPull(parsedArgs, configPath);
+      return 0;
+    }
+
     if (namespace === "techtree" && isNamedTree(subcommand)) {
       const tree = subcommand;
       const action = maybeThird;
@@ -227,6 +308,16 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
 
       if (tree === "bbh" && action === "run" && verb === "exec") {
         await runTechtreeBbhRunExec(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "capsules" && verb === "list") {
+        await runTechtreeBbhCapsulesList(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "capsules" && verb === "get") {
+        await runTechtreeBbhCapsulesGet(parsedArgs, configPath);
         return 0;
       }
 
@@ -242,6 +333,46 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
 
       if (tree === "bbh" && action === "leaderboard") {
         await runTechtreeBbhLeaderboard(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "init") {
+        await runTechtreeBbhDraftInit(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "create") {
+        await runTechtreeBbhDraftCreate(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "list") {
+        await runTechtreeBbhDraftList(configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "pull") {
+        await runTechtreeBbhDraftPull(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "propose") {
+        await runTechtreeBbhDraftPropose(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "proposals") {
+        await runTechtreeBbhDraftProposals(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "apply") {
+        await runTechtreeBbhDraftApply(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "draft" && verb === "ready") {
+        await runTechtreeBbhDraftReady(parsedArgs, configPath);
         return 0;
       }
 
@@ -332,6 +463,46 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
 
     }
 
+    if (namespace === "techtree" && subcommand === "reviewer" && maybeThird === "orcid" && maybeFourth === "link") {
+      await runTechtreeReviewerOrcidLink(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "reviewer" && maybeThird === "apply") {
+      await runTechtreeReviewerApply(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "reviewer" && maybeThird === "status") {
+      await runTechtreeReviewerStatus(configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "review" && maybeThird === "list") {
+      await runTechtreeReviewList(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "review" && maybeThird === "claim") {
+      await runTechtreeReviewClaim(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "review" && maybeThird === "pull") {
+      await runTechtreeReviewPull(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "review" && maybeThird === "submit") {
+      await runTechtreeReviewSubmit(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "certificate" && maybeThird === "verify") {
+      await runTechtreeCertificateVerify(parsedArgs, configPath);
+      return 0;
+    }
+
     if (namespace === "techtree" && subcommand === "activity") {
       await runTechtreeActivity(parsedArgs, configPath);
       return 0;
@@ -359,6 +530,41 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
 
     if (namespace === "techtree" && subcommand === "node" && maybeThird === "comments") {
       await runTechtreeNodeComments(rawArgs, requireNodeId(maybeFourth), configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "lineage" && maybeFourth === "list") {
+      await runTechtreeNodeLineageList(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "lineage" && maybeFourth === "claim") {
+      await runTechtreeNodeLineageClaim(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "lineage" && maybeFourth === "withdraw") {
+      await runTechtreeNodeLineageWithdraw(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "cross-chain-links" && maybeFourth === "list") {
+      await runTechtreeNodeCrossChainLinksList(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "cross-chain-links" && maybeFourth === "create") {
+      await runTechtreeNodeCrossChainLinksCreate(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "cross-chain-links" && maybeFourth === "clear") {
+      await runTechtreeNodeCrossChainLinksClear(parsedArgs, configPath);
+      return 0;
+    }
+
+    if (namespace === "techtree" && subcommand === "node" && maybeThird === "create") {
+      await runTechtreeNodeCreate(rawArgs, configPath);
       return 0;
     }
 

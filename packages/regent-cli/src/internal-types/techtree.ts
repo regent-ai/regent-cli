@@ -4,6 +4,224 @@ export interface TreeAgentSummary {
   wallet_address: `0x${string}`;
 }
 
+export interface AutoskillScorecardSummary {
+  community: {
+    count: number;
+    avg_rating: number | null;
+  };
+  replicable: {
+    review_count: number;
+    unique_agent_count: number;
+    median_score: number | null;
+  };
+}
+
+export interface AutoskillListingSummary {
+  id: number;
+  skill_node_id: number;
+  seller_agent_id: number;
+  status: "draft" | "active" | "paused" | "closed";
+  payment_rail: "x402" | "mpp";
+  chain_id: number;
+  settlement_contract_address: `0x${string}` | null;
+  usdc_token_address: `0x${string}`;
+  treasury_address: `0x${string}`;
+  seller_payout_address: `0x${string}`;
+  price_usdc: string;
+  treasury_bps: number;
+  seller_bps: number;
+  listing_meta: Record<string, unknown>;
+  inserted_at: string;
+  updated_at: string;
+}
+
+export interface AutoskillProjection {
+  flavor: "skill" | "eval";
+  access_mode: "public_free" | "gated_paid";
+  preview_md: string | null;
+  marimo_entrypoint: string;
+  primary_file: string | null;
+  bundle_hash: string | null;
+  scorecard?: AutoskillScorecardSummary | null;
+  listing?: AutoskillListingSummary | null;
+}
+
+export interface AutoskillVersionSummary {
+  node_id: number;
+  kind: "skill" | "eval";
+  seed: string;
+  slug: string | null;
+  title: string;
+  summary: string | null;
+  inserted_at: string;
+  creator_agent: TreeAgentSummary | null;
+  autoskill: AutoskillProjection | null;
+}
+
+export interface AutoskillReview {
+  id: number;
+  kind: "community" | "replicable";
+  skill_node_id: number;
+  reviewer_agent_id: number;
+  result_id: number | null;
+  rating: number | null;
+  note: string | null;
+  runtime_kind: "local" | "molab" | "wasm" | "self_hosted" | null;
+  reported_score: number | null;
+  details: Record<string, unknown>;
+  inserted_at: string;
+}
+
+export interface AutoskillBundleAccessResponse {
+  data: {
+    node_id: number;
+    bundle_uri: string | null;
+    download_url: string | null;
+    manifest: Record<string, unknown>;
+    marimo_entrypoint: string;
+    primary_file: string | null;
+  };
+}
+
+export interface AutoskillCreateSkillResponse {
+  data: {
+    node_id: number;
+  };
+}
+
+export interface AutoskillCreateEvalResponse {
+  data: {
+    node_id: number;
+  };
+}
+
+export interface AutoskillCreateResultResponse {
+  data: {
+    result_id: number;
+  };
+}
+
+export interface AutoskillCreateReviewResponse {
+  data: {
+    review_id: number;
+  };
+}
+
+export interface AutoskillCreateListingResponse {
+  data: {
+    listing_id: number;
+    status: "draft" | "active" | "paused" | "closed";
+  };
+}
+
+export interface AutoskillSkillPublishInput {
+  parent_id?: number;
+  title: string;
+  summary?: string;
+  slug?: string;
+  skill_slug: string;
+  skill_version: string;
+  notebook_source?: string;
+  access_mode: "public_free" | "gated_paid";
+  preview_md?: string;
+  bundle_manifest: Record<string, unknown>;
+  primary_file?: string;
+  marimo_entrypoint: string;
+  bundle_archive_b64?: string;
+  encrypted_bundle_archive_b64?: string;
+  payment_rail?: "x402" | "mpp" | "manual";
+  access_policy?: Record<string, unknown>;
+  encryption_meta?: Record<string, unknown>;
+}
+
+export interface AutoskillSkillPublishRequest {
+  parent_id?: number;
+  title: string;
+  summary?: string;
+  slug?: string;
+  skill_slug: string;
+  skill_version: string;
+  access_mode: "public_free" | "gated_paid";
+  preview_md?: string;
+  marimo_entrypoint: string;
+  primary_file?: string;
+  payment_rail?: "x402" | "mpp" | "manual";
+  access_policy?: Record<string, unknown>;
+  encryption_meta?: Record<string, unknown>;
+}
+
+export interface AutoskillEvalPublishInput {
+  parent_id?: number;
+  title: string;
+  summary?: string;
+  slug: string;
+  notebook_source?: string;
+  access_mode: "public_free" | "gated_paid";
+  preview_md?: string;
+  bundle_manifest: Record<string, unknown>;
+  primary_file?: string;
+  marimo_entrypoint: string;
+  bundle_archive_b64?: string;
+  encrypted_bundle_archive_b64?: string;
+  payment_rail?: "x402" | "mpp" | "manual";
+  access_policy?: Record<string, unknown>;
+  encryption_meta?: Record<string, unknown>;
+}
+
+export interface AutoskillEvalPublishRequest {
+  parent_id?: number;
+  title: string;
+  summary?: string;
+  slug: string;
+  access_mode: "public_free" | "gated_paid";
+  preview_md?: string;
+  marimo_entrypoint: string;
+  primary_file?: string;
+  payment_rail?: "x402" | "mpp" | "manual";
+  access_policy?: Record<string, unknown>;
+  encryption_meta?: Record<string, unknown>;
+  bundle_manifest: {
+    metadata: {
+      version: string;
+    };
+  };
+}
+
+export interface AutoskillResultPublishInput {
+  skill_node_id: number;
+  eval_node_id: number;
+  runtime_kind: "local" | "molab" | "wasm" | "self_hosted";
+  status?: "complete" | "failed";
+  trial_count?: number;
+  raw_score: number;
+  normalized_score: number;
+  grader_breakdown?: Record<string, unknown>;
+  artifacts?: Record<string, unknown>;
+  repro_manifest?: Record<string, unknown>;
+}
+
+export interface AutoskillReviewCreateInput {
+  kind: "community" | "replicable";
+  skill_node_id: number;
+  result_id?: number;
+  rating?: number;
+  note?: string;
+  runtime_kind?: "local" | "molab" | "wasm" | "self_hosted";
+  reported_score?: number;
+  details?: Record<string, unknown>;
+}
+
+export interface AutoskillListingCreateInput {
+  skill_node_id: number;
+  payment_rail: "x402" | "mpp";
+  chain_id: number;
+  usdc_token_address: `0x${string}`;
+  treasury_address: `0x${string}`;
+  seller_payout_address: `0x${string}`;
+  price_usdc: string;
+  listing_meta?: Record<string, unknown>;
+}
+
 export interface NodeTagEdge {
   id: number;
   src_node_id: number;
@@ -26,7 +244,8 @@ export interface TreeNode {
     | "review"
     | "synthesis"
     | "meta"
-    | "skill";
+    | "skill"
+    | "eval";
   title: string;
   slug: string | null;
   summary: string | null;
@@ -44,6 +263,8 @@ export interface TreeNode {
   inserted_at: string;
   updated_at: string;
   sidelinks: NodeTagEdge[];
+  cross_chain_lineage?: Record<string, unknown> | null;
+  autoskill?: AutoskillProjection | null;
   creator_agent?: TreeAgentSummary;
 }
 
@@ -100,6 +321,7 @@ export interface NodeCreateInput {
   skill_slug?: string;
   skill_version?: string;
   skill_md_body?: string;
+  cross_chain_link?: Record<string, unknown>;
   idempotency_key?: string;
 }
 

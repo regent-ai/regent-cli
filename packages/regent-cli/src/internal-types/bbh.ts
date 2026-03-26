@@ -1,12 +1,22 @@
 export type BbhSplit = "climb" | "benchmark" | "challenge" | "draft";
 export type BbhLane = BbhSplit;
 export type BbhHarnessType = "openclaw" | "hermes" | "claude_code" | "custom";
-export type BbhAssignmentPolicy = "public_next" | "operator_assigned" | "validator_assigned" | "draft_only";
+export type BbhAssignmentPolicy = "auto" | "select" | "auto_or_select" | "operator";
 export type BbhKeepDecision = "keep" | "discard" | "pending";
 export type BbhRunStatus = "created" | "running" | "completed" | "failed";
 export type BbhValidationRole = "official" | "community";
 export type BbhReviewMethod = "replay" | "manual" | "replication";
 export type BbhReviewResult = "confirmed" | "rejected" | "mixed" | "needs_revision";
+export type BbhCapsuleWorkflowState = "authoring" | "review_ready" | "in_review" | "approved" | "rejected" | "published";
+export type BbhCertificateStatus = "none" | "pending" | "active" | "expired" | "revoked";
+export type BbhDraftProposalStatus = "open" | "accepted" | "rejected";
+export type BbhReviewerOrcidAuthKind = "oauth_authenticated" | "self_attested";
+export type BbhReviewerVettingStatus = "pending" | "approved" | "rejected";
+export type BbhOrcidLinkState = "pending" | "authenticated" | "expired" | "timed_out";
+export type BbhReviewRequestKind = "design" | "genome" | "certification";
+export type BbhReviewRequestVisibility = "private" | "public_claim";
+export type BbhReviewRequestState = "open" | "claimed" | "submitted" | "closed";
+export type BbhReviewDecision = "approve" | "approve_with_edits" | "changes_requested" | "reject";
 
 export interface BbhDataFile {
   name: string;
@@ -32,6 +42,301 @@ export interface BbhCapsule {
   artifact_source?: Record<string, unknown> | null;
 }
 
+export interface BbhCertificateSummary {
+  capsule_id: string;
+  status: BbhCertificateStatus;
+  certificate_review_id?: string | null;
+  scope?: string | null;
+  issued_at?: string | null;
+  expires_at?: string | null;
+  reviewer_wallet?: `0x${string}` | null;
+}
+
+export interface BbhCapsuleSummary {
+  capsule_id: string;
+  split: BbhSplit;
+  title: string;
+  hypothesis: string;
+  provider: BbhCapsule["provider"];
+  provider_ref: string;
+  assignment_policy: BbhAssignmentPolicy;
+  published_at?: string | null;
+}
+
+export interface BbhCapsuleDetail extends BbhCapsuleSummary {
+  family_ref?: string | null;
+  instance_ref?: string | null;
+  language: BbhCapsule["language"];
+  mode: BbhCapsule["mode"];
+  task_summary?: Record<string, unknown> | null;
+  rubric_summary?: Record<string, unknown> | null;
+  data_manifest?: Array<{
+    path: string;
+    sha256: string;
+    bytes: number;
+  }>;
+  artifact_source?: Record<string, unknown> | null;
+}
+
+export interface BbhCapsuleListResponse {
+  data: BbhCapsuleSummary[];
+}
+
+export interface BbhCapsuleGetResponse {
+  data: BbhCapsuleDetail;
+}
+
+export interface BbhDraftWorkspaceBundle {
+  notebook_py: string;
+  hypothesis_md: string;
+  protocol_md: string;
+  rubric_json: Record<string, unknown>;
+  capsule_source: Record<string, unknown>;
+  recommended_genome_source?: Record<string, unknown> | null;
+  genome_notes_md?: string | null;
+}
+
+export interface BbhDraftCapsule {
+  capsule_id: string;
+  title: string;
+  split: "draft";
+  workflow_state: BbhCapsuleWorkflowState;
+  owner_wallet_address: `0x${string}`;
+  source_node_id?: number | null;
+  seed?: string | null;
+  parent_id?: number | null;
+  inserted_at?: string | null;
+  updated_at?: string | null;
+  published_at?: string | null;
+  hypothesis?: string | null;
+  protocol_md?: string | null;
+  rubric_json?: Record<string, unknown> | null;
+  capsule_source?: Record<string, unknown> | null;
+  recommended_genome_source?: Record<string, unknown> | null;
+  genome_notes_md?: string | null;
+  certificate?: BbhCertificateSummary | null;
+}
+
+export interface BbhDraftCreateRequest {
+  title: string;
+  seed?: string | null;
+  parent_id?: number | null;
+  workspace: BbhDraftWorkspaceBundle;
+}
+
+export interface BbhDraftCreateParams {
+  workspace_path: string;
+  title: string;
+  seed?: string | null;
+  parent_id?: number | null;
+}
+
+export interface BbhDraftGetResponse {
+  data: {
+    capsule: BbhDraftCapsule;
+    workspace: BbhDraftWorkspaceBundle;
+  };
+}
+
+export interface BbhDraftListResponse {
+  data: BbhDraftCapsule[];
+}
+
+export interface BbhDraftPullParams {
+  capsule_id: string;
+  workspace_path: string;
+}
+
+export interface BbhDraftPullResponse {
+  ok: true;
+  entrypoint: "bbh.draft.pull";
+  workspace_path: string;
+  capsule_id: string;
+  files: string[];
+  capsule: BbhDraftCapsule;
+}
+
+export interface BbhDraftProposal {
+  proposal_id: string;
+  capsule_id: string;
+  proposer_wallet_address: `0x${string}`;
+  summary: string;
+  patch_json?: Record<string, unknown> | null;
+  workspace_manifest_hash: string;
+  status: BbhDraftProposalStatus;
+  inserted_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface BbhDraftProposalSubmitRequest {
+  summary: string;
+  workspace: BbhDraftWorkspaceBundle;
+  workspace_manifest_hash: string;
+}
+
+export interface BbhDraftProposalSubmitParams {
+  workspace_path: string;
+  capsule_id: string;
+  summary: string;
+}
+
+export interface BbhDraftProposalListResponse {
+  data: BbhDraftProposal[];
+}
+
+export interface BbhDraftProposalSubmitResponse {
+  data: {
+    proposal: BbhDraftProposal;
+  };
+}
+
+export interface BbhDraftApplyParams {
+  capsule_id: string;
+  proposal_id: string;
+}
+
+export interface BbhDraftReadyParams {
+  capsule_id: string;
+}
+
+export interface BbhReviewerProfile {
+  wallet_address: `0x${string}`;
+  orcid_id?: string | null;
+  orcid_auth_kind?: BbhReviewerOrcidAuthKind | null;
+  orcid_name?: string | null;
+  vetting_status: BbhReviewerVettingStatus;
+  domain_tags: string[];
+  payout_wallet?: `0x${string}` | null;
+  experience_summary?: string | null;
+  vetted_by?: `0x${string}` | null;
+  vetted_at?: string | null;
+}
+
+export interface BbhReviewerApplyParams {
+  domain_tags: string[];
+  payout_wallet?: `0x${string}` | null;
+  experience_summary?: string | null;
+}
+
+export interface BbhReviewerApplyRequest extends BbhReviewerApplyParams {}
+
+export interface BbhReviewerStatusResponse {
+  data: BbhReviewerProfile;
+}
+
+export interface BbhReviewerApplyResponse {
+  data: BbhReviewerProfile;
+}
+
+export interface BbhReviewerOrcidLinkParams {
+  request_id?: string | null;
+}
+
+export interface BbhReviewerOrcidLinkResponse {
+  data: {
+    request_id: string;
+    state: BbhOrcidLinkState;
+    start_url?: string | null;
+    reviewer?: BbhReviewerProfile | null;
+  };
+}
+
+export interface BbhReviewRequest {
+  request_id: string;
+  capsule_id: string;
+  review_kind: BbhReviewRequestKind;
+  visibility: BbhReviewRequestVisibility;
+  state: BbhReviewRequestState;
+  capsule_title?: string | null;
+  claimed_by_wallet?: `0x${string}` | null;
+  fee_quote_usdc?: string | null;
+  holdback_usdc?: string | null;
+  due_at?: string | null;
+  inserted_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface BbhReviewListParams {
+  kind?: BbhReviewRequestKind | null;
+}
+
+export interface BbhReviewListResponse {
+  data: BbhReviewRequest[];
+}
+
+export interface BbhReviewPacket {
+  request: BbhReviewRequest;
+  capsule: BbhDraftCapsule;
+  workspace: BbhDraftWorkspaceBundle;
+  prior_proposals: BbhDraftProposal[];
+  evidence_pack_summary?: Record<string, unknown> | null;
+  checklist_template: Record<string, unknown>;
+  certificate_payload?: Record<string, unknown> | null;
+}
+
+export interface BbhReviewPacketResponse {
+  data: BbhReviewPacket;
+}
+
+export interface BbhReviewPullParams {
+  request_id: string;
+  workspace_path: string;
+}
+
+export interface BbhReviewPullResponse {
+  ok: true;
+  entrypoint: "bbh.review.pull";
+  workspace_path: string;
+  request_id: string;
+  capsule_id: string;
+  files: string[];
+  review: BbhReviewRequest;
+}
+
+export interface BbhReviewSubmission {
+  submission_id: string;
+  request_id: string;
+  capsule_id: string;
+  reviewer_wallet: `0x${string}`;
+  checklist_json: Record<string, unknown>;
+  suggested_edits_json: Record<string, unknown>;
+  decision: BbhReviewDecision;
+  summary_md: string;
+  genome_recommendation_source?: Record<string, unknown> | null;
+  review_node_id?: string | null;
+  inserted_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface BbhReviewSubmitRequest {
+  request_id: string;
+  capsule_id: string;
+  checklist_json: Record<string, unknown>;
+  suggested_edits_json: Record<string, unknown>;
+  decision: BbhReviewDecision;
+  summary_md: string;
+  genome_recommendation_source?: Record<string, unknown> | null;
+  certificate_payload?: Record<string, unknown> | null;
+}
+
+export interface BbhReviewSubmitParams {
+  workspace_path: string;
+}
+
+export interface BbhReviewSubmitResponse {
+  data: {
+    submission: BbhReviewSubmission;
+  };
+}
+
+export interface BbhCertificateVerifyParams {
+  capsule_id: string;
+}
+
+export interface BbhCertificateVerifyResponse {
+  data: BbhCertificateSummary;
+}
+
 export interface BbhAssignmentResponse {
   data: {
     assignment_ref: string;
@@ -43,6 +348,7 @@ export interface BbhAssignmentResponse {
 export interface BbhRunExecParams {
   workspace_path?: string | null;
   split?: "climb" | "benchmark" | "challenge";
+  capsule_id?: string | null;
   metadata?: import("./agent.js").RegentRunMetadata | null;
   genome?: Partial<BbhGenomeSource> | null;
 }
