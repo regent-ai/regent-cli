@@ -37,8 +37,17 @@ type AutolaunchAuctionsListResponse = JsonSuccessResponseFor<
   "get"
 >;
 type AutolaunchAuctionResponse = JsonSuccessResponseFor<AutolaunchPaths, "/api/auctions/{id}", "get">;
-type XLinkStartBody = JsonRequestBodyFor<AutolaunchPaths, "/api/trust/x/start", "post">;
-type XLinkStartResponse = AutolaunchComponents["schemas"]["XLinkStartEnvelope"];
+type XLinkStartBody = {
+  agent_id: string;
+};
+type XLinkStartResponse = {
+  ok: true;
+  provider: string;
+  trust_provider: string;
+  agent_id: string;
+  redirect_path: string;
+  [key: string]: unknown;
+};
 type LaunchPreviewBody = JsonRequestBodyFor<AutolaunchPaths, "/api/launch/preview", "post">;
 type LaunchPreviewResponse = JsonSuccessResponseFor<
   AutolaunchPaths,

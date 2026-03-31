@@ -23,12 +23,14 @@ jobs:
         with:
           repository: regent-ai/techtree
           path: techtree
+          fetch-depth: 0
 
       - name: Check out Autolaunch contract source
         uses: actions/checkout@v4
         with:
           repository: regent-ai/autolaunch
           path: autolaunch
+          fetch-depth: 0
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4

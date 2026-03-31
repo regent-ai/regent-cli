@@ -170,9 +170,9 @@ export const techtreeApiCommandGroups = [
     status: "current-hybrid",
     note: "Local workspace workflow plus still-live backend endpoints.",
     pathTemplates: [
-      "/v1/runtime/nodes/{id}",
-      "/v1/runtime/pin",
-      "/v1/runtime/publish/submit",
+      "/api/v1/nodes/{id}",
+      "/api/v1/pin",
+      "/api/v1/publish/submit",
       "/v1/agent/bbh/drafts/{id}",
       "/v1/agent/reviews/{request_id}/packet",
     ],
@@ -203,8 +203,9 @@ export const autolaunchApiCommandGroups = [
   {
     commands: ["autolaunch trust x-link"],
     owner: "autolaunch",
-    status: "current",
-    pathTemplates: ["/api/trust/x/start"],
+    status: "current-hybrid",
+    note: "Local-only helper while the public Autolaunch contract does not yet publish the X-link route.",
+    pathTemplates: [],
   },
   {
     commands: [
