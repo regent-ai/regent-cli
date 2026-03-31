@@ -43,6 +43,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: regent-cli/pnpm-lock.yaml
           registry-url: https://registry.npmjs.org
 
       - name: Upgrade npm for trusted publishing
