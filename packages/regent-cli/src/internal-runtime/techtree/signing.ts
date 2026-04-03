@@ -88,7 +88,12 @@ export function parseSignatureInputHeader(signatureInput: string): ParsedSignatu
 }
 
 const signatureParamsFromHeader = (signatureInput: string): string => {
-  return signatureInput.startsWith("sig1=") ? signatureInput.slice(5) : signatureInput;
+  return signatureInput.slice(5);
+};
+
+const toSig1SignatureHeader = (signatureHex: `0x${string}`): string => {
+  const signatureBase64 = Buffer.from(signatureHex.slice(2), "hex").toString("base64");
+  return `sig1=:${signatureBase64}:`;
 };
 
 export function buildSignatureInputString(input: {
@@ -172,6 +177,6 @@ export async function buildSignedAgentHeaders(
   return {
     ...unsignedHeaders,
     "signature-input": signatureInput,
-    signature,
+    signature: toSig1SignatureHeader(signature),
   };
 }

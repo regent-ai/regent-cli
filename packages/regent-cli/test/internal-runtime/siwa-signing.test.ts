@@ -133,7 +133,7 @@ describe("http signing", () => {
 
     expect(headers["x-key-id"]).toBe("0x1111111111111111111111111111111111111111");
     expect(headers["signature-input"]).toContain('nonce="sig-nonce-fixed"');
-    expect(headers.signature).toMatch(/^0x[0-9a-f]+$/);
+    expect(headers.signature).toMatch(/^sig1=:[A-Za-z0-9+/=]+:$/);
   });
 
   it("builds a stable protected auth debug snapshot", async () => {

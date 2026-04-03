@@ -156,6 +156,16 @@ const parseReceipt = (receipt: string): ReceiptClaims | null => {
   }
 };
 
+const parseSig1SignatureHeader = (value: string): Buffer | null => {
+  const match = /^sig1=:([A-Za-z0-9+/=]+):$/.exec(value.trim());
+  if (!match?.[1]) {
+    return null;
+  }
+
+  const signatureBytes = Buffer.from(match[1], "base64");
+  return signatureBytes.byteLength === 65 ? signatureBytes : null;
+};
+
 export class TechtreeContractServer {
   readonly requests: ContractRequestRecord[] = [];
   readonly createdNodes = new Map<string, NodeCreateResponse>();
@@ -1225,7 +1235,7 @@ export class TechtreeContractServer {
       headers,
     });
 
-    if (!/^0x[0-9a-fA-F]{130}$/.test(headers.signature ?? "")) {
+    if (!parseSig1SignatureHeader(headers.signature ?? "")) {
       return {
         statusCode: 401,
         payload: {
