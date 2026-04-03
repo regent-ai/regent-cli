@@ -45,6 +45,9 @@ describe("printer surface", () => {
     expect(output).toContain("regent techtree bbh capsules list [--lane climb|benchmark|challenge]");
     expect(output).toContain("regent techtree bbh capsules get <capsule-id>");
     expect(output).toContain("regent techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]");
+    expect(output).toContain("regent techtree bbh run solve [path] [--agent hermes|openclaw]");
+    expect(output).toContain("regent techtree bbh genome init [path] [--lane climb|benchmark|challenge] [--sample-size 3] [--budget 6]");
+    expect(output).toContain("regent techtree bbh genome improve [path]");
   });
 
   it("renders framed JSON output for human terminals", async () => {

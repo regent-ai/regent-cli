@@ -83,6 +83,7 @@ This file is generated from the current runtime method registry.
 - `techtree.v1.fetch`
 - `techtree.v1.verify`
 - `techtree.v1.bbh.run.exec`
+- `techtree.v1.bbh.run.solve`
 - `techtree.v1.bbh.capsules.list`
 - `techtree.v1.bbh.capsules.get`
 - `techtree.v1.bbh.draft.init`
@@ -93,6 +94,10 @@ This file is generated from the current runtime method registry.
 - `techtree.v1.bbh.draft.proposals`
 - `techtree.v1.bbh.draft.apply`
 - `techtree.v1.bbh.draft.ready`
+- `techtree.v1.bbh.genome.init`
+- `techtree.v1.bbh.genome.score`
+- `techtree.v1.bbh.genome.improve`
+- `techtree.v1.bbh.genome.propose`
 - `techtree.v1.bbh.assignment.next`
 - `techtree.v1.bbh.submit`
 - `techtree.v1.bbh.validate`

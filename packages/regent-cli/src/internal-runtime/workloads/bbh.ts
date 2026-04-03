@@ -120,7 +120,7 @@ const triggerForSplit = (split: string): "assignment" | "validator" => {
   return "validator";
 };
 
-const defaultGenomeSource = (
+export const buildBbhGenomeSource = (
   params: BbhRunExecParams,
   metadata: RegentResolvedRunMetadata,
 ): BbhGenomeSource => {
@@ -147,6 +147,18 @@ const defaultGenomeSource = (
     genome_id: partial.genome_id ?? `gen_${shortHash(base)}`,
     ...base,
   };
+};
+
+const loadGenomeSourceFromFile = async (filePath: string): Promise<BbhGenomeSource> => {
+  const genomeSource = await readRequiredJsonFile<BbhGenomeSource>(path.resolve(filePath));
+
+  validateBbhSource("genome source", genomeSource, (source) => {
+    if (source.schema_version !== "techtree.bbh.genome-source.v1") {
+      throw new Error("genome source must declare techtree.bbh.genome-source.v1");
+    }
+  });
+
+  return genomeSource;
 };
 
 const analysisTemplate = (assignment: BbhAssignmentResponse["data"]): string => `# /// script
@@ -205,6 +217,10 @@ const verdictTemplate = () => ({
   rubric_breakdown: [],
   status: "ok",
 });
+
+const marimoPyprojectToml = () => `[tool.marimo.runtime]
+watcher_on_save = "autorun"
+`;
 
 const buildRunSource = (
   assignment: BbhAssignmentResponse["data"],
@@ -535,7 +551,10 @@ export const materializeBbhWorkspace = async (
     );
   }
 
-  const genome = defaultGenomeSource(params, metadata);
+  const genome =
+    params.genome_path && params.genome_path !== ""
+      ? await loadGenomeSourceFromFile(params.genome_path)
+      : buildBbhGenomeSource(params, metadata);
   const runId = `run_${shortHash({ assignment_ref: assignmentData.assignment_ref, genome_id: genome.genome_id, at: nowIso() })}`;
   const workspacePath =
     params.workspace_path && params.workspace_path !== ""
@@ -555,6 +574,7 @@ export const materializeBbhWorkspace = async (
   await fs.writeFile(path.join(workspacePath, "protocol.md"), assignmentData.capsule.protocol_md, "utf8");
   await fs.writeFile(path.join(workspacePath, "rubric.json"), jsonText(assignmentData.capsule.rubric_json), "utf8");
   await fs.writeFile(path.join(workspacePath, "analysis.py"), analysisTemplate(assignmentData), "utf8");
+  await fs.writeFile(path.join(workspacePath, "pyproject.toml"), marimoPyprojectToml(), "utf8");
   await fs.writeFile(path.join(workspacePath, "final_answer.md"), "", "utf8");
   await fs.writeFile(path.join(workspacePath, "outputs", "verdict.json"), jsonText(verdictTemplate()), "utf8");
   await fs.writeFile(path.join(workspacePath, "outputs", "run.log"), "", "utf8");
@@ -591,6 +611,7 @@ export const materializeBbhWorkspace = async (
       "protocol.md",
       "rubric.json",
       "analysis.py",
+      "pyproject.toml",
       "outputs/verdict.json",
     ],
     capsule: assignmentData.capsule,

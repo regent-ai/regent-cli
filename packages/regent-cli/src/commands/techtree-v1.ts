@@ -7,7 +7,7 @@ import { getFlag, requireArg, type ParsedCliArgs } from "../parse.js";
 import { printJson } from "../printer.js";
 import { normalizeNodeId, normalizeTree, normalizeWorkspacePath, optionalWorkspacePath, workspaceFlag } from "./techtree-v1-shared.js";
 
-const readRunMetadata = (args: ParsedCliArgs): RegentRunMetadata | undefined => {
+export const readRunMetadata = (args: ParsedCliArgs): RegentRunMetadata | undefined => {
   const executorHarnessKind = getFlag(args, "executor-harness-kind");
   const executorHarnessProfile = getFlag(args, "executor-harness-profile");
   const executorHarnessEntrypoint = getFlag(args, "executor-harness-entrypoint");
@@ -385,7 +385,7 @@ const renameSplitField = <T extends Record<string, unknown>>(record: T): T & { l
   return mutable as T & { lane?: BbhLane };
 };
 
-const readBbhGenome = (args: ParsedCliArgs): Partial<BbhGenomeSource> | undefined => {
+export const readBbhGenome = (args: ParsedCliArgs): Partial<BbhGenomeSource> | undefined => {
   const genome: Partial<BbhGenomeSource> = {};
 
   const set = <K extends keyof BbhGenomeSource>(key: K, flag: string): void => {
@@ -417,6 +417,7 @@ export async function runTechtreeBbhRunExec(args: ParsedCliArgs, configPath?: st
   const genome = readBbhGenome(args);
   const lane = readBbhLane(args) as Exclude<BbhLane, "draft"> | undefined;
   const capsuleId = getFlag(args, "capsule");
+  const genomePath = getFlag(args, "genome-path");
 
   const response = await daemonCall(
     "techtree.v1.bbh.run.exec",
@@ -426,11 +427,39 @@ export async function runTechtreeBbhRunExec(args: ParsedCliArgs, configPath?: st
       ...(capsuleId ? { capsule_id: capsuleId } : {}),
       ...(metadata ? { metadata } : {}),
       ...(genome ? { genome } : {}),
+      ...(genomePath ? { genome_path: path.resolve(genomePath) } : {}),
     },
     configPath,
   );
 
   printJson(mapRunExecLane(response));
+}
+
+export async function runTechtreeBbhRunSolve(args: ParsedCliArgs, configPath?: string): Promise<void> {
+  const metadata = readRunMetadata(args);
+  const agentFlag = getFlag(args, "agent");
+  const timeoutSeconds = getFlag(args, "timeout-seconds");
+  const agent =
+    agentFlag === undefined
+      ? undefined
+      : agentFlag === "hermes" || agentFlag === "openclaw"
+        ? agentFlag
+        : (() => {
+            throw new Error("invalid solve agent; expected `hermes` or `openclaw`");
+          })();
+
+  printJson(
+    await daemonCall(
+      "techtree.v1.bbh.run.solve",
+      {
+        workspace_path: normalizeWorkspacePath(args, 4),
+        ...(agent ? { agent } : {}),
+        ...(timeoutSeconds ? { timeout_seconds: Number.parseInt(timeoutSeconds, 10) } : {}),
+        ...(metadata ? { metadata } : {}),
+      },
+      configPath,
+    ),
+  );
 }
 
 export async function runTechtreeBbhSubmit(args: ParsedCliArgs, configPath?: string): Promise<void> {

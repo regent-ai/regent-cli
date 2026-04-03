@@ -91,6 +91,10 @@ if __name__ == "__main__":
     app.run()
 `;
 
+const DEFAULT_MARIMO_PYPROJECT = `[tool.marimo.runtime]
+watcher_on_save = "autorun"
+`;
+
 const DEFAULT_RESULT = {
   runtime_kind: "local",
   status: "complete",
@@ -192,9 +196,10 @@ export const initAutoskillSkillWorkspace = async (workspacePath: string): Promis
   await ensureDir(path.join(resolved, "examples"));
   await fs.writeFile(path.join(resolved, "manifest.yaml"), DEFAULT_SKILL_MANIFEST, "utf8");
   await fs.writeFile(path.join(resolved, "session.marimo.py"), DEFAULT_SKILL_MARIMO, "utf8");
+  await fs.writeFile(path.join(resolved, "pyproject.toml"), DEFAULT_MARIMO_PYPROJECT, "utf8");
   await fs.writeFile(path.join(resolved, "SKILL.md"), "# Skill\n\nDescribe the skill preview here.\n", "utf8");
 
-  return ["manifest.yaml", "session.marimo.py", "SKILL.md", "prompts/", "examples/"];
+  return ["manifest.yaml", "session.marimo.py", "pyproject.toml", "SKILL.md", "prompts/", "examples/"];
 };
 
 export const initAutoskillEvalWorkspace = async (workspacePath: string): Promise<string[]> => {
@@ -205,9 +210,10 @@ export const initAutoskillEvalWorkspace = async (workspacePath: string): Promise
   await ensureDir(path.join(resolved, "fixtures"));
   await fs.writeFile(path.join(resolved, "scenario.yaml"), DEFAULT_EVAL_MANIFEST, "utf8");
   await fs.writeFile(path.join(resolved, "session.marimo.py"), DEFAULT_EVAL_MARIMO, "utf8");
+  await fs.writeFile(path.join(resolved, "pyproject.toml"), DEFAULT_MARIMO_PYPROJECT, "utf8");
   await fs.writeFile(path.join(resolved, "README.md"), "# Eval\n\nDescribe the eval scenario preview here.\n", "utf8");
 
-  return ["scenario.yaml", "session.marimo.py", "README.md", "tasks/", "graders/", "fixtures/"];
+  return ["scenario.yaml", "session.marimo.py", "pyproject.toml", "README.md", "tasks/", "graders/", "fixtures/"];
 };
 
 export const buildAutoskillBundlePayload = async (

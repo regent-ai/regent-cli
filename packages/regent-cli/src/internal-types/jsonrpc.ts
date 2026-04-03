@@ -13,6 +13,13 @@ import type {
   BbhDraftPullParams,
   BbhDraftPullResponse,
   BbhDraftReadyParams,
+  BbhGenomeImproveParams,
+  BbhGenomeImproveResponse,
+  BbhGenomeInitParams,
+  BbhGenomeInitResponse,
+  BbhGenomeProposeParams,
+  BbhGenomeScoreParams,
+  BbhGenomeScoreResponse,
   BbhReviewerApplyParams,
   BbhReviewerApplyResponse,
   BbhReviewerOrcidLinkParams,
@@ -26,6 +33,8 @@ import type {
   BbhReviewPullResponse,
   BbhReviewSubmitParams,
   BbhReviewSubmitResponse,
+  BbhRunSolveParams,
+  BbhRunSolveResponse,
   BbhSubmitParams,
   BbhValidateParams,
   BbhRunExecParams,
@@ -196,6 +205,7 @@ export type RegentRpcMethod =
   | "techtree.v1.fetch"
   | "techtree.v1.verify"
   | "techtree.v1.bbh.run.exec"
+  | "techtree.v1.bbh.run.solve"
   | "techtree.v1.bbh.capsules.list"
   | "techtree.v1.bbh.capsules.get"
   | "techtree.v1.bbh.draft.init"
@@ -206,6 +216,10 @@ export type RegentRpcMethod =
   | "techtree.v1.bbh.draft.proposals"
   | "techtree.v1.bbh.draft.apply"
   | "techtree.v1.bbh.draft.ready"
+  | "techtree.v1.bbh.genome.init"
+  | "techtree.v1.bbh.genome.score"
+  | "techtree.v1.bbh.genome.improve"
+  | "techtree.v1.bbh.genome.propose"
   | "techtree.v1.bbh.assignment.next"
   | "techtree.v1.bbh.submit"
   | "techtree.v1.bbh.validate"
@@ -306,6 +320,7 @@ export interface RegentRpcParamsMap {
   "techtree.v1.fetch": TechtreeV1FetchParams;
   "techtree.v1.verify": TechtreeV1VerifyParams;
   "techtree.v1.bbh.run.exec": BbhRunExecParams;
+  "techtree.v1.bbh.run.solve": BbhRunSolveParams;
   "techtree.v1.bbh.capsules.list": TechtreeV1BbhCapsulesListParams | undefined;
   "techtree.v1.bbh.capsules.get": TechtreeV1BbhCapsulesGetParams;
   "techtree.v1.bbh.draft.init": TechtreeV1BbhDraftInitParams;
@@ -316,6 +331,10 @@ export interface RegentRpcParamsMap {
   "techtree.v1.bbh.draft.proposals": { capsule_id: string };
   "techtree.v1.bbh.draft.apply": TechtreeV1BbhDraftApplyParams;
   "techtree.v1.bbh.draft.ready": TechtreeV1BbhDraftReadyParams;
+  "techtree.v1.bbh.genome.init": BbhGenomeInitParams;
+  "techtree.v1.bbh.genome.score": BbhGenomeScoreParams;
+  "techtree.v1.bbh.genome.improve": BbhGenomeImproveParams;
+  "techtree.v1.bbh.genome.propose": BbhGenomeProposeParams;
   "techtree.v1.bbh.assignment.next": { split?: "climb" | "benchmark" | "challenge" | "draft" } | undefined;
   "techtree.v1.bbh.submit": BbhSubmitParams;
   "techtree.v1.bbh.validate": BbhValidateParams;
@@ -444,6 +463,7 @@ export interface RegentRpcResultMap {
   "techtree.v1.fetch": TechtreeFetchResponse & { tree: "main" | "bbh" };
   "techtree.v1.verify": TechtreeVerifyResponse & { tree: "main" | "bbh" };
   "techtree.v1.bbh.run.exec": BbhRunExecResponse;
+  "techtree.v1.bbh.run.solve": BbhRunSolveResponse;
   "techtree.v1.bbh.capsules.list": BbhCapsuleListResponse;
   "techtree.v1.bbh.capsules.get": BbhCapsuleGetResponse;
   "techtree.v1.bbh.draft.init": TechtreeWorkspaceActionResult;
@@ -454,6 +474,10 @@ export interface RegentRpcResultMap {
   "techtree.v1.bbh.draft.proposals": BbhDraftProposalListResponse;
   "techtree.v1.bbh.draft.apply": BbhDraftGetResponse;
   "techtree.v1.bbh.draft.ready": BbhDraftGetResponse;
+  "techtree.v1.bbh.genome.init": BbhGenomeInitResponse;
+  "techtree.v1.bbh.genome.score": BbhGenomeScoreResponse;
+  "techtree.v1.bbh.genome.improve": BbhGenomeImproveResponse;
+  "techtree.v1.bbh.genome.propose": BbhDraftProposalSubmitResponse;
   "techtree.v1.bbh.assignment.next": BbhAssignmentResponse;
   "techtree.v1.bbh.submit": BbhRunSubmitResponse;
   "techtree.v1.bbh.validate": BbhValidationSubmitResponse;

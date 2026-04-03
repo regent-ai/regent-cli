@@ -36,6 +36,7 @@ describe("autoskill workload helpers", () => {
     expect(first.archiveHash).toBe(second.archiveHash);
     expect(first.marimoEntrypoint).toBe("session.marimo.py");
     expect(first.primaryFile).toBe("SKILL.md");
+    expect(await fs.readFile(path.join(workspace, "pyproject.toml"), "utf8")).toContain("watcher_on_save = \"autorun\"");
     expect(first.manifest).toMatchObject({
       type: "skill",
       access_mode: "public_free",
@@ -60,6 +61,7 @@ describe("autoskill workload helpers", () => {
     );
 
     expect(restoredFiles).toContain("session.marimo.py");
+    expect(restoredFiles).toContain("pyproject.toml");
     expect(restoredFiles).toContain("scenario.yaml");
     expect(restoredFiles).toContain("tasks/task.txt");
     expect(await fs.readFile(path.join(target, "tasks", "task.txt"), "utf8")).toBe("score this run\n");

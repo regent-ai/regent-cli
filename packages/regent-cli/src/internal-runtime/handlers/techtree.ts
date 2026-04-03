@@ -43,6 +43,13 @@ import type {
   BbhDraftPullParams,
   BbhDraftPullResponse,
   BbhDraftReadyParams,
+  BbhGenomeImproveParams,
+  BbhGenomeImproveResponse,
+  BbhGenomeInitParams,
+  BbhGenomeInitResponse,
+  BbhGenomeProposeParams,
+  BbhGenomeScoreParams,
+  BbhGenomeScoreResponse,
   BbhLeaderboardResponse,
   BbhReviewerApplyParams,
   BbhReviewerApplyResponse,
@@ -57,6 +64,8 @@ import type {
   BbhReviewSubmitResponse,
   BbhRunExecParams,
   BbhRunExecResponse,
+  BbhRunSolveParams,
+  BbhRunSolveResponse,
   BbhSubmitParams,
   BbhSyncParams,
   BbhRunSubmitResponse,
@@ -96,11 +105,19 @@ import {
   loadBbhDraftProposalRequest,
   loadBbhReviewSubmitRequest,
   buildBbhValidationRequest,
+  buildBbhGenomeSource,
   loadBbhRunSubmitRequest,
   materializeBbhDraftWorkspace,
   materializeBbhReviewWorkspace,
   materializeBbhWorkspace,
 } from "../workloads/bbh.js";
+import {
+  genomeProposalSummary,
+  improveBbhGenomeWorkspace,
+  initBbhGenomeWorkspace,
+  scoreBbhGenomeWorkspace,
+} from "../workloads/bbh-genome.js";
+import { solveBbhWorkspace } from "../workloads/bbh-solve.js";
 import {
   buildAutoskillBundlePayload,
   defaultSkillSlug,
@@ -1164,6 +1181,56 @@ export async function handleTechtreeV1BbhRunExec(
   return materializeBbhWorkspace(ctx.techtree, ctx.config, params, resolvedMetadata);
 }
 
+export async function handleTechtreeV1BbhRunSolve(
+  ctx: RuntimeContext,
+  params: BbhRunSolveParams,
+): Promise<BbhRunSolveResponse> {
+  const resolvedMetadata = ctx.agentRouter.resolveRunMetadata(params.metadata ?? null);
+  return solveBbhWorkspace(ctx.config, params, resolvedMetadata);
+}
+
+export async function handleTechtreeV1BbhGenomeInit(
+  ctx: RuntimeContext,
+  params: BbhGenomeInitParams,
+): Promise<BbhGenomeInitResponse> {
+  const resolvedMetadata = ctx.agentRouter.resolveRunMetadata(params.metadata ?? null);
+  return initBbhGenomeWorkspace(
+    params.workspace_path,
+    buildBbhGenomeSource(
+      {
+        genome: params.genome ?? null,
+      },
+      resolvedMetadata,
+    ),
+    {
+      budget: params.budget,
+      scope:
+        params.capsule_ids && params.capsule_ids.length > 0
+          ? { capsule_ids: params.capsule_ids }
+          : {
+              ...(params.split ? { split: params.split } : {}),
+              ...(params.sample_size ? { sample_size: params.sample_size } : {}),
+            },
+    },
+  );
+}
+
+export async function handleTechtreeV1BbhGenomeScore(
+  ctx: RuntimeContext,
+  params: BbhGenomeScoreParams,
+): Promise<BbhGenomeScoreResponse> {
+  const resolvedMetadata = ctx.agentRouter.resolveRunMetadata(params.metadata ?? null);
+  return scoreBbhGenomeWorkspace(ctx.techtree, ctx.config, params.workspace_path, resolvedMetadata);
+}
+
+export async function handleTechtreeV1BbhGenomeImprove(
+  ctx: RuntimeContext,
+  params: BbhGenomeImproveParams,
+): Promise<BbhGenomeImproveResponse> {
+  const resolvedMetadata = ctx.agentRouter.resolveRunMetadata(params.metadata ?? null);
+  return improveBbhGenomeWorkspace(ctx.techtree, ctx.config, params.workspace_path, resolvedMetadata);
+}
+
 export async function handleTechtreeV1BbhDraftInit(
   _ctx: RuntimeContext,
   params: { workspace_path: string },
@@ -1219,6 +1286,16 @@ export async function handleTechtreeV1BbhDraftPropose(
   return ctx.techtree.createBbhDraftProposal(
     params.capsule_id,
     await loadBbhDraftProposalRequest(params.workspace_path, params.summary),
+  );
+}
+
+export async function handleTechtreeV1BbhGenomePropose(
+  ctx: RuntimeContext,
+  params: BbhGenomeProposeParams,
+): Promise<BbhDraftProposalSubmitResponse> {
+  return ctx.techtree.createBbhDraftProposal(
+    params.capsule_id,
+    await loadBbhDraftProposalRequest(params.workspace_path, await genomeProposalSummary(params.workspace_path, params.summary)),
   );
 }
 

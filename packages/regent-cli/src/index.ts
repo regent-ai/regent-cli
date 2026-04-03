@@ -152,6 +152,12 @@ import {
   runTechtreeBbhDraftPull,
   runTechtreeBbhDraftReady,
 } from "./commands/techtree-v1-bbh-draft.js";
+import {
+  runTechtreeBbhGenomeImprove,
+  runTechtreeBbhGenomeInit,
+  runTechtreeBbhGenomePropose,
+  runTechtreeBbhGenomeScore,
+} from "./commands/techtree-v1-bbh-genome.js";
 import { runTechtreeCertificateVerify } from "./commands/techtree-v1-certificate.js";
 import {
   runTechtreeArtifactCompile,
@@ -159,6 +165,7 @@ import {
   runTechtreeArtifactPin,
   runTechtreeArtifactPublish,
   runTechtreeBbhRunExec,
+  runTechtreeBbhRunSolve,
   runTechtreeBbhSubmit,
   runTechtreeBbhValidate,
   runTechtreeFetch,
@@ -437,6 +444,11 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
         return 0;
       }
 
+      if (tree === "bbh" && action === "run" && verb === "solve") {
+        await runTechtreeBbhRunSolve(parsedArgs, configPath);
+        return 0;
+      }
+
       if (tree === "bbh" && action === "capsules" && verb === "list") {
         await runTechtreeBbhCapsulesList(parsedArgs, configPath);
         return 0;
@@ -499,6 +511,26 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
 
       if (tree === "bbh" && action === "draft" && verb === "ready") {
         await runTechtreeBbhDraftReady(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "genome" && verb === "init") {
+        await runTechtreeBbhGenomeInit(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "genome" && verb === "score") {
+        await runTechtreeBbhGenomeScore(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "genome" && verb === "improve") {
+        await runTechtreeBbhGenomeImprove(parsedArgs, configPath);
+        return 0;
+      }
+
+      if (tree === "bbh" && action === "genome" && verb === "propose") {
+        await runTechtreeBbhGenomePropose(parsedArgs, configPath);
         return 0;
       }
 

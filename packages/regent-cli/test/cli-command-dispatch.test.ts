@@ -631,6 +631,61 @@ const commandCases: CommandCase[] = [
     },
   },
   {
+    name: "techtree bbh genome init",
+    args: ["techtree", "bbh", "genome", "init", "draft-workspace", "--lane", "climb", "--sample-size", "3", "--budget", "6"],
+    expected: {
+      ok: true,
+      entrypoint: "bbh.genome.init",
+      workspace_path: path.resolve("draft-workspace"),
+      files: expect.arrayContaining(["genome/baseline.source.yaml", "genome/scoreboard.json"]),
+      baseline_genome_id: "gen_baseline",
+      evaluation_scope: {
+        split: "climb",
+        sample_size: 3,
+      },
+    },
+  },
+  {
+    name: "techtree bbh genome score",
+    args: ["techtree", "bbh", "genome", "score", "draft-workspace"],
+    expected: {
+      ok: true,
+      entrypoint: "bbh.genome.score",
+      workspace_path: path.resolve("draft-workspace"),
+      scoreboard: expect.objectContaining({
+        schema_version: "techtree.bbh.genome-scoreboard.v1",
+        best_score: 0.82,
+      }),
+    },
+  },
+  {
+    name: "techtree bbh genome improve",
+    args: ["techtree", "bbh", "genome", "improve", "draft-workspace"],
+    expected: {
+      ok: true,
+      entrypoint: "bbh.genome.improve",
+      workspace_path: path.resolve("draft-workspace"),
+      scoreboard: expect.objectContaining({
+        schema_version: "techtree.bbh.genome-scoreboard.v1",
+        best_score: 0.82,
+      }),
+      next_trial_id: "mutation_trial_test",
+      recommended_genome_id: "gen_candidate",
+    },
+  },
+  {
+    name: "techtree bbh genome propose",
+    args: ["techtree", "bbh", "genome", "propose", "capsule_draft_test", "draft-workspace"],
+    expected: {
+      data: {
+        proposal: expect.objectContaining({
+          proposal_id: "proposal_test",
+          capsule_id: "capsule_draft_test",
+        }),
+      },
+    },
+  },
+  {
     name: "techtree main run init",
     args: ["techtree", "main", "run", "init", "--artifact", "0x1234000000000000000000000000000000000000000000000000000000000000", "run-workspace"],
     expected: {
@@ -972,6 +1027,23 @@ const commandCases: CommandCase[] = [
         capsule_id: "capsule_test",
         lane: "benchmark",
       }),
+    },
+  },
+  {
+    name: "techtree bbh run solve",
+    args: ["techtree", "bbh", "run", "solve", "bbh-run", "--agent", "openclaw", "--timeout-seconds", "120"],
+    expected: {
+      ok: true,
+      entrypoint: "bbh.run.solve",
+      workspace_path: path.resolve("bbh-run"),
+      run_id: "run_test",
+      agent: "openclaw",
+      produced_files: expect.any(Array),
+      verdict_summary: {
+        decision: "support",
+        raw_score: 0.8,
+        normalized_score: 0.9,
+      },
     },
   },
   {

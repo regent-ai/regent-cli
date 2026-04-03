@@ -74,7 +74,12 @@ import {
   handleTechtreeV1BbhDraftPropose,
   handleTechtreeV1BbhDraftPull,
   handleTechtreeV1BbhDraftReady,
+  handleTechtreeV1BbhGenomeImprove,
+  handleTechtreeV1BbhGenomeInit,
+  handleTechtreeV1BbhGenomePropose,
+  handleTechtreeV1BbhGenomeScore,
   handleTechtreeV1BbhRunExec,
+  handleTechtreeV1BbhRunSolve,
   handleTechtreeV1BbhSubmit,
   handleTechtreeV1BbhValidate,
   handleTechtreeV1BbhLeaderboard,
@@ -532,6 +537,8 @@ export class RegentRuntime {
         return handleTechtreeV1Verify(ctx, params as Parameters<typeof handleTechtreeV1Verify>[1]);
       case "techtree.v1.bbh.run.exec":
         return handleTechtreeV1BbhRunExec(ctx, params as Parameters<typeof handleTechtreeV1BbhRunExec>[1]);
+      case "techtree.v1.bbh.run.solve":
+        return handleTechtreeV1BbhRunSolve(ctx, params as Parameters<typeof handleTechtreeV1BbhRunSolve>[1]);
       case "techtree.v1.bbh.capsules.list":
         return handleTechtreeV1BbhCapsulesList(
           ctx,
@@ -561,6 +568,14 @@ export class RegentRuntime {
         return handleTechtreeV1BbhDraftApply(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftApply>[1]);
       case "techtree.v1.bbh.draft.ready":
         return handleTechtreeV1BbhDraftReady(ctx, params as Parameters<typeof handleTechtreeV1BbhDraftReady>[1]);
+      case "techtree.v1.bbh.genome.init":
+        return handleTechtreeV1BbhGenomeInit(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomeInit>[1]);
+      case "techtree.v1.bbh.genome.score":
+        return handleTechtreeV1BbhGenomeScore(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomeScore>[1]);
+      case "techtree.v1.bbh.genome.improve":
+        return handleTechtreeV1BbhGenomeImprove(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomeImprove>[1]);
+      case "techtree.v1.bbh.genome.propose":
+        return handleTechtreeV1BbhGenomePropose(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomePropose>[1]);
       case "techtree.v1.bbh.submit":
         return handleTechtreeV1BbhSubmit(ctx, params as Parameters<typeof handleTechtreeV1BbhSubmit>[1]);
       case "techtree.v1.bbh.validate":

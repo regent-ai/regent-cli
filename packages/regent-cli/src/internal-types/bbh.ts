@@ -351,6 +351,7 @@ export interface BbhRunExecParams {
   capsule_id?: string | null;
   metadata?: import("./agent.js").RegentRunMetadata | null;
   genome?: Partial<BbhGenomeSource> | null;
+  genome_path?: string | null;
 }
 
 export interface BbhRunExecResponse {
@@ -383,6 +384,116 @@ export interface BbhGenomeSource {
   data_profile?: string | null;
   axes?: Record<string, unknown>;
   notes?: string | null;
+}
+
+export interface BbhGenomeImproverScope {
+  capsule_ids?: string[];
+  split?: "climb" | "benchmark" | "challenge";
+  sample_size?: number;
+}
+
+export interface BbhGenomeImproverProgram {
+  budget?: number;
+  evaluation_scope?: BbhGenomeImproverScope;
+  search?: {
+    model_id?: string[];
+    harness_type?: BbhHarnessType[];
+    harness_version?: string[];
+    prompt_pack_version?: string[];
+    skill_pack_version?: string[];
+    tool_profile?: string[];
+    runtime_image?: string[];
+    data_profile?: string[];
+    axes?: Array<Record<string, unknown>>;
+  };
+}
+
+export interface BbhGenomeRecommendationSource {
+  schema_version: "techtree.bbh.genome-recommendation.v1";
+  recommended_genome_id: string | null;
+  baseline_genome_id?: string | null;
+  improver_kind?: "autoagent-style";
+  evaluation_scope?: BbhGenomeImproverScope | null;
+  trial_count?: number;
+  best_score?: number | null;
+  notes?: string[];
+  genome_source?: BbhGenomeSource | null;
+}
+
+export interface BbhGenomeImproverTrial {
+  trial_id: string;
+  genome_id: string;
+  status: "pending" | "partial" | "completed";
+  kind: "baseline" | "candidate" | "mutation";
+  workspace_path: string;
+  completed_runs: number;
+  total_runs: number;
+  mean_normalized_score: number | null;
+}
+
+export interface BbhGenomeImproverScoreboard {
+  schema_version: "techtree.bbh.genome-scoreboard.v1";
+  budget: number;
+  evaluation_scope: BbhGenomeImproverScope;
+  baseline_genome_id: string;
+  candidate_genome_id: string;
+  recommended_genome_id: string | null;
+  best_score: number | null;
+  completed_trials: number;
+  pending_trials: number;
+  trials: BbhGenomeImproverTrial[];
+  last_updated_at: string;
+}
+
+export interface BbhGenomeInitParams {
+  workspace_path: string;
+  budget?: number;
+  split?: "climb" | "benchmark" | "challenge";
+  sample_size?: number;
+  capsule_ids?: string[] | null;
+  metadata?: import("./agent.js").RegentRunMetadata | null;
+  genome?: Partial<BbhGenomeSource> | null;
+}
+
+export interface BbhGenomeScoreParams {
+  workspace_path: string;
+  metadata?: import("./agent.js").RegentRunMetadata | null;
+}
+
+export interface BbhGenomeImproveParams {
+  workspace_path: string;
+  metadata?: import("./agent.js").RegentRunMetadata | null;
+}
+
+export interface BbhGenomeProposeParams {
+  workspace_path: string;
+  capsule_id: string;
+  summary?: string | null;
+}
+
+export interface BbhGenomeInitResponse {
+  ok: true;
+  entrypoint: "bbh.genome.init";
+  workspace_path: string;
+  files: string[];
+  baseline_genome_id: string;
+  evaluation_scope: BbhGenomeImproverScope;
+}
+
+export interface BbhGenomeScoreResponse {
+  ok: true;
+  entrypoint: "bbh.genome.score";
+  workspace_path: string;
+  scoreboard: BbhGenomeImproverScoreboard;
+}
+
+export interface BbhGenomeImproveResponse {
+  ok: true;
+  entrypoint: "bbh.genome.improve";
+  workspace_path: string;
+  scoreboard: BbhGenomeImproverScoreboard;
+  next_trial_id: string | null;
+  recommended_genome_id: string | null;
 }
 
 export interface BbhRunSource {
@@ -485,6 +596,29 @@ export interface BbhRunSubmitRequest {
 
 export interface BbhSubmitParams {
   workspace_path: string;
+}
+
+export interface BbhRunSolveParams {
+  workspace_path: string;
+  agent?: "hermes" | "openclaw" | null;
+  timeout_seconds?: number | null;
+  metadata?: import("./agent.js").RegentRunMetadata | null;
+}
+
+export interface BbhRunSolveVerdictSummary {
+  decision: string;
+  raw_score: number | null;
+  normalized_score: number | null;
+}
+
+export interface BbhRunSolveResponse {
+  ok: true;
+  entrypoint: "bbh.run.solve";
+  workspace_path: string;
+  run_id: string;
+  agent: "hermes" | "openclaw";
+  produced_files: string[];
+  verdict_summary: BbhRunSolveVerdictSummary;
 }
 
 export interface BbhRunSubmitResponse {

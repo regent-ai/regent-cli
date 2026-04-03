@@ -249,6 +249,22 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
       };
     }
 
+    if (method === "techtree.v1.bbh.run.solve") {
+      return {
+        ok: true,
+        entrypoint: "bbh.run.solve",
+        workspace_path: workspacePath,
+        run_id: "run_test",
+        agent: String(payload.agent ?? "hermes"),
+        produced_files: ["analysis.py", "final_answer.md", "outputs/verdict.json", "outputs/run.log"],
+        verdict_summary: {
+          decision: "support",
+          raw_score: 0.8,
+          normalized_score: 0.9,
+        },
+      };
+    }
+
     if (method === "techtree.v1.bbh.capsules.list") {
       const split = (payload.split as string | undefined) ?? "climb";
       return {
@@ -406,6 +422,87 @@ const defaultDaemonResponse = async (method: string, params?: unknown) => {
             status: "open",
           },
         ],
+      };
+    }
+
+    if (method === "techtree.v1.bbh.genome.init") {
+      return {
+        ok: true,
+        entrypoint: "bbh.genome.init",
+        workspace_path: workspacePath,
+        files: [
+          "genome/baseline.source.yaml",
+          "genome/candidate.source.yaml",
+          "genome/recommended.source.yaml",
+          "genome/program.md",
+          "genome/notes.md",
+          "genome/experiments.jsonl",
+          "genome/scoreboard.json",
+        ],
+        baseline_genome_id: "gen_baseline",
+        evaluation_scope: {
+          split: "climb",
+          sample_size: 3,
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.genome.score") {
+      return {
+        ok: true,
+        entrypoint: "bbh.genome.score",
+        workspace_path: workspacePath,
+        scoreboard: {
+          schema_version: "techtree.bbh.genome-scoreboard.v1",
+          budget: 6,
+          evaluation_scope: { split: "climb", sample_size: 3 },
+          baseline_genome_id: "gen_baseline",
+          candidate_genome_id: "gen_candidate",
+          recommended_genome_id: "gen_candidate",
+          best_score: 0.82,
+          completed_trials: 1,
+          pending_trials: 0,
+          trials: [],
+          last_updated_at: "2026-03-20T00:00:00Z",
+        },
+      };
+    }
+
+    if (method === "techtree.v1.bbh.genome.improve") {
+      return {
+        ok: true,
+        entrypoint: "bbh.genome.improve",
+        workspace_path: workspacePath,
+        scoreboard: {
+          schema_version: "techtree.bbh.genome-scoreboard.v1",
+          budget: 6,
+          evaluation_scope: { split: "climb", sample_size: 3 },
+          baseline_genome_id: "gen_baseline",
+          candidate_genome_id: "gen_candidate",
+          recommended_genome_id: "gen_candidate",
+          best_score: 0.82,
+          completed_trials: 1,
+          pending_trials: 1,
+          trials: [],
+          last_updated_at: "2026-03-20T00:00:00Z",
+        },
+        next_trial_id: "mutation_trial_test",
+        recommended_genome_id: "gen_candidate",
+      };
+    }
+
+    if (method === "techtree.v1.bbh.genome.propose") {
+      return {
+        data: {
+          proposal: {
+            proposal_id: "proposal_test",
+            capsule_id: String(payload.capsule_id ?? "capsule_draft_test"),
+            proposer_wallet_address: TEST_WALLET,
+            summary: String(payload.summary ?? "summary"),
+            workspace_manifest_hash: `sha256:${"66".repeat(32)}`,
+            status: "open",
+          },
+        },
       };
     }
 
