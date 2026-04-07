@@ -23,6 +23,15 @@ The separate company-token rewards rail is:
 regent regent-staking ...
 ```
 
+The product rules for this CLI surface are:
+
+- recognized subject revenue is Sepolia USDC only
+- that revenue only counts once it reaches the subject splitter
+- launch operators should use the CLI-first flow
+- launch participants should use the browser for auctions, claims, staking, and subject rewards
+- ingress is a receive-and-sweep wrapper, not a second accounting system
+- the Regent-side fee lane is a treasury payout path, not part of the active Sepolia launch rewards path
+
 ## Environment
 
 - `AUTOLAUNCH_BASE_URL`
