@@ -6,9 +6,91 @@ info:
     Source-of-truth contract for shared Regent service rails that are not product-owned.
     This file owns Regent staking plus shared operator reporting rails.
 tags:
+  - name: auth
   - name: regent-staking
   - name: reports
 paths:
+  /v1/agent/siwa/nonce:
+    post:
+      operationId: createSharedSiwaNonce
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiwaNonceRequest"
+      responses:
+        "200":
+          description: Nonce issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiwaNonceResponse"
+        "400":
+          description: Invalid nonce request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/agent/siwa/verify:
+    post:
+      operationId: verifySharedSiwaSession
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiwaVerifyRequest"
+      responses:
+        "200":
+          description: Session verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiwaVerifyResponse"
+        "400":
+          description: Invalid SIWA verification request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Signature or nonce validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/agent/siwa/http-verify:
+    post:
+      operationId: verifySharedSiwaHttpEnvelope
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiwaHttpVerifyRequest"
+      responses:
+        "200":
+          description: Protected request envelope verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiwaHttpVerifyResponse"
+        "400":
+          description: Invalid envelope request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Envelope verification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /api/regent/staking:
     get:
       operationId: getRegentStakingOverview
@@ -127,6 +209,126 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PreparedActionResponse"
+  /v1/agent/regent/staking:
+    get:
+      operationId: getAgentRegentStakingOverview
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      responses:
+        "200":
+          description: Staking overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegentStakingOverviewResponse"
+  /v1/agent/regent/staking/account/{address}:
+    get:
+      operationId: getAgentRegentStakingAccount
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Address"
+      responses:
+        "200":
+          description: Account staking state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegentStakingAccountResponse"
+  /v1/agent/regent/staking/stake:
+    post:
+      operationId: stakeAgentRegent
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountRequest"
+      responses:
+        "200":
+          description: Stake prepared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparedActionResponse"
+  /v1/agent/regent/staking/unstake:
+    post:
+      operationId: unstakeAgentRegent
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountRequest"
+      responses:
+        "200":
+          description: Unstake prepared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparedActionResponse"
+  /v1/agent/regent/staking/claim-usdc:
+    post:
+      operationId: claimAgentRegentStakingUsdc
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Claim prepared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparedActionResponse"
+  /v1/agent/regent/staking/claim-regent:
+    post:
+      operationId: claimAgentRegentStakingRegent
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Regent claim prepared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparedActionResponse"
+  /v1/agent/regent/staking/claim-and-restake-regent:
+    post:
+      operationId: claimAndRestakeAgentRegentStakingRegent
+      tags: [regent-staking]
+      security: [{ AgentSiwaHeaders: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Regent claim and restake prepared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparedActionResponse"
   /api/regent/staking/deposit-usdc/prepare:
     post:
       operationId: prepareRegentStakingDepositUsdc
@@ -161,10 +363,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PreparedActionResponse"
-  /api/bug-report:
+  /v1/agent/bug-report:
     post:
-      operationId: createBugReport
+      operationId: createAgentBugReport
       tags: [reports]
+      security: [{ AgentSiwaHeaders: [] }]
       requestBody:
         required: true
         content:
@@ -184,10 +387,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
-  /api/security-report:
+  /v1/agent/security-report:
     post:
-      operationId: createSecurityReport
+      operationId: createAgentSecurityReport
       tags: [reports]
+      security: [{ AgentSiwaHeaders: [] }]
       requestBody:
         required: true
         content:
@@ -209,6 +413,13 @@ paths:
                 $ref: "#/components/schemas/ErrorEnvelope"
 components:
   securitySchemes:
+    AgentSiwaHeaders:
+      type: apiKey
+      in: header
+      name: x-regent-agent-address
+      description: >
+        Placeholder for the signed SIWA header bundle used by authenticated agent requests.
+        The concrete header set is carried by the CLI request signer.
     PrivySessionCookie:
       type: apiKey
       in: cookie
@@ -222,6 +433,159 @@ components:
       pattern: "^0x[a-fA-F0-9]*$"
     DecimalString:
       type: string
+    SiwaNonceRequest:
+      type: object
+      required: [wallet_address, chain_id, audience]
+      properties:
+        wallet_address:
+          $ref: "#/components/schemas/Address"
+        chain_id:
+          type: integer
+        audience:
+          type: string
+      additionalProperties: false
+    SiwaNonceResponse:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          enum: [nonce_issued]
+        data:
+          type: object
+          required: [nonce, walletAddress, chainId, expiresAt]
+          properties:
+            nonce:
+              type: string
+            walletAddress:
+              $ref: "#/components/schemas/Address"
+            chainId:
+              type: integer
+            expiresAt:
+              type: string
+              format: date-time
+          additionalProperties: false
+        meta:
+          $ref: "#/components/schemas/LooseObject"
+      additionalProperties: false
+    SiwaVerifyRequest:
+      type: object
+      required: [wallet_address, chain_id, nonce, message, signature]
+      properties:
+        wallet_address:
+          $ref: "#/components/schemas/Address"
+        chain_id:
+          type: integer
+        nonce:
+          type: string
+        message:
+          type: string
+        signature:
+          $ref: "#/components/schemas/HexData"
+        registry_address:
+          $ref: "#/components/schemas/Address"
+        token_id:
+          type: string
+      additionalProperties: false
+    SiwaVerifyResponse:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          enum: [siwa_verified]
+        data:
+          type: object
+          required: [verified, walletAddress, chainId, nonce, keyId, signatureScheme, receipt, receiptExpiresAt]
+          properties:
+            verified:
+              type: boolean
+              enum: [true]
+            walletAddress:
+              $ref: "#/components/schemas/Address"
+            chainId:
+              type: integer
+            nonce:
+              type: string
+            keyId:
+              type: string
+            signatureScheme:
+              type: string
+              enum: [evm_personal_sign]
+            receipt:
+              type: string
+            receiptExpiresAt:
+              type: string
+              format: date-time
+          additionalProperties: false
+        meta:
+          $ref: "#/components/schemas/LooseObject"
+      additionalProperties: false
+    SiwaHttpVerifyRequest:
+      type: object
+      required: [method, path, headers]
+      properties:
+        method:
+          type: string
+        path:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        raw_body:
+          type: string
+        body_digest:
+          type: string
+      additionalProperties: false
+    SiwaHttpVerifyResponse:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          enum: [http_envelope_valid]
+        data:
+          type: object
+          required: [verified, walletAddress, chainId, keyId, receiptExpiresAt, requiredHeaders, requiredCoveredComponents, coveredComponents]
+          properties:
+            verified:
+              type: boolean
+              enum: [true]
+            walletAddress:
+              $ref: "#/components/schemas/Address"
+            chainId:
+              type: integer
+            keyId:
+              type: string
+            receiptExpiresAt:
+              type: string
+              format: date-time
+            requiredHeaders:
+              type: array
+              items:
+                type: string
+            requiredCoveredComponents:
+              type: array
+              items:
+                type: string
+            coveredComponents:
+              type: array
+              items:
+                type: string
+          additionalProperties: false
+        meta:
+          $ref: "#/components/schemas/LooseObject"
+      additionalProperties: false
     ReportStatus:
       type: string
       enum: [pending, fixed, won't fix, duplicate]

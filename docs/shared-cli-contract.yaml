@@ -1,9 +1,20 @@
 version: 1
 product: shared-services
 command_groups:
+  - name: auth-siwa
+    interface: http
+    auth_mode: agent-siwa
+    output_envelope: loose-object
+    commands:
+      - auth siwa login
+      - auth siwa status
+      - auth siwa logout
+    path_templates:
+      - /v1/agent/siwa/nonce
+      - /v1/agent/siwa/verify
   - name: regent-staking
     interface: http
-    auth_mode: mixed
+    auth_mode: agent-siwa
     output_envelope: regent-staking-envelopes
     commands:
       - regent-staking show
@@ -14,20 +25,59 @@ command_groups:
       - regent-staking claim-regent
       - regent-staking claim-and-restake-regent
     path_templates:
-      - /api/regent/staking
-      - /api/regent/staking/account/{address}
-      - /api/regent/staking/stake
-      - /api/regent/staking/unstake
-      - /api/regent/staking/claim-usdc
-      - /api/regent/staking/claim-regent
-      - /api/regent/staking/claim-and-restake-regent
+      - /v1/agent/regent/staking
+      - /v1/agent/regent/staking/account/{address}
+      - /v1/agent/regent/staking/stake
+      - /v1/agent/regent/staking/unstake
+      - /v1/agent/regent/staking/claim-usdc
+      - /v1/agent/regent/staking/claim-regent
+      - /v1/agent/regent/staking/claim-and-restake-regent
   - name: reports
     interface: http
-    auth_mode: none
+    auth_mode: agent-siwa
     output_envelope: report-envelopes
     commands:
       - bug
       - security-report
     path_templates:
-      - /api/bug-report
-      - /api/security-report
+      - /v1/agent/bug-report
+      - /v1/agent/security-report
+  - name: xmtp
+    interface: runtime
+    auth_mode: none
+    output_envelope: loose-object
+    commands:
+      - xmtp init
+      - xmtp info
+      - xmtp status
+      - xmtp resolve
+      - xmtp owner add
+      - xmtp owner list
+      - xmtp owner remove
+      - xmtp trusted add
+      - xmtp trusted list
+      - xmtp trusted remove
+      - xmtp policy init
+      - xmtp policy show
+      - xmtp policy validate
+      - xmtp policy edit
+      - xmtp doctor
+      - xmtp test dm
+      - xmtp group create
+      - xmtp group add-member
+      - xmtp group remove-member
+      - xmtp group list
+      - xmtp group members
+      - xmtp group permissions
+      - xmtp group update-permission
+      - xmtp group admins
+      - xmtp group super-admins
+      - xmtp group add-admin
+      - xmtp group remove-admin
+      - xmtp group add-super-admin
+      - xmtp group remove-super-admin
+      - xmtp revoke-other-installations
+      - xmtp rotate-db-key
+      - xmtp rotate-wallet
+    rpc_methods:
+      - xmtp.status

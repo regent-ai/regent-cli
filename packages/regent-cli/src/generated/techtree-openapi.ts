@@ -20,38 +20,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/agent/siwa/nonce": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["techtreeSiwaNonce"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/siwa/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["techtreeSiwaVerify"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/platform/explorer/tiles": {
         parameters: {
             query?: never;
@@ -68,7 +36,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/platform/auth/privy/session": {
+    "/api/auth/privy/csrf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["techtreePrivySessionCsrf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/privy/session": {
         parameters: {
             query?: never;
             header?: never;
@@ -77,8 +61,41 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createPlatformPrivySession"];
-        delete: operations["deletePlatformPrivySession"];
+        post: operations["createTechtreePrivySession"];
+        delete: operations["deleteTechtreePrivySession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/privy/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTechtreePrivyProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/privy/xmtp/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Complete XMTP setup for the wallet already opened by the current Privy session. */
+        post: operations["completeTechtreePrivyXmtpIdentity"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -781,6 +798,7 @@ export interface paths {
         };
         get: operations["listWebappChatboxMessages"];
         put?: never;
+        /** @description Create a public-room message after the signed-in person has completed secure room setup. */
         post: operations["createWebappChatboxMessage"];
         delete?: never;
         options?: never;
@@ -829,6 +847,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description React in the public room after the signed-in person has completed secure room setup. */
         post: operations["reactToWebappChatboxMessage"];
         delete?: never;
         options?: never;
@@ -1617,6 +1636,44 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        PrivySessionCsrf: {
+            /** @enum {boolean} */
+            ok: true;
+            csrf_token: string;
+        };
+        PrivySessionRequest: {
+            wallet_address: components["schemas"]["Address"];
+            display_name?: string;
+        };
+        PlatformPrivyXmtpCompleteRequest: {
+            wallet_address: components["schemas"]["Address"];
+            client_id: string;
+            signature_request_id: string;
+            signature: string;
+        };
+        PlatformPrivyHuman: {
+            id: number;
+            privy_user_id: string;
+            wallet_address?: components["schemas"]["Address"] | null;
+            display_name?: string | null;
+            role: string;
+            xmtp_inbox_id?: string | null;
+        };
+        PlatformPrivyXmtpState: {
+            /** @enum {string} */
+            status: "ready" | "signature_required";
+            inbox_id?: string | null;
+            wallet_address?: components["schemas"]["Address"] | null;
+            client_id?: string | null;
+            signature_request_id?: string | null;
+            signature_text?: string | null;
+        };
+        PrivySessionResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            human: components["schemas"]["PlatformPrivyHuman"];
+            xmtp: components["schemas"]["PlatformPrivyXmtpState"] | null;
+        };
         TreeNode: {
             id?: number;
             seed?: string;
@@ -1671,33 +1728,67 @@ export interface components {
             [key: string]: unknown;
         };
         SiwaNonceRequest: {
-            wallet_address?: components["schemas"]["Address"];
-            chain_id?: number;
-            registry_address?: components["schemas"]["Address"];
-            token_id?: string;
+            wallet_address: components["schemas"]["Address"];
+            chain_id: number;
             audience?: string;
-        } & {
-            [key: string]: unknown;
         };
         SiwaNonceResponse: {
-            [key: string]: unknown;
+            /** @enum {boolean} */
+            ok: true;
+            /** @enum {string} */
+            code: "nonce_issued";
+            data: {
+                nonce: string;
+                walletAddress: components["schemas"]["Address"];
+                chainId: number;
+                /** Format: date-time */
+                expiresAt: string;
+            };
+            meta?: {
+                [key: string]: unknown;
+            };
         };
         SiwaVerifyRequest: {
-            [key: string]: unknown;
+            wallet_address: components["schemas"]["Address"];
+            chain_id: number;
+            nonce: string;
+            message: string;
+            signature: string;
+            registry_address?: components["schemas"]["Address"];
+            token_id?: string;
         };
         SiwaVerifyResponse: {
-            [key: string]: unknown;
+            /** @enum {boolean} */
+            ok: true;
+            /** @enum {string} */
+            code: "siwa_verified";
+            data: {
+                /** @enum {boolean} */
+                verified: true;
+                walletAddress: components["schemas"]["Address"];
+                chainId: number;
+                nonce: string;
+                keyId: string;
+                /** @enum {string} */
+                signatureScheme: "evm_personal_sign";
+                receipt: string;
+                /** Format: date-time */
+                receiptExpiresAt: string;
+            };
+            meta?: {
+                [key: string]: unknown;
+            };
         };
         ChatboxMessage: {
             id?: number;
-            /** @enum {string} */
-            room?: "webapp" | "agent";
+            room_id?: string;
             body?: string;
         } & {
             [key: string]: unknown;
         };
         ChatboxListResponse: {
             data: components["schemas"]["ChatboxMessage"][];
+            next_cursor: number | null;
         } & {
             [key: string]: unknown;
         };
@@ -1748,54 +1839,6 @@ export interface operations {
             };
         };
     };
-    techtreeSiwaNonce: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SiwaNonceRequest"];
-            };
-        };
-        responses: {
-            /** @description Nonce issued */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiwaNonceResponse"];
-                };
-            };
-        };
-    };
-    techtreeSiwaVerify: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SiwaVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Verification result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiwaVerifyResponse"];
-                };
-            };
-        };
-    };
     listPlatformExplorerTiles: {
         parameters: {
             query?: never;
@@ -1816,16 +1859,36 @@ export interface operations {
             };
         };
     };
-    createPlatformPrivySession: {
+    techtreePrivySessionCsrf: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody?: never;
+        responses: {
+            /** @description CSRF token for session-backed browser writes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivySessionCsrf"];
+                };
+            };
+        };
+    };
+    createTechtreePrivySession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["PrivySessionRequest"];
             };
         };
         responses: {
@@ -1835,12 +1898,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["PrivySessionResponse"];
                 };
             };
         };
     };
-    deletePlatformPrivySession: {
+    deleteTechtreePrivySession: {
         parameters: {
             query?: never;
             header?: never;
@@ -1856,6 +1919,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OkEnvelope"];
+                };
+            };
+        };
+    };
+    getTechtreePrivyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current browser session profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivySessionResponse"];
+                };
+            };
+        };
+    };
+    completeTechtreePrivyXmtpIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformPrivyXmtpCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Platform XMTP identity ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivySessionResponse"];
                 };
             };
         };

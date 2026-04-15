@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/v1/agent/siwa/nonce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createSharedSiwaNonce"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/siwa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verifySharedSiwaSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/siwa/http-verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verifySharedSiwaHttpEnvelope"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/regent/staking": {
         parameters: {
             query?: never;
@@ -116,6 +164,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/agent/regent/staking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAgentRegentStakingOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/account/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAgentRegentStakingAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/stake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stakeAgentRegent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/unstake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["unstakeAgentRegent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/claim-usdc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claimAgentRegentStakingUsdc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/claim-regent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claimAgentRegentStakingRegent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agent/regent/staking/claim-and-restake-regent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claimAndRestakeAgentRegentStakingRegent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/regent/staking/deposit-usdc/prepare": {
         parameters: {
             query?: never;
@@ -148,7 +308,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/bug-report": {
+    "/v1/agent/bug-report": {
         parameters: {
             query?: never;
             header?: never;
@@ -157,14 +317,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createBugReport"];
+        post: operations["createAgentBugReport"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/security-report": {
+    "/v1/agent/security-report": {
         parameters: {
             query?: never;
             header?: never;
@@ -173,7 +333,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createSecurityReport"];
+        post: operations["createAgentSecurityReport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -187,6 +347,82 @@ export interface components {
         Address: string;
         HexData: string;
         DecimalString: string;
+        SiwaNonceRequest: {
+            wallet_address: components["schemas"]["Address"];
+            chain_id: number;
+            audience: string;
+        };
+        SiwaNonceResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            /** @enum {string} */
+            code: "nonce_issued";
+            data: {
+                nonce: string;
+                walletAddress: components["schemas"]["Address"];
+                chainId: number;
+                /** Format: date-time */
+                expiresAt: string;
+            };
+            meta?: components["schemas"]["LooseObject"];
+        };
+        SiwaVerifyRequest: {
+            wallet_address: components["schemas"]["Address"];
+            chain_id: number;
+            nonce: string;
+            message: string;
+            signature: components["schemas"]["HexData"];
+            registry_address?: components["schemas"]["Address"];
+            token_id?: string;
+        };
+        SiwaVerifyResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            /** @enum {string} */
+            code: "siwa_verified";
+            data: {
+                /** @enum {boolean} */
+                verified: true;
+                walletAddress: components["schemas"]["Address"];
+                chainId: number;
+                nonce: string;
+                keyId: string;
+                /** @enum {string} */
+                signatureScheme: "evm_personal_sign";
+                receipt: string;
+                /** Format: date-time */
+                receiptExpiresAt: string;
+            };
+            meta?: components["schemas"]["LooseObject"];
+        };
+        SiwaHttpVerifyRequest: {
+            method: string;
+            path: string;
+            headers: {
+                [key: string]: string;
+            };
+            raw_body?: string;
+            body_digest?: string;
+        };
+        SiwaHttpVerifyResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            /** @enum {string} */
+            code: "http_envelope_valid";
+            data: {
+                /** @enum {boolean} */
+                verified: true;
+                walletAddress: components["schemas"]["Address"];
+                chainId: number;
+                keyId: string;
+                /** Format: date-time */
+                receiptExpiresAt: string;
+                requiredHeaders: string[];
+                requiredCoveredComponents: string[];
+                coveredComponents: string[];
+            };
+            meta?: components["schemas"]["LooseObject"];
+        };
         /** @enum {string} */
         ReportStatus: "pending" | "fixed" | "won't fix" | "duplicate";
         ReportingAgent: {
@@ -341,6 +577,123 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    createSharedSiwaNonce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiwaNonceRequest"];
+            };
+        };
+        responses: {
+            /** @description Nonce issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiwaNonceResponse"];
+                };
+            };
+            /** @description Invalid nonce request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    verifySharedSiwaSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiwaVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Session verified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiwaVerifyResponse"];
+                };
+            };
+            /** @description Invalid SIWA verification request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Signature or nonce validation failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    verifySharedSiwaHttpEnvelope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiwaHttpVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Protected request envelope verified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiwaHttpVerifyResponse"];
+                };
+            };
+            /** @description Invalid envelope request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Envelope verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     getRegentStakingOverview: {
         parameters: {
             query?: never;
@@ -503,6 +856,168 @@ export interface operations {
             };
         };
     };
+    getAgentRegentStakingOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staking overview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegentStakingOverviewResponse"];
+                };
+            };
+        };
+    };
+    getAgentRegentStakingAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                address: components["schemas"]["Address"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account staking state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegentStakingAccountResponse"];
+                };
+            };
+        };
+    };
+    stakeAgentRegent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmountRequest"];
+            };
+        };
+        responses: {
+            /** @description Stake prepared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedActionResponse"];
+                };
+            };
+        };
+    };
+    unstakeAgentRegent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmountRequest"];
+            };
+        };
+        responses: {
+            /** @description Unstake prepared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedActionResponse"];
+                };
+            };
+        };
+    };
+    claimAgentRegentStakingUsdc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Claim prepared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedActionResponse"];
+                };
+            };
+        };
+    };
+    claimAgentRegentStakingRegent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Regent claim prepared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedActionResponse"];
+                };
+            };
+        };
+    };
+    claimAndRestakeAgentRegentStakingRegent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Regent claim and restake prepared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedActionResponse"];
+                };
+            };
+        };
+    };
     prepareRegentStakingDepositUsdc: {
         parameters: {
             query?: never;
@@ -551,7 +1066,7 @@ export interface operations {
             };
         };
     };
-    createBugReport: {
+    createAgentBugReport: {
         parameters: {
             query?: never;
             header?: never;
@@ -584,7 +1099,7 @@ export interface operations {
             };
         };
     };
-    createSecurityReport: {
+    createAgentSecurityReport: {
         parameters: {
             query?: never;
             header?: never;

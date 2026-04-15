@@ -15,13 +15,6 @@ export interface ApiCommandGroup {
 
 export const techtreeApiCommandGroups = [
   {
-    commands: ["auth siwa login", "auth siwa status", "auth siwa logout"],
-    owner: "techtree",
-    status: "current",
-    note: "Cross-cutting auth flow, but Techtree owns the first canonical SIWA contract cut.",
-    pathTemplates: ["/v1/agent/siwa/nonce", "/v1/agent/siwa/verify"],
-  },
-  {
     commands: ["techtree activity", "techtree search", "techtree nodes list"],
     owner: "techtree",
     status: "current",
@@ -236,6 +229,9 @@ export const autolaunchApiCommandGroups = [
       "autolaunch jobs watch",
       "autolaunch vesting status",
       "autolaunch vesting release",
+      "autolaunch vesting propose-beneficiary-rotation",
+      "autolaunch vesting cancel-beneficiary-rotation",
+      "autolaunch vesting execute-beneficiary-rotation",
     ],
     owner: "autolaunch",
     status: "current-hybrid",
@@ -331,11 +327,13 @@ export const autolaunchApiCommandGroups = [
       "autolaunch splitter show",
       "autolaunch splitter set-paused",
       "autolaunch splitter set-label",
-      "autolaunch splitter set-treasury-recipient",
+      "autolaunch splitter propose-treasury-recipient-rotation",
+      "autolaunch splitter cancel-treasury-recipient-rotation",
+      "autolaunch splitter execute-treasury-recipient-rotation",
       "autolaunch splitter set-protocol-recipient",
       "autolaunch splitter set-protocol-skim-bps",
-      "autolaunch splitter withdraw-treasury-residual",
-      "autolaunch splitter withdraw-protocol-reserve",
+      "autolaunch splitter sweep-treasury-residual",
+      "autolaunch splitter sweep-protocol-reserve",
       "autolaunch splitter reassign-dust",
       "autolaunch ingress create",
       "autolaunch ingress set-default",
@@ -344,6 +342,7 @@ export const autolaunchApiCommandGroups = [
       "autolaunch registry show",
       "autolaunch registry set-subject-manager",
       "autolaunch registry link-identity",
+      "autolaunch registry rotate-safe",
       "autolaunch factory revenue-share set-authorized-creator",
       "autolaunch factory revenue-ingress set-authorized-creator",
     ],
@@ -364,6 +363,12 @@ export const autolaunchApiCommandGroups = [
 
 export const sharedServicesApiCommandGroups = [
   {
+    commands: ["auth siwa login", "auth siwa status", "auth siwa logout"],
+    owner: "shared-services",
+    status: "current",
+    pathTemplates: ["/v1/agent/siwa/nonce", "/v1/agent/siwa/verify"],
+  },
+  {
     commands: [
       "regent-staking show",
       "regent-staking account",
@@ -376,20 +381,20 @@ export const sharedServicesApiCommandGroups = [
     owner: "shared-services",
     status: "current",
     pathTemplates: [
-      "/api/regent/staking",
-      "/api/regent/staking/account/{address}",
-      "/api/regent/staking/stake",
-      "/api/regent/staking/unstake",
-      "/api/regent/staking/claim-usdc",
-      "/api/regent/staking/claim-regent",
-      "/api/regent/staking/claim-and-restake-regent",
+      "/v1/agent/regent/staking",
+      "/v1/agent/regent/staking/account/{address}",
+      "/v1/agent/regent/staking/stake",
+      "/v1/agent/regent/staking/unstake",
+      "/v1/agent/regent/staking/claim-usdc",
+      "/v1/agent/regent/staking/claim-regent",
+      "/v1/agent/regent/staking/claim-and-restake-regent",
     ],
   },
   {
     commands: ["bug", "security-report"],
     owner: "shared-services",
     status: "current",
-    pathTemplates: ["/api/bug-report", "/api/security-report"],
+    pathTemplates: ["/v1/agent/bug-report", "/v1/agent/security-report"],
   },
 ] as const satisfies readonly (Omit<ApiCommandGroup, "pathTemplates"> & {
   readonly pathTemplates: readonly (keyof RegentServicePaths)[];
