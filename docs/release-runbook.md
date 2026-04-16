@@ -1,6 +1,6 @@
 # Regent CLI Release Runbook
 
-This is the package release runbook for `@regentlabs/cli`.
+This is the package release runbook for `@regentslabs/cli`.
 
 It is not a service deployment guide. The CLI is a published npm package, so the operator job here is to prove the package is shippable, publish it cleanly, and make sure the shipped tarball works on a clean machine.
 
@@ -162,7 +162,7 @@ The practical flow is:
 4. create and push a matching tag like `v0.2.0`
 5. the publish workflow reruns the release gate
 6. the publish workflow rechecks the tarball contents
-7. the publish workflow publishes `@regentlabs/cli`
+7. the publish workflow publishes `@regentslabs/cli`
 8. the publish workflow creates a GitHub release with generated notes
 
 The publish job should also prove that it is publishing the same package shape that passed `test:pack-smoke`.
@@ -179,7 +179,7 @@ The workflows alone are not enough. Two things still need to be configured outsi
 1. Branch protection on `main`
    Require the CI workflow to pass before merge.
 2. npm trusted publishing
-   Configure `@regentlabs/cli` on npm to trust this repository and the publish workflow file.
+   Configure `@regentslabs/cli` on npm to trust this repository and the publish workflow file.
 
 The publish workflow is written for npm trusted publishing, not a long-lived npm token.
 

@@ -6,7 +6,7 @@ usage() {
   cat <<'EOF'
 Usage: bash scripts/release-cli.sh [--dry-run] [--no-push]
 
-Runs the Regent CLI release gate from a clean worktree, bumps the @regentlabs/cli minor
+Runs the Regent CLI release gate from a clean worktree, bumps the @regentslabs/cli minor
 version if the checks pass, stages only the package release files it owns, creates a
 Codex-style commit message, commits, and pushes.
 

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@regentlabs/cli` should be recorded here.
+All notable changes to `@regentslabs/cli` should be recorded here.
 
 ## Unreleased
 

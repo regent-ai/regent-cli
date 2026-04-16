@@ -3,19 +3,19 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @regentlabs/cli build",
-    "typecheck": "pnpm --filter @regentlabs/cli typecheck",
-    "lint": "pnpm --filter @regentlabs/cli lint",
-    "test": "pnpm --filter @regentlabs/cli test",
+    "build": "pnpm --filter @regentslabs/cli build",
+    "typecheck": "pnpm --filter @regentslabs/cli typecheck",
+    "lint": "pnpm --filter @regentslabs/cli lint",
+    "test": "pnpm --filter @regentslabs/cli test",
     "generate:openapi": "node scripts/generate-openapi-types.mjs",
     "check:openapi": "pnpm generate:openapi && git diff --exit-code -- packages/regent-cli/src/generated",
     "check:cli-contract": "node scripts/check-cli-contract.mjs",
     "check:pack-cli-contents": "node scripts/check-packed-cli-package.mjs",
-    "test:integration": "pnpm --filter @regentlabs/cli --if-present test:integration",
+    "test:integration": "pnpm --filter @regentslabs/cli --if-present test:integration",
     "pack:cli": "bash -lc 'mkdir -p .packed && cd packages/regent-cli && pnpm pack --pack-destination ../../.packed'",
     "test:pack-smoke": "bash scripts/packed-install-smoke.sh",
     "release:cli": "bash scripts/release-cli.sh",
-    "clean": "pnpm --filter @regentlabs/cli clean"
+    "clean": "pnpm --filter @regentslabs/cli clean"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",
