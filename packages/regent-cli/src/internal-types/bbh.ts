@@ -17,10 +17,42 @@ export type BbhReviewRequestKind = "design" | "genome" | "certification";
 export type BbhReviewRequestVisibility = "private" | "public_claim";
 export type BbhReviewRequestState = "open" | "claimed" | "submitted" | "closed";
 export type BbhReviewDecision = "approve" | "approve_with_edits" | "changes_requested" | "reject";
+export type BbhSolveSolverKind = "hermes" | "openclaw" | "skydiscover";
 
 export interface BbhDataFile {
   name: string;
   content: string;
+}
+
+export interface BbhExecutionDefaults {
+  solver: {
+    kind: BbhSolveSolverKind;
+    entrypoint?: string | null;
+    search_algorithm?: string | null;
+  };
+  evaluator: {
+    kind: "hypotest";
+    dataset_ref: string;
+    benchmark_ref?: string | null;
+    scorer_version: string;
+  };
+  workspace: {
+    analysis_path?: string;
+    verdict_path?: string;
+    final_answer_path?: string | null;
+    report_path?: string | null;
+    log_path?: string | null;
+    genome_path?: string | null;
+    search_config_path?: string | null;
+    evaluator_path?: string | null;
+    seed_program_path?: string | null;
+    best_program_path?: string | null;
+    search_summary_path?: string | null;
+    evaluator_artifacts_path?: string | null;
+    checkpoint_pointer_path?: string | null;
+    best_solution_patch_path?: string | null;
+    search_log_path?: string | null;
+  };
 }
 
 export interface BbhCapsule {
@@ -40,6 +72,7 @@ export interface BbhCapsule {
   task_json: Record<string, unknown>;
   data_files: BbhDataFile[];
   artifact_source?: Record<string, unknown> | null;
+  execution_defaults?: BbhExecutionDefaults | null;
 }
 
 export interface BbhCertificateSummary {
@@ -76,6 +109,7 @@ export interface BbhCapsuleDetail extends BbhCapsuleSummary {
     bytes: number;
   }>;
   artifact_source?: Record<string, unknown> | null;
+  execution_defaults?: BbhExecutionDefaults | null;
 }
 
 export interface BbhCapsuleListResponse {
@@ -506,6 +540,31 @@ export interface BbhRunSource {
     harness_version: string;
     profile?: string | null;
   };
+  solver: {
+    kind: BbhSolveSolverKind;
+    entrypoint?: string | null;
+  };
+  search?: {
+    algorithm: string;
+    budget?: number | null;
+    checkpoint_ref?: string | null;
+    summary?: {
+      best_score: number;
+      best_iteration: number;
+      iterations_requested: number;
+      iterations_completed: number;
+      total_evaluations: number;
+      elapsed_ms: number;
+      checkpoint_ref?: string | null;
+      artifact_keys?: string[] | null;
+    } | null;
+  } | null;
+  evaluator: {
+    kind: "hypotest";
+    dataset_ref: string;
+    benchmark_ref?: string | null;
+    scorer_version: string;
+  };
   instance: {
     instance_ref: string;
     family_ref?: string | null;
@@ -523,6 +582,15 @@ export interface BbhRunSource {
     report_path?: string | null;
     log_path?: string | null;
     genome_path?: string | null;
+    search_config_path?: string | null;
+    evaluator_path?: string | null;
+    seed_program_path?: string | null;
+    best_program_path?: string | null;
+    search_summary_path?: string | null;
+    evaluator_artifacts_path?: string | null;
+    checkpoint_pointer_path?: string | null;
+    best_solution_patch_path?: string | null;
+    search_log_path?: string | null;
   };
   status?: BbhRunStatus;
   score?: {
@@ -530,6 +598,13 @@ export interface BbhRunSource {
     normalized: number;
     scorer_version?: string | null;
   } | null;
+  artifact_manifest?: Array<{
+    path: string;
+    kind: "workspace_file" | "generated_output" | "report" | "checkpoint_pointer" | "data_file";
+    sha256: string;
+    size_bytes?: number | null;
+    required_for_validation?: boolean | null;
+  }>;
   bbh: {
     split: BbhSplit;
     genome_ref: string;
@@ -568,7 +643,13 @@ export interface BbhReviewSource {
     reproduced_normalized_score?: number | null;
     raw_abs_tolerance?: number;
     scorer_version?: string | null;
+    evaluator_kind?: string | null;
+    dataset_ref?: string | null;
     assignment_ref?: string | null;
+    submitted_program_sha256?: string | null;
+    reproduced_program_sha256?: string | null;
+    score_match?: boolean | null;
+    artifact_match?: boolean | null;
   };
   notes?: string | null;
 }
@@ -579,6 +660,8 @@ export interface BbhWorkspaceBundle {
   rubric_json: Record<string, unknown>;
   analysis_py: string;
   verdict_json: Record<string, unknown>;
+  search_summary_json?: Record<string, unknown> | null;
+  search_log?: string | null;
   final_answer_md?: string | null;
   report_html?: string | null;
   run_log?: string | null;
@@ -600,7 +683,7 @@ export interface BbhSubmitParams {
 
 export interface BbhRunSolveParams {
   workspace_path: string;
-  agent?: "hermes" | "openclaw" | null;
+  solver: BbhSolveSolverKind;
   timeout_seconds?: number | null;
   metadata?: import("./agent.js").RegentRunMetadata | null;
 }
@@ -616,7 +699,7 @@ export interface BbhRunSolveResponse {
   entrypoint: "bbh.run.solve";
   workspace_path: string;
   run_id: string;
-  agent: "hermes" | "openclaw";
+  solver: BbhSolveSolverKind;
   produced_files: string[];
   verdict_summary: BbhRunSolveVerdictSummary;
 }
@@ -654,6 +737,8 @@ export interface BbhValidationSubmitRequest {
   review_source: BbhReviewSource;
   workspace?: {
     verdict_json?: Record<string, unknown> | null;
+    search_summary_json?: Record<string, unknown> | null;
+    search_log?: string | null;
     report_html?: string | null;
     run_log?: string | null;
   };

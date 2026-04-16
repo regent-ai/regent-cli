@@ -135,6 +135,8 @@ ${JSON.stringify(
 \`\`\`
 
 Use this like AutoAgent's \`program.md\`: change the search space here, then rerun \`regent techtree bbh genome improve\`.
+
+The BBH run workspaces spawned from this program also carry \`search.config.yaml\`, \`outputs/skydiscover/search.log\`, and \`outputs/skydiscover/search_summary.json\` beside the usual run files.
 `;
 
 const defaultRecommendation = (baseline: BbhGenomeSource, scope: BbhGenomeImproverScope): BbhGenomeRecommendationSource => ({

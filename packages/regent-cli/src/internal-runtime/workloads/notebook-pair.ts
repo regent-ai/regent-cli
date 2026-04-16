@@ -182,6 +182,7 @@ export const prepareBbhNotebookPair = async (
   for (const required of [
     "genome.source.yaml",
     "run.source.yaml",
+    "search.config.yaml",
     "task.json",
     "protocol.md",
     "rubric.json",

@@ -39,6 +39,7 @@ const seedBbhWorkspace = async (workspacePath: string): Promise<void> => {
   await fs.mkdir(path.join(workspacePath, "outputs"), { recursive: true });
   await fs.writeFile(path.join(workspacePath, "genome.source.yaml"), "schema_version: techtree.bbh.genome-source.v1\n", "utf8");
   await fs.writeFile(path.join(workspacePath, "run.source.yaml"), "schema_version: techtree.bbh.run-source.v1\n", "utf8");
+  await fs.writeFile(path.join(workspacePath, "search.config.yaml"), "schema_version: techtree.bbh.search-config.v1\n", "utf8");
   await fs.writeFile(path.join(workspacePath, "task.json"), "{\"objective\":\"solve\"}\n", "utf8");
   await fs.writeFile(path.join(workspacePath, "protocol.md"), "1. Solve it\n", "utf8");
   await fs.writeFile(path.join(workspacePath, "rubric.json"), "{\"items\":[]}\n", "utf8");

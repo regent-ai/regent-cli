@@ -24,10 +24,10 @@ afterEach(async () => {
 
 const resolvedMetadata = {
   resolved_at: "2026-04-03T00:00:00.000Z",
-  executor_harness: { kind: "claude_code", profile: "bbh-analyst", entrypoint: "regent" },
+  executor_harness: { kind: "hermes", profile: "bbh", entrypoint: "hermes" },
   origin: { kind: "local", transport: "api", session_id: null, trigger_ref: null },
-  executor_harness_kind: "claude_code",
-  executor_harness_profile: "bbh-analyst",
+  executor_harness_kind: "hermes",
+  executor_harness_profile: "bbh",
   origin_session_id: null,
 } as const;
 
@@ -120,10 +120,10 @@ describe("BBH genome improver workspace", () => {
       workspacePath,
       {
         model_id: "baseline-model",
-        harness_type: "claude_code",
+        harness_type: "hermes",
         prompt_pack_version: "bbh-v0.1",
         skill_pack_version: "techtree-bbh-v0.1",
-        tool_profile: "bbh-analyst",
+        tool_profile: "bbh",
         runtime_image: "local-runtime",
       },
       { scope: { split: "climb", sample_size: 2 }, budget: 4 },
@@ -149,10 +149,10 @@ describe("BBH genome improver workspace", () => {
       workspacePath,
       {
         model_id: "baseline-model",
-        harness_type: "claude_code",
+        harness_type: "hermes",
         prompt_pack_version: "bbh-v0.1",
         skill_pack_version: "techtree-bbh-v0.1",
-        tool_profile: "bbh-analyst",
+        tool_profile: "bbh",
         runtime_image: "local-runtime",
       },
       { scope: { split: "climb", sample_size: 2 }, budget: 4 },
@@ -179,10 +179,10 @@ describe("BBH genome improver workspace", () => {
       workspacePath,
       {
         model_id: "baseline-model",
-        harness_type: "claude_code",
+        harness_type: "hermes",
         prompt_pack_version: "bbh-v0.1",
         skill_pack_version: "techtree-bbh-v0.1",
-        tool_profile: "bbh-analyst",
+        tool_profile: "bbh",
         runtime_image: "local-runtime",
       },
       { scope: { split: "climb", sample_size: 2 }, budget: 4 },
@@ -201,7 +201,7 @@ describe("BBH genome improver workspace", () => {
   },
   "search": {
     "model_id": ["baseline-model", "challenger-model"],
-    "tool_profile": ["bbh-analyst"]
+    "tool_profile": ["bbh"]
   }
 }
 \`\`\`

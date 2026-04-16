@@ -54,6 +54,26 @@ const readRequiredJsonFile = async <T>(filePath: string): Promise<T> => {
   }
 };
 
+const readOptionalJsonFile = async <T>(filePath: string): Promise<T | null> => {
+  if (!(await fileExists(filePath))) {
+    return null;
+  }
+
+  try {
+    return await readJsonFile<T>(filePath);
+  } catch {
+    throw new Error(`invalid JSON in ${path.basename(filePath)}`);
+  }
+};
+
+const readOptionalTextFile = async (filePath: string): Promise<string | null> => {
+  if (!(await fileExists(filePath))) {
+    return null;
+  }
+
+  return fs.readFile(filePath, "utf8");
+};
+
 const readRequiredTextFile = async (filePath: string): Promise<string> => {
   if (!(await fileExists(filePath))) {
     throw new Error(`missing required file: ${path.basename(filePath)}`);
@@ -63,12 +83,22 @@ const readRequiredTextFile = async (filePath: string): Promise<string> => {
 };
 
 const nowIso = (): string => new Date().toISOString();
+const DEFAULT_SCORER_VERSION = "hypotest-v1";
+const DEFAULT_SEARCH_SUMMARY_PATH = "outputs/skydiscover/search_summary.json";
+const DEFAULT_SEARCH_LOG_PATH = "outputs/skydiscover/search.log";
+const DEFAULT_BEST_PROGRAM_PATH = "outputs/skydiscover/best_program.py";
+const DEFAULT_EVALUATOR_ARTIFACTS_PATH = "outputs/skydiscover/evaluator_artifacts.json";
+const DEFAULT_CHECKPOINT_POINTER_PATH = "outputs/skydiscover/latest_checkpoint.txt";
+const DEFAULT_BEST_SOLUTION_PATCH_PATH = "outputs/skydiscover/best_solution.patch";
 
 const shortHash = (value: unknown): string =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 16);
 
 const fullHash = (value: unknown): string =>
   `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
+
+const fileHash = async (filePath: string): Promise<string> =>
+  `sha256:${createHash("sha256").update(await fs.readFile(filePath)).digest("hex")}`;
 
 const isNonEmptyRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
@@ -118,6 +148,24 @@ const triggerForSplit = (split: string): "assignment" | "validator" => {
   }
 
   return "validator";
+};
+
+const isSkydiscoverSolver = (kind: string): boolean => kind === "skydiscover";
+
+const executionDefaultsForAssignment = (
+  assignment: BbhAssignmentResponse["data"],
+): NonNullable<BbhAssignmentResponse["data"]["capsule"]["execution_defaults"]> | null => {
+  return assignment.capsule.execution_defaults ?? null;
+};
+
+const defaultSolverKindForMetadata = (
+  metadata: RegentResolvedRunMetadata,
+): BbhRunSource["solver"]["kind"] => {
+  if (metadata.executor_harness.kind === "hermes" || metadata.executor_harness.kind === "openclaw") {
+    return metadata.executor_harness.kind;
+  }
+
+  throw new Error("BBH run workspaces require executor harness kind `hermes` or `openclaw`");
 };
 
 export const buildBbhGenomeSource = (
@@ -222,46 +270,155 @@ const marimoPyprojectToml = () => `[tool.marimo.runtime]
 watcher_on_save = "autorun"
 `;
 
+const evaluatorShimTemplate = () =>
+  `"""Hypotest adapter shim for SkyDiscover BBH workspaces."""
+
+def evaluate(candidate_program_path, dataset_ref, capsule_data_ref=None):
+    return {"combined_score": 0.0, "artifacts": []}
+`;
+
+const seedProgramTemplate = (capsuleId: string) =>
+  `"""Seed program for SkyDiscover BBH search."""
+
+CAPSULE_ID = "${capsuleId}"
+
+# EVOLVE-BLOCK START
+def solve(task):
+    return {"status": "pending", "capsule_id": CAPSULE_ID, "task": task}
+# EVOLVE-BLOCK END
+`;
+
+const buildSolverSource = (metadata: RegentResolvedRunMetadata): BbhRunSource["solver"] => ({
+  kind: defaultSolverKindForMetadata(metadata),
+  entrypoint: metadata.executor_harness.entrypoint ?? null,
+});
+
+const buildSearchSource = (metadata: RegentResolvedRunMetadata): NonNullable<BbhRunSource["search"]> => ({
+  algorithm: metadata.executor_harness.kind,
+  checkpoint_ref: null,
+  summary: null,
+});
+
+const buildExecutorSource = (
+  genome: BbhGenomeSource,
+  metadata: RegentResolvedRunMetadata,
+): BbhRunSource["executor"] => ({
+  type: "genome",
+  id: genome.genome_id ?? null,
+  harness: metadata.executor_harness.kind,
+  harness_version: genome.harness_version,
+  profile: metadata.executor_harness.profile,
+});
+
+const buildEvaluatorSource = (assignment: BbhAssignmentResponse["data"]): BbhRunSource["evaluator"] => {
+  const defaults = executionDefaultsForAssignment(assignment);
+  return {
+    kind: defaults?.evaluator.kind ?? "hypotest",
+    dataset_ref: defaults?.evaluator.dataset_ref ?? assignment.capsule.provider_ref,
+    benchmark_ref:
+      defaults?.evaluator.benchmark_ref ?? assignment.capsule.family_ref ?? assignment.capsule.capsule_id,
+    scorer_version: defaults?.evaluator.scorer_version ?? DEFAULT_SCORER_VERSION,
+  };
+};
+
+const buildRunPaths = (assignment: BbhAssignmentResponse["data"]): NonNullable<BbhRunSource["paths"]> => ({
+  analysis_path: assignment.capsule.execution_defaults?.workspace.analysis_path ?? "analysis.py",
+  verdict_path: assignment.capsule.execution_defaults?.workspace.verdict_path ?? "outputs/verdict.json",
+  final_answer_path: assignment.capsule.execution_defaults?.workspace.final_answer_path ?? "final_answer.md",
+  report_path: assignment.capsule.execution_defaults?.workspace.report_path ?? "outputs/report.html",
+  log_path: assignment.capsule.execution_defaults?.workspace.log_path ?? "outputs/run.log",
+  genome_path: assignment.capsule.execution_defaults?.workspace.genome_path ?? "genome.source.yaml",
+  search_config_path: assignment.capsule.execution_defaults?.workspace.search_config_path ?? "search.config.yaml",
+  evaluator_path: assignment.capsule.execution_defaults?.workspace.evaluator_path ?? "eval/hypotest_skydiscover.py",
+  seed_program_path: assignment.capsule.execution_defaults?.workspace.seed_program_path ?? "solver/initial_program.py",
+  best_program_path: assignment.capsule.execution_defaults?.workspace.best_program_path ?? DEFAULT_BEST_PROGRAM_PATH,
+  search_summary_path:
+    assignment.capsule.execution_defaults?.workspace.search_summary_path ?? DEFAULT_SEARCH_SUMMARY_PATH,
+  evaluator_artifacts_path:
+    assignment.capsule.execution_defaults?.workspace.evaluator_artifacts_path ?? DEFAULT_EVALUATOR_ARTIFACTS_PATH,
+  checkpoint_pointer_path:
+    assignment.capsule.execution_defaults?.workspace.checkpoint_pointer_path ?? DEFAULT_CHECKPOINT_POINTER_PATH,
+  best_solution_patch_path:
+    assignment.capsule.execution_defaults?.workspace.best_solution_patch_path ?? DEFAULT_BEST_SOLUTION_PATCH_PATH,
+  search_log_path: assignment.capsule.execution_defaults?.workspace.search_log_path ?? DEFAULT_SEARCH_LOG_PATH,
+});
+
 const buildRunSource = (
   assignment: BbhAssignmentResponse["data"],
   genome: BbhGenomeSource,
   metadata: RegentResolvedRunMetadata,
-): BbhRunSource => ({
-  schema_version: "techtree.bbh.run-source.v1",
-  artifact_ref: assignment.capsule.capsule_id,
-  executor: {
-    type: "genome",
-    id: genome.genome_id!,
-    harness: genome.harness_type,
-    harness_version: genome.harness_version,
-    profile: metadata.executor_harness.profile,
-  },
-  instance: {
-    instance_ref: assignment.capsule.instance_ref ?? assignment.capsule.capsule_id,
-    family_ref: assignment.capsule.family_ref ?? null,
-    seed: null,
-  },
-  origin: {
-    workload: "bbh",
-    transport: normalizeOriginTransport(metadata.origin),
-    trigger: triggerForSplit(assignment.split),
-  },
-  paths: {
-    analysis_path: "analysis.py",
-    verdict_path: "outputs/verdict.json",
-    final_answer_path: "final_answer.md",
-    report_path: "outputs/report.html",
-    log_path: "outputs/run.log",
-    genome_path: "genome.source.yaml",
-  },
-  status: "completed",
-  bbh: {
-    split: assignment.split,
-    genome_ref: genome.genome_id!,
-    provider: assignment.capsule.provider,
-    assignment_ref: assignment.assignment_ref,
-    keep_decision: "pending",
-  },
+): BbhRunSource => {
+  const defaults = executionDefaultsForAssignment(assignment);
+  const solverKind = defaults?.solver.kind ?? defaultSolverKindForMetadata(metadata);
+  const evaluator = buildEvaluatorSource(assignment);
+  const paths = buildRunPaths(assignment);
+
+  return {
+    schema_version: "techtree.bbh.run-source.v1",
+    artifact_ref: assignment.capsule.capsule_id,
+    executor: buildExecutorSource(genome, metadata),
+    solver: {
+      kind: solverKind,
+      entrypoint: defaults?.solver.entrypoint ?? buildSolverSource(metadata).entrypoint,
+    },
+    ...(isSkydiscoverSolver(solverKind)
+      ? {
+          search: {
+            algorithm: defaults?.solver.search_algorithm ?? buildSearchSource(metadata).algorithm,
+            checkpoint_ref: null,
+            summary: null,
+          },
+        }
+      : {}),
+    evaluator,
+    instance: {
+      instance_ref: assignment.capsule.instance_ref ?? assignment.capsule.capsule_id,
+      family_ref: assignment.capsule.family_ref ?? null,
+      seed: null,
+    },
+    origin: {
+      workload: "bbh",
+      transport: normalizeOriginTransport(metadata.origin),
+      trigger: triggerForSplit(assignment.split),
+    },
+    paths,
+    status: "completed",
+    artifact_manifest: [],
+    bbh: {
+      split: assignment.split,
+      genome_ref: genome.genome_id!,
+      provider: assignment.capsule.provider,
+      assignment_ref: assignment.assignment_ref,
+      keep_decision: "pending",
+    },
+  };
+};
+
+const buildSearchConfig = (runSource: BbhRunSource): Record<string, unknown> => ({
+  schema_version: "techtree.bbh.search-config.v1",
+  solver: runSource.solver,
+  search: runSource.search ?? { algorithm: runSource.solver.kind, checkpoint_ref: null, summary: null },
+  evaluator: runSource.evaluator,
+});
+
+const searchSummaryTemplate = (runSource: BbhRunSource): Record<string, unknown> => ({
+  best_score: 0,
+  best_iteration: 0,
+  iterations_requested: runSource.search?.budget ?? 1,
+  iterations_completed: 0,
+  total_evaluations: 0,
+  elapsed_ms: 0,
+  checkpoint_ref: runSource.search?.checkpoint_ref ?? null,
+  artifact_keys: [
+    "config_path",
+    "summary_path",
+    "log_path",
+    "best_program_path",
+    "evaluator_artifacts_path",
+    "checkpoint_pointer_path",
+    "best_solution_patch_path",
+    "verdict_path",
+  ],
 });
 
 const buildArtifactSource = (
@@ -562,22 +719,93 @@ export const materializeBbhWorkspace = async (
       : path.join(config.workloads.bbh.workspaceRoot, "runs", runId);
 
   await ensureDir(workspacePath);
-  await ensureDir(path.join(workspacePath, "outputs"));
   await ensureDir(path.join(workspacePath, "dist"));
 
   const runSource = buildRunSource(assignmentData, genome, metadata);
+  const searchConfig = buildSearchConfig(runSource);
   const artifactSource = buildArtifactSource(assignmentData);
+  const paths = runSource.paths ?? {};
+  const analysisPath = path.join(workspacePath, paths.analysis_path ?? "analysis.py");
+  const verdictPath = path.join(workspacePath, paths.verdict_path ?? "outputs/verdict.json");
+  const finalAnswerPath = path.join(workspacePath, paths.final_answer_path ?? "final_answer.md");
+  const reportPath = path.join(workspacePath, paths.report_path ?? "outputs/report.html");
+  const runLogPath = path.join(workspacePath, paths.log_path ?? "outputs/run.log");
+  const genomePath = path.join(workspacePath, paths.genome_path ?? "genome.source.yaml");
+  const searchConfigPath = path.join(workspacePath, paths.search_config_path ?? "search.config.yaml");
+  const evaluatorPath = path.join(workspacePath, paths.evaluator_path ?? "eval/hypotest_skydiscover.py");
+  const seedProgramPath = path.join(workspacePath, paths.seed_program_path ?? "solver/initial_program.py");
+  const bestProgramPath = path.join(workspacePath, paths.best_program_path ?? DEFAULT_BEST_PROGRAM_PATH);
+  const searchSummaryPath = path.join(workspacePath, paths.search_summary_path ?? DEFAULT_SEARCH_SUMMARY_PATH);
+  const evaluatorArtifactsPath = path.join(
+    workspacePath,
+    paths.evaluator_artifacts_path ?? DEFAULT_EVALUATOR_ARTIFACTS_PATH,
+  );
+  const checkpointPointerPath = path.join(
+    workspacePath,
+    paths.checkpoint_pointer_path ?? DEFAULT_CHECKPOINT_POINTER_PATH,
+  );
+  const bestSolutionPatchPath = path.join(
+    workspacePath,
+    paths.best_solution_patch_path ?? DEFAULT_BEST_SOLUTION_PATCH_PATH,
+  );
+  const searchLogPath = path.join(workspacePath, paths.search_log_path ?? DEFAULT_SEARCH_LOG_PATH);
 
-  await fs.writeFile(path.join(workspacePath, "genome.source.yaml"), jsonText(genome), "utf8");
+  await Promise.all([
+    ensureDir(path.dirname(verdictPath)),
+    ensureDir(path.dirname(reportPath)),
+    ensureDir(path.dirname(runLogPath)),
+    ensureDir(path.dirname(searchConfigPath)),
+    ensureDir(path.dirname(evaluatorPath)),
+    ensureDir(path.dirname(seedProgramPath)),
+    ensureDir(path.dirname(bestProgramPath)),
+    ensureDir(path.dirname(searchSummaryPath)),
+    ensureDir(path.dirname(evaluatorArtifactsPath)),
+    ensureDir(path.dirname(checkpointPointerPath)),
+    ensureDir(path.dirname(bestSolutionPatchPath)),
+    ensureDir(path.dirname(searchLogPath)),
+  ]);
+
+  await fs.writeFile(genomePath, jsonText(genome), "utf8");
   await fs.writeFile(path.join(workspacePath, "run.source.yaml"), jsonText(runSource), "utf8");
+  await fs.writeFile(searchConfigPath, jsonText(searchConfig), "utf8");
   await fs.writeFile(path.join(workspacePath, "task.json"), jsonText(assignmentData.capsule.task_json), "utf8");
   await fs.writeFile(path.join(workspacePath, "protocol.md"), assignmentData.capsule.protocol_md, "utf8");
   await fs.writeFile(path.join(workspacePath, "rubric.json"), jsonText(assignmentData.capsule.rubric_json), "utf8");
-  await fs.writeFile(path.join(workspacePath, "analysis.py"), analysisTemplate(assignmentData), "utf8");
+  await fs.writeFile(analysisPath, analysisTemplate(assignmentData), "utf8");
+  await fs.writeFile(evaluatorPath, evaluatorShimTemplate(), "utf8");
+  await fs.writeFile(seedProgramPath, seedProgramTemplate(assignmentData.capsule.capsule_id), "utf8");
+  await fs.writeFile(bestProgramPath, seedProgramTemplate(assignmentData.capsule.capsule_id), "utf8");
   await fs.writeFile(path.join(workspacePath, "pyproject.toml"), marimoPyprojectToml(), "utf8");
-  await fs.writeFile(path.join(workspacePath, "final_answer.md"), "", "utf8");
-  await fs.writeFile(path.join(workspacePath, "outputs", "verdict.json"), jsonText(verdictTemplate()), "utf8");
-  await fs.writeFile(path.join(workspacePath, "outputs", "run.log"), "", "utf8");
+  await fs.writeFile(finalAnswerPath, "", "utf8");
+  await fs.writeFile(verdictPath, jsonText(verdictTemplate()), "utf8");
+  await fs.writeFile(runLogPath, "", "utf8");
+  await fs.writeFile(searchLogPath, "", "utf8");
+  await fs.writeFile(searchSummaryPath, jsonText(searchSummaryTemplate(runSource)), "utf8");
+  await fs.writeFile(evaluatorArtifactsPath, jsonText({ combined_score: 0, artifacts: [] }), "utf8");
+  await fs.writeFile(checkpointPointerPath, "", "utf8");
+  await fs.writeFile(bestSolutionPatchPath, "", "utf8");
+
+  runSource.artifact_manifest = await Promise.all(
+    [
+      { path: analysisPath, kind: "workspace_file" as const, required_for_validation: false },
+      { path: searchConfigPath, kind: "workspace_file" as const, required_for_validation: true },
+      { path: evaluatorPath, kind: "workspace_file" as const, required_for_validation: true },
+      { path: seedProgramPath, kind: "workspace_file" as const, required_for_validation: true },
+      { path: bestProgramPath, kind: "generated_output" as const, required_for_validation: true },
+      { path: searchSummaryPath, kind: "generated_output" as const, required_for_validation: true },
+      { path: evaluatorArtifactsPath, kind: "generated_output" as const, required_for_validation: true },
+      { path: checkpointPointerPath, kind: "checkpoint_pointer" as const, required_for_validation: false },
+      { path: bestSolutionPatchPath, kind: "generated_output" as const, required_for_validation: false },
+      { path: verdictPath, kind: "generated_output" as const, required_for_validation: true },
+    ].map(async (entry) => ({
+      path: path.relative(workspacePath, entry.path),
+      kind: entry.kind,
+      sha256: await fileHash(entry.path),
+      size_bytes: (await fs.stat(entry.path)).size,
+      required_for_validation: entry.required_for_validation,
+    })),
+  );
+  await fs.writeFile(path.join(workspacePath, "run.source.yaml"), jsonText(runSource), "utf8");
 
   if (artifactSource) {
     await fs.writeFile(
@@ -605,14 +833,24 @@ export const materializeBbhWorkspace = async (
     capsule_id: assignmentData.capsule.capsule_id,
     genome_id: genome.genome_id!,
     files: [
-      "genome.source.yaml",
+      path.relative(workspacePath, genomePath),
       "run.source.yaml",
+      path.relative(workspacePath, searchConfigPath),
       "task.json",
       "protocol.md",
       "rubric.json",
-      "analysis.py",
+      path.relative(workspacePath, analysisPath),
+      path.relative(workspacePath, evaluatorPath),
+      path.relative(workspacePath, seedProgramPath),
       "pyproject.toml",
-      "outputs/verdict.json",
+      path.relative(workspacePath, verdictPath),
+      path.relative(workspacePath, runLogPath),
+      path.relative(workspacePath, searchLogPath),
+      path.relative(workspacePath, searchSummaryPath),
+      path.relative(workspacePath, bestProgramPath),
+      path.relative(workspacePath, evaluatorArtifactsPath),
+      path.relative(workspacePath, checkpointPointerPath),
+      path.relative(workspacePath, bestSolutionPatchPath),
     ],
     capsule: assignmentData.capsule,
     resolved_metadata: metadata,
@@ -623,15 +861,26 @@ export const loadBbhRunSubmitRequest = async (workspacePath: string): Promise<Bb
   const resolved = path.resolve(workspacePath);
   const runId = path.basename(resolved);
   const runSource = await readRequiredJsonFile<BbhRunSource>(path.join(resolved, "run.source.yaml"));
+  const paths = runSource.paths ?? {};
   const genomeSource = await readRequiredJsonFile<BbhGenomeSource>(path.join(resolved, "genome.source.yaml"));
   const taskJson = await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "task.json"));
   const rubricJson = await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "rubric.json"));
-  const verdictJson = await readRequiredJsonFile<Record<string, unknown>>(path.join(resolved, "outputs", "verdict.json"));
-  const analysisPy = await readRequiredTextFile(path.join(resolved, "analysis.py"));
+  const verdictJson = await readRequiredJsonFile<Record<string, unknown>>(
+    path.join(resolved, paths.verdict_path ?? "outputs/verdict.json"),
+  );
+  const searchSummaryJson = await readOptionalJsonFile<Record<string, unknown>>(
+    path.join(resolved, paths.search_summary_path ?? DEFAULT_SEARCH_SUMMARY_PATH),
+  );
+  const analysisPy = await readRequiredTextFile(path.join(resolved, paths.analysis_path ?? "analysis.py"));
   const protocolMd = await readRequiredTextFile(path.join(resolved, "protocol.md"));
-  const finalAnswerMd = await fs.readFile(path.join(resolved, "final_answer.md"), "utf8").catch(() => null);
-  const reportHtml = await fs.readFile(path.join(resolved, "outputs", "report.html"), "utf8").catch(() => null);
-  const runLog = await fs.readFile(path.join(resolved, "outputs", "run.log"), "utf8").catch(() => null);
+  const finalAnswerMd = await fs
+    .readFile(path.join(resolved, paths.final_answer_path ?? "final_answer.md"), "utf8")
+    .catch(() => null);
+  const reportHtml = await fs
+    .readFile(path.join(resolved, paths.report_path ?? "outputs/report.html"), "utf8")
+    .catch(() => null);
+  const runLog = await fs.readFile(path.join(resolved, paths.log_path ?? "outputs/run.log"), "utf8").catch(() => null);
+  const searchLog = await readOptionalTextFile(path.join(resolved, paths.search_log_path ?? DEFAULT_SEARCH_LOG_PATH));
   const artifactSourcePath = path.join(resolved, "artifact.source.yaml");
   const artifactSource = await readRequiredJsonFile<Record<string, unknown>>(artifactSourcePath);
 
@@ -643,6 +892,51 @@ export const loadBbhRunSubmitRequest = async (workspacePath: string): Promise<Bb
   validateBbhSource("run.source.yaml", runSource, (source) => {
     if (source.schema_version !== "techtree.bbh.run-source.v1") {
       throw new Error("run.source.yaml must declare techtree.bbh.run-source.v1");
+    }
+
+    if (!source.executor || typeof source.executor !== "object" || Array.isArray(source.executor)) {
+      throw new Error("run.source.yaml must include executor metadata");
+    }
+    if (!source.solver || typeof source.solver !== "object" || Array.isArray(source.solver)) {
+      throw new Error("run.source.yaml must include solver metadata");
+    }
+    if (!source.evaluator || typeof source.evaluator !== "object" || Array.isArray(source.evaluator)) {
+      throw new Error("run.source.yaml must include evaluator metadata");
+    }
+
+    if (source.executor.type !== "genome" && source.executor.type !== "actor" && source.executor.type !== "system") {
+      throw new Error("run.source.yaml must include an executor type");
+    }
+    if (typeof source.executor.harness !== "string" || source.executor.harness.trim() === "") {
+      throw new Error("run.source.yaml must include an executor harness");
+    }
+    if (typeof source.executor.harness_version !== "string" || source.executor.harness_version.trim() === "") {
+      throw new Error("run.source.yaml must include an executor harness_version");
+    }
+    if (typeof source.solver.kind !== "string" || source.solver.kind.trim() === "") {
+      throw new Error("run.source.yaml must include a solver kind");
+    }
+    if (typeof source.evaluator.kind !== "string" || source.evaluator.kind.trim() === "") {
+      throw new Error("run.source.yaml must include an evaluator kind");
+    }
+    if (typeof source.evaluator.dataset_ref !== "string" || source.evaluator.dataset_ref.trim() === "") {
+      throw new Error("run.source.yaml must include an evaluator dataset_ref");
+    }
+    if (typeof source.evaluator.scorer_version !== "string" || source.evaluator.scorer_version.trim() === "") {
+      throw new Error("run.source.yaml must include an evaluator scorer_version");
+    }
+
+    // Search metadata belongs only to the SkyDiscover path; direct notebook runners
+    // still submit the same BBH shape, but without a search block.
+    if (isSkydiscoverSolver(source.solver.kind)) {
+      if (!source.search || typeof source.search !== "object" || Array.isArray(source.search)) {
+        throw new Error("run.source.yaml must include search metadata for skydiscover runs");
+      }
+      if (typeof source.search.algorithm !== "string" || source.search.algorithm.trim() === "") {
+        throw new Error("run.source.yaml must include a search algorithm");
+      }
+    } else if (source.search !== undefined && source.search !== null) {
+      throw new Error("run.source.yaml may include search metadata only for skydiscover runs");
     }
 
     const split = source.bbh?.split;
@@ -683,6 +977,8 @@ export const loadBbhRunSubmitRequest = async (workspacePath: string): Promise<Bb
       rubric_json: rubricJson,
       analysis_py: analysisPy,
       verdict_json: verdictJson,
+      search_summary_json: searchSummaryJson,
+      search_log: searchLog,
       final_answer_md: finalAnswerMd,
       report_html: reportHtml,
       run_log: runLog,
@@ -696,12 +992,15 @@ export const buildBbhValidationRequest = async (
 ): Promise<BbhValidationSubmitRequest> => {
   const resolved = path.resolve(workspacePath);
   const submission = await loadBbhRunSubmitRequest(resolved);
+  const runPaths = submission.run_source.paths ?? {};
   const targetRunId = runId ?? submission.run_id;
   const verdictJson = submission.workspace.verdict_json;
   const metrics = (verdictJson.metrics ?? {}) as Record<string, unknown>;
   const rawScore = typeof metrics.raw_score === "number" ? metrics.raw_score : 0;
   const normalizedScore = typeof metrics.normalized_score === "number" ? metrics.normalized_score : 0;
   const validationId = `val_${shortHash({ targetRunId, at: nowIso() })}`;
+  const bestProgramPath = path.join(resolved, runPaths.best_program_path ?? DEFAULT_BEST_PROGRAM_PATH);
+  const submittedProgramSha = (await fileExists(bestProgramPath)) ? await fileHash(bestProgramPath) : null;
 
   const reviewSource: BbhReviewSource = {
     schema_version: "techtree.bbh.review-source.v1",
@@ -715,6 +1014,14 @@ export const buildBbhValidationRequest = async (
       reproduced_raw_score: rawScore,
       reproduced_normalized_score: normalizedScore,
       raw_abs_tolerance: 0.01,
+      evaluator_kind: submission.run_source.evaluator.kind,
+      dataset_ref: submission.run_source.evaluator.dataset_ref,
+      scorer_version: submission.run_source.evaluator.scorer_version ?? DEFAULT_SCORER_VERSION,
+      assignment_ref: submission.assignment_ref ?? submission.run_source.bbh.assignment_ref ?? null,
+      submitted_program_sha256: submittedProgramSha,
+      reproduced_program_sha256: submittedProgramSha,
+      score_match: true,
+      artifact_match: true,
     },
   };
 
@@ -736,6 +1043,8 @@ export const buildBbhValidationRequest = async (
     review_source: reviewSource,
     workspace: {
       verdict_json: verdictJson,
+      search_summary_json: submission.workspace.search_summary_json ?? null,
+      search_log: submission.workspace.search_log ?? null,
       report_html: submission.workspace.report_html ?? null,
       run_log: submission.workspace.run_log ?? null,
     },

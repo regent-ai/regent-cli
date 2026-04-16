@@ -4,9 +4,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type {
+  BbhRunSource,
   BbhRunSolveParams,
   BbhRunSolveResponse,
   BbhRunSolveVerdictSummary,
+  BbhSolveSolverKind,
   RegentConfig,
   RegentResolvedRunMetadata,
 } from "../../internal-types/index.js";
@@ -14,6 +16,9 @@ import type {
 const REQUIRED_INPUTS = [
   "genome.source.yaml",
   "run.source.yaml",
+  "search.config.yaml",
+  "eval/hypotest_skydiscover.py",
+  "solver/initial_program.py",
   "task.json",
   "protocol.md",
   "rubric.json",
@@ -25,6 +30,7 @@ const REQUIRED_INPUTS = [
 const PROTECTED_INPUTS = [
   "genome.source.yaml",
   "run.source.yaml",
+  "search.config.yaml",
   "task.json",
   "protocol.md",
   "rubric.json",
@@ -37,12 +43,18 @@ const SYNC_BACK_PATHS = [
   "outputs/verdict.json",
   "outputs/report.html",
   "outputs/run.log",
+  "outputs/skydiscover/search.log",
+  "outputs/skydiscover/search_summary.json",
+  "outputs/skydiscover/best_program.py",
+  "outputs/skydiscover/evaluator_artifacts.json",
+  "outputs/skydiscover/latest_checkpoint.txt",
+  "outputs/skydiscover/best_solution.patch",
 ] as const;
 
-type SupportedSolveAgent = "hermes" | "openclaw";
+type SupportedSolveSolver = BbhSolveSolverKind;
 
-interface SolveAgentInvocation {
-  agent: SupportedSolveAgent;
+interface SolveSolverInvocation {
+  solver: SupportedSolveSolver;
   entrypoint: string;
   workspacePath: string;
   prompt: string;
@@ -50,12 +62,12 @@ interface SolveAgentInvocation {
   logPath: string;
 }
 
-interface SolveAgentResult {
+interface SolveSolverResult {
   exitCode: number;
 }
 
 interface SolveOptions {
-  runAgent?: (input: SolveAgentInvocation) => Promise<SolveAgentResult>;
+  runSolver?: (input: SolveSolverInvocation) => Promise<SolveSolverResult>;
 }
 
 const nowIso = (): string => new Date().toISOString();
@@ -199,6 +211,7 @@ const buildSolvePrompt = (
   "- protocol.md",
   "- rubric.json",
   "- analysis.py",
+  "- search.config.yaml",
   "- data/**",
   "- genome.source.yaml",
   "- run.source.yaml",
@@ -209,6 +222,12 @@ const buildSolvePrompt = (
   "- outputs/verdict.json",
   "- outputs/report.html",
   "- outputs/run.log",
+  "- outputs/skydiscover/search.log",
+  "- outputs/skydiscover/search_summary.json",
+  "- outputs/skydiscover/best_program.py",
+  "- outputs/skydiscover/evaluator_artifacts.json",
+  "- outputs/skydiscover/latest_checkpoint.txt",
+  "- outputs/skydiscover/best_solution.patch",
   "",
   "Do not modify any other file.",
   "Do not submit the run.",
@@ -216,6 +235,7 @@ const buildSolvePrompt = (
   "Required outputs before you stop:",
   "- final_answer.md must contain the final answer in plain English.",
   "- outputs/verdict.json must be valid JSON with decision, justification, and metrics.",
+  "- outputs/skydiscover/search_summary.json must describe the search session in valid JSON.",
   "",
   "Optional outputs:",
   "- outputs/report.html",
@@ -228,12 +248,14 @@ const buildSolvePrompt = (
   "If you cannot complete the solve, write the reason to outputs/run.log and exit.",
 ].join("\n");
 
-const parseSupportedAgent = (value: string | null | undefined): SupportedSolveAgent => {
-  if (value === "hermes" || value === "openclaw") {
+const parseSupportedSolver = (value: string | null | undefined): SupportedSolveSolver => {
+  if (value === "hermes" || value === "openclaw" || value === "skydiscover") {
     return value;
   }
 
-  throw new Error("unsupported solve agent; expected `hermes` or `openclaw`");
+  throw new Error(
+    "unsupported solve solver; use `hermes` or `openclaw` for direct notebook work, or `skydiscover` for the search path",
+  );
 };
 
 const parseTimeoutSeconds = (value: number | null | undefined): number => {
@@ -244,10 +266,17 @@ const parseTimeoutSeconds = (value: number | null | undefined): number => {
   return 600;
 };
 
-const commandForAgent = (
-  invocation: SolveAgentInvocation,
+const commandForSolver = (
+  invocation: SolveSolverInvocation,
 ): { command: string; args: string[] } => {
-  if (invocation.agent === "hermes") {
+  if (invocation.solver === "skydiscover") {
+    return {
+      command: "uv",
+      args: ["run", "python", "-m", "skydiscover"],
+    };
+  }
+
+  if (invocation.solver === "hermes") {
     return {
       command: invocation.entrypoint,
       args: ["chat", "--toolsets", "skills", "-q", invocation.prompt],
@@ -268,12 +297,12 @@ const commandForAgent = (
   };
 };
 
-const defaultRunAgent = async (invocation: SolveAgentInvocation): Promise<SolveAgentResult> => {
+const defaultRunSolver = async (invocation: SolveSolverInvocation): Promise<SolveSolverResult> => {
   await ensureDir(path.dirname(invocation.logPath));
   const logHandle = await fs.open(invocation.logPath, "a");
-  const { command, args } = commandForAgent(invocation);
+  const { command, args } = commandForSolver(invocation);
 
-  return new Promise<SolveAgentResult>((resolve, reject) => {
+  return new Promise<SolveSolverResult>((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: invocation.workspacePath,
       env: process.env,
@@ -305,7 +334,7 @@ const defaultRunAgent = async (invocation: SolveAgentInvocation): Promise<SolveA
       await logHandle.close();
       reject(
         new Error(
-          `unable to start ${invocation.agent} solve adapter \`${invocation.entrypoint}\`: ${
+          `unable to start ${invocation.solver} solve adapter \`${invocation.entrypoint}\`: ${
             error instanceof Error ? error.message : String(error)
           }`,
         ),
@@ -367,24 +396,107 @@ const validateSolveOutputs = async (workspacePath: string): Promise<BbhRunSolveV
     throw new Error("missing required solver output: final_answer.md");
   }
 
+  const runSource = await readJsonFile<BbhRunSource>(path.join(workspacePath, "run.source.yaml"));
+  const searchSummaryPath = path.join(
+    workspacePath,
+    runSource.paths?.search_summary_path ?? "outputs/skydiscover/search_summary.json",
+  );
+  if (!(await fileExists(searchSummaryPath))) {
+    throw new Error("missing required solver output: outputs/skydiscover/search_summary.json");
+  }
+  try {
+    await readJsonFile<Record<string, unknown>>(searchSummaryPath);
+  } catch {
+    throw new Error("invalid solver output: outputs/skydiscover/search_summary.json must be valid JSON");
+  }
+
   return readVerdictSummary(workspacePath);
+};
+
+const updateRunSourceForSolve = (
+  runSource: BbhRunSource,
+  solver: SupportedSolveSolver,
+  entrypoint: string,
+  verdictSummary: BbhRunSolveVerdictSummary,
+  searchSummary: Record<string, unknown>,
+): BbhRunSource => {
+  const nextRunSource: BbhRunSource = {
+    ...runSource,
+    solver: {
+      kind: solver,
+      entrypoint,
+    },
+    status: "completed",
+    score: {
+      raw: verdictSummary.raw_score ?? 0,
+      normalized: verdictSummary.normalized_score ?? 0,
+      scorer_version: runSource.evaluator.scorer_version,
+    },
+  };
+
+  if (solver === "skydiscover") {
+    nextRunSource.search = {
+      algorithm: solver,
+      budget: runSource.search?.budget ?? null,
+      checkpoint_ref: runSource.search?.checkpoint_ref ?? null,
+      summary: searchSummary as NonNullable<NonNullable<BbhRunSource["search"]>["summary"]>,
+    };
+  } else {
+    delete nextRunSource.search;
+  }
+
+  return nextRunSource;
+};
+
+const syncRunMetadata = async (
+  workspacePath: string,
+  solver: SupportedSolveSolver,
+  entrypoint: string,
+  verdictSummary: BbhRunSolveVerdictSummary,
+): Promise<void> => {
+  const runSourcePath = path.join(workspacePath, "run.source.yaml");
+  const runSource = await readJsonFile<BbhRunSource>(runSourcePath);
+  const searchConfigPath = path.join(workspacePath, runSource.paths?.search_config_path ?? "search.config.yaml");
+  const searchSummaryPath = path.join(
+    workspacePath,
+    runSource.paths?.search_summary_path ?? "outputs/skydiscover/search_summary.json",
+  );
+  const searchSummary = await readJsonFile<Record<string, unknown>>(searchSummaryPath);
+
+  // Keep the run record aligned with the actual local solve path so submit,
+  // validate, and public run detail all describe the same BBH/SkyDiscover/Hypotest story.
+  const nextRunSource = updateRunSourceForSolve(runSource, solver, entrypoint, verdictSummary, searchSummary);
+  const nextSearchConfig = {
+    schema_version: "techtree.bbh.search-config.v1",
+    solver: nextRunSource.solver,
+    search:
+      solver === "skydiscover"
+        ? nextRunSource.search ?? { algorithm: solver, checkpoint_ref: null, summary: searchSummary }
+        : { algorithm: solver, checkpoint_ref: null, summary: searchSummary },
+    evaluator: nextRunSource.evaluator,
+  };
+
+  await Promise.all([
+    fs.writeFile(runSourcePath, `${JSON.stringify(nextRunSource, null, 2)}\n`, "utf8"),
+    fs.writeFile(searchConfigPath, `${JSON.stringify(nextSearchConfig, null, 2)}\n`, "utf8"),
+  ]);
 };
 
 const resolveEntrypoint = (
   config: RegentConfig,
-  agent: SupportedSolveAgent,
+  solver: Exclude<SupportedSolveSolver, "skydiscover">,
   metadata: RegentResolvedRunMetadata,
 ): string => {
-  if (metadata.executor_harness.kind === agent && typeof metadata.executor_harness.entrypoint === "string") {
+  if (metadata.executor_harness.kind === solver && typeof metadata.executor_harness.entrypoint === "string") {
     return metadata.executor_harness.entrypoint;
   }
 
-  const configured = config.agents.harnesses[agent]?.entrypoint;
+  const configured = config.agents.harnesses[solver]?.entrypoint;
   if (typeof configured === "string" && configured.trim() !== "") {
     return configured;
   }
 
-  throw new Error(`solve adapter is not configured for ${agent}`);
+  throw new Error(`solve adapter is not configured for ${solver}`);
 };
 
 export async function solveBbhWorkspace(
@@ -397,16 +509,17 @@ export async function solveBbhWorkspace(
   await ensureRequiredInputs(workspacePath);
 
   const targetProtectedBefore = await snapshotProtectedFiles(workspacePath);
-  const agent = parseSupportedAgent(params.agent ?? metadata.executor_harness.kind);
-  const harnessWorkspaceRoot = config.agents.harnesses[agent]?.workspaceRoot;
+  const solver = parseSupportedSolver(params.solver);
+  const harnessWorkspaceRoot =
+    solver === "skydiscover" ? config.workloads.bbh.workspaceRoot : config.agents.harnesses[solver]?.workspaceRoot;
   if (!harnessWorkspaceRoot) {
-    throw new Error(`missing workspace root for ${agent} solve adapter`);
+    throw new Error(`missing workspace root for ${solver} solve adapter`);
   }
 
   const isolatedWorkspacePath = path.join(
     harnessWorkspaceRoot,
     "bbh-solve",
-    `${path.basename(workspacePath)}-${shortHash({ workspacePath, agent, at: nowIso() })}`,
+    `${path.basename(workspacePath)}-${shortHash({ workspacePath, solver, at: nowIso() })}`,
   );
 
   await copyWorkspace(workspacePath, isolatedWorkspacePath);
@@ -414,11 +527,12 @@ export async function solveBbhWorkspace(
   const logPath = path.join(isolatedWorkspacePath, "outputs", "run.log");
   const timeoutSeconds = parseTimeoutSeconds(params.timeout_seconds);
 
-  const runner = options.runAgent ?? defaultRunAgent;
+  const runner = options.runSolver ?? defaultRunSolver;
   const prompt = buildSolvePrompt(workspacePath, metadata);
-  const invocation: SolveAgentInvocation = {
-    agent,
-    entrypoint: resolveEntrypoint(config, agent, metadata),
+  const invocation: SolveSolverInvocation = {
+    solver,
+    entrypoint:
+      solver === "skydiscover" ? "uv" : resolveEntrypoint(config, solver, metadata),
     workspacePath: isolatedWorkspacePath,
     prompt,
     timeoutSeconds,
@@ -428,7 +542,7 @@ export async function solveBbhWorkspace(
   const result = await runner(invocation);
   if (result.exitCode !== 0) {
     await syncFileIfPresent(logPath, path.join(workspacePath, "outputs", "run.log"));
-    throw new Error(`${agent} solve adapter exited with code ${result.exitCode}`);
+    throw new Error(`${solver} solve adapter exited with code ${result.exitCode}`);
   }
 
   const isolatedProtectedAfter = await snapshotProtectedFiles(isolatedWorkspacePath);
@@ -448,13 +562,16 @@ export async function solveBbhWorkspace(
     "solver modified protected workspace inputs",
   );
 
+  await syncRunMetadata(workspacePath, solver, invocation.entrypoint, verdictSummary);
+  const syncedFiles = [...producedFiles, "run.source.yaml", "search.config.yaml"];
+
   return {
     ok: true,
     entrypoint: "bbh.run.solve",
     workspace_path: workspacePath,
     run_id: path.basename(workspacePath),
-    agent,
-    produced_files: producedFiles,
+    solver,
+    produced_files: syncedFiles,
     verdict_summary: verdictSummary,
   };
 }

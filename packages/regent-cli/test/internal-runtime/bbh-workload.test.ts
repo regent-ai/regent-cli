@@ -194,6 +194,32 @@ describe("BBH workload lanes", () => {
               artifact_source: {
                 schema_version: "techtree.bbh.artifact-source.v1",
               },
+              execution_defaults: {
+                solver: { kind: "hermes", entrypoint: "hermes", search_algorithm: null },
+                evaluator: {
+                  kind: "hypotest",
+                  dataset_ref: "provider/climb",
+                  benchmark_ref: "capsule_climb",
+                  scorer_version: "hypotest-v0.1",
+                },
+                workspace: {
+                  analysis_path: "analysis.py",
+                  verdict_path: "outputs/verdict.json",
+                  final_answer_path: "final_answer.md",
+                  report_path: "outputs/report.html",
+                  log_path: "outputs/run.log",
+                  genome_path: "genome.source.yaml",
+                  search_config_path: "search.config.yaml",
+                  evaluator_path: "eval/hypotest_skydiscover.py",
+                  seed_program_path: "solver/initial_program.py",
+                  best_program_path: "outputs/skydiscover/best_program.py",
+                  search_summary_path: "outputs/skydiscover/search_summary.json",
+                  evaluator_artifacts_path: "outputs/skydiscover/evaluator_artifacts.json",
+                  checkpoint_pointer_path: "outputs/skydiscover/latest_checkpoint.txt",
+                  best_solution_patch_path: "outputs/skydiscover/best_solution.patch",
+                  search_log_path: "outputs/skydiscover/search.log",
+                },
+              },
             },
           },
         }),
@@ -228,6 +254,13 @@ describe("BBH workload lanes", () => {
     const submitRequest = await loadBbhRunSubmitRequest(response.workspace_path);
     expect(submitRequest.artifact_source?.bbh?.split).toBe("climb");
     expect(submitRequest.run_source.bbh.split).toBe("climb");
+    expect(submitRequest.run_source.solver.kind).toBe("hermes");
+    expect(submitRequest.run_source.evaluator.kind).toBe("hypotest");
+    expect(submitRequest.run_source.paths?.search_summary_path).toBe("outputs/skydiscover/search_summary.json");
+    expect(submitRequest.workspace.search_summary_json).toEqual(
+      expect.objectContaining({ best_score: 0, iterations_requested: 1 }),
+    );
+    expect(submitRequest.workspace.search_log).toBe("");
   });
 
   it("materializes challenge workspaces with the public challenge lane", async () => {
@@ -461,7 +494,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v1",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 1, normalized: 0.1 },
@@ -540,7 +586,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v1",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 1, normalized: 0.1 },
@@ -603,7 +662,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v1",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 1, normalized: 0.1 },
@@ -666,7 +738,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v0",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 1, normalized: 0.1 },
@@ -684,7 +769,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v1",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 1, normalized: 0.1 },
@@ -738,7 +836,20 @@ describe("BBH workload lanes", () => {
       JSON.stringify({
         schema_version: "techtree.bbh.run-source.v1",
         artifact_ref: "capsule_1",
-        executor: { type: "genome", id: "gen_1", harness: "hermes", harness_version: "1.0.0" },
+        executor: {
+          type: "genome",
+          id: "gen_1",
+          harness: "hermes",
+          harness_version: "1.0.0",
+          profile: "bbh",
+        },
+        solver: { kind: "hermes", entrypoint: "hermes" },
+        evaluator: {
+          kind: "hypotest",
+          dataset_ref: "provider/climb",
+          benchmark_ref: "family_climb",
+          scorer_version: "hypotest-v1",
+        },
         instance: { instance_ref: "capsule_1" },
         status: "completed",
         score: { raw: 5, normalized: 0.5 },
