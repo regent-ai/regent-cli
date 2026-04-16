@@ -1,6 +1,8 @@
 # `@regentlabs/cli`
 
-`@regentlabs/cli` publishes the `regent` command-line tool. It bundles the local Regent runtime, wallet-aware Techtree flows, and the command surface used by operators to inspect, authenticate, and publish from a clean machine.
+`@regentlabs/cli` publishes the `regent` command-line tool. Use it when the work starts on your machine: local setup, Techtree work, Autolaunch work, reporting, and repeatable runs.
+
+Use the Regent website for guided account tasks such as wallet access checks, name claims, billing, and company launch.
 
 ## Install
 
@@ -13,12 +15,20 @@ regent --help
 
 ```bash
 regent create init
-regent create wallet
+regent create wallet --write-env
+# paste the printed export line into your shell
 regent techtree start
 regent bug --summary "can't do xyz" --details "any more details here"
 ```
 
-The guided `techtree start` flow checks local readiness, points at the configured backend, and walks through the first publish path.
+`regent techtree start` is the best first command for most CLI users. It creates or reuses local state, checks the local runtime, helps bind a Techtree identity, signs in through SIWA, and points at the next useful command for the current machine.
+
+After that guided start, the usual next moves are:
+
+- read Techtree status, activity, and search results
+- create or comment on Techtree work
+- move into the BBH branch
+- switch into `regent autolaunch ...` when launch work is next
 
 ## Reporting
 

@@ -1,24 +1,41 @@
 # Regent CLI
 
-`regent-cli` is the local runtime and operator surface for the published `@regentlabs/cli` package. It ships the `regent` binary, the daemon/runtime it talks to, and the shared contracts that make Techtree and the CLI behave like one system.
+`regent-cli` is the local tool for work that starts on a machine or inside an agent. It ships the `regent` command, manages local state, checks readiness, binds identity, and gives operators and agents a direct path into Techtree and Autolaunch.
 
 ## Agents
 
 - Published package: `@regentlabs/cli`
 - Primary binary: `regent`
-- Canonical entrypoint: `regent run`
-- Guided Techtree onboarding: `regent techtree start`
+- Best first command for most Techtree work: `regent techtree start`
 - Local config commands: `regent config read` and `regent config write --input @file.json`
 - Supported chat flow: `regent chatbox history --webapp|--agent`, `regent chatbox tail --webapp|--agent`, and `regent chatbox post --body ...`
 - Optional XMTP v3 identity registration lives here, but it is not required for browser signoff flows
-- Autolaunch now runs through `regent autolaunch ...`
+- Autolaunch runs through `regent autolaunch ...`
 - Trust-link helper: `regent autolaunch trust x-link --agent <id>`
-- Public operator bug report: `regent bug --summary ... --details ...`
+- Public bug report: `regent bug --summary ... --details ...`
 - Private security report: `regent security-report --summary ... --details ... --contact ...`
 
 ## Humans
 
-The Techtree Phoenix app remains the server-side source of truth. This workspace owns the local side of the experience: configuration, wallet access, SIWA session caching, daemon lifecycle, JSON-RPC control, and the transport adapters that let the CLI talk to the runtime cleanly.
+Use the Regent website when a person wants guided browser setup for wallet access, name claims, billing, and company launch. Use Regent CLI when a person or agent wants direct local control.
+
+The practical setup path is:
+
+1. Install `@regentlabs/cli`.
+2. Run `regent create init`.
+3. Run `regent create wallet --write-env`.
+4. Paste the printed export line into the shell.
+5. Run `regent techtree start`.
+6. Let the guided start check wallet, runtime, identity, and readiness.
+7. Move into the next Techtree task or the BBH branch.
+
+## Key Concepts
+
+- Guided start: `regent techtree start` is the first step. It prepares local config, checks the runtime, helps bind identity, and confirms readiness.
+- Run folder: the local folder for one active run. After setup, the usual next move is to open the next Techtree task or start the BBH loop.
+- Live tree: the public map of seeds, nodes, and branches.
+- BBH branch: the Big-Bench Hard research branch. It gives you a notebook flow, optional SkyDiscover search, and Hypotest replay validation.
+- Public rooms: the `webapp` room and the `agent` room. They stay nearby for context, but they are not the first step.
 
 For the current v0.1 launch:
 
@@ -29,19 +46,6 @@ For the current v0.1 launch:
 - Regent chat transport stays local-only, including `regent chatbox tail --webapp` and `regent chatbox tail --agent`
 - paid node unlocks use Base Sepolia onchain settlement and server-verified entitlement
 - paid node payloads may set a payout wallet that is different from the node creator wallet
-
-For most operators, the practical path is:
-
-1. Install `@regentlabs/cli`.
-2. Run `regent techtree start`.
-3. Let the guided flow check local readiness, bind identity, and point you at the first command set.
-
-For an agent working with Techtree through the CLI, the shortest reliable path is:
-
-1. Run `regent techtree identities list --chain sepolia` or mint if needed.
-2. Run `regent auth siwa login --registry-address ... --token-id ...`.
-3. Run `regent doctor techtree`.
-4. Use the protected Techtree commands you actually need.
 
 If you skip the CLI and call the Techtree SIWA HTTP routes directly, send the current request fields only:
 
@@ -57,8 +61,33 @@ The standalone Python wrapper that used to sit beside the Phoenix app is retired
 ```bash
 pnpm add -g @regentlabs/cli
 regent --help
+regent create init
+regent create wallet --write-env
 regent techtree start
 ```
+
+`regent techtree start` is the best first command for most CLI users. It prepares local config, checks the runtime, helps bind a Techtree identity, confirms access, and prints the next commands when the machine is ready.
+
+## What Opens Next
+
+After the guided start, the usual next moves are:
+
+- `regent techtree status`, `activity`, and `search` when you need to orient yourself
+- `regent techtree node create` and `comment add` when you are ready to publish work
+- the BBH branch when you want a local notebook run, replay, and public proof loop
+- `regent autolaunch ...` when you are moving into launch and market work
+
+## BBH Next Loop
+
+BBH is the Big-Bench Hard branch in Techtree.
+
+- `regent techtree bbh run exec ./bbh-run --lane climb` creates the run folder.
+- `regent techtree bbh notebook pair ./bbh-run` opens the notebook and prints the next move.
+- `regent techtree bbh run solve ./bbh-run --solver hermes|openclaw|skydiscover` runs the local solve step inside that folder.
+- `regent techtree bbh submit ./bbh-run` stores the run.
+- `regent techtree bbh validate ./bbh-run` replays the same work.
+
+SkyDiscover is the search runner for BBH run folders. Hypotest is the scorer and replay check for BBH runs. BBH comes after the guided start, not before it.
 
 ## Workspace
 
@@ -122,6 +151,6 @@ regent security-report --summary "private vuln" --details "steps and impact" --c
 ## Boundary
 
 - `techtree/` owns the server-side business logic and HTTP contracts
-- `regent-cli/` owns the single-package local agent/runtime install surface
+- `regent-cli/` owns the single-package local install and command path
 - packaged install proof is enforced here through `pnpm test:pack-smoke`
 - package tarball shape is enforced here through `pnpm check:pack-cli-contents`

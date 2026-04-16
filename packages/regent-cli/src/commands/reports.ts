@@ -50,7 +50,7 @@ const readLocalAgentIdentity = (configPath?: string): NonNullable<BugReportReque
     !identity.tokenId
   ) {
     throw new Error(
-      "This machine does not have a saved Regent agent identity yet. Run `regent techtree start` or sign in with `regent auth siwa login --registry-address ... --token-id ...` first.",
+      "This machine does not have a saved Regent agent identity yet. Start with `regent techtree start`. Only use `regent auth siwa login --registry-address ... --token-id ...` directly if you already know you need the lower-level auth path.",
     );
   }
 

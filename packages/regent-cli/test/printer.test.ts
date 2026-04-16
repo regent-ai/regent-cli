@@ -28,8 +28,15 @@ describe("printer surface", () => {
   it("renders a framed usage screen", () => {
     const output = renderUsageScreen("/tmp/regent.json");
 
-    expect(output).toContain("R E G E N T  S U R F A C E");
-    expect(output).toContain("Techtree + BBH");
+    expect(output).toContain("R E G E N T   C L I");
+    expect(output).toContain("Start Here");
+    expect(output).toContain("Techtree Next Commands");
+    expect(output).toContain("BBH Next Loop");
+    expect(output).toContain("Guided start first");
+    expect(output).toContain("use regents.sh/services for guided setup, billing, claimed names, and company launch");
+    expect(output).toContain("use regent techtree start first for most Techtree setups");
+    expect(output).toContain("it checks local config, the runtime, identity, Techtree readiness, and BBH readiness");
+    expect(output).toContain("when that finishes, move into the next Techtree task or the BBH branch you need");
     expect(output).toContain("regent techtree start");
     expect(output).toContain("regent techtree node lineage list <id>");
     expect(output).toContain("regent techtree node cross-chain-links create <id> --input @file.json");
@@ -50,7 +57,11 @@ describe("printer surface", () => {
     expect(output).toContain("regent techtree bbh capsules get <capsule-id>");
     expect(output).toContain("regent techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]");
     expect(output).toContain("regent techtree bbh notebook pair [path]");
-    expect(output).toContain("regent techtree bbh run solve [path] [--agent hermes|openclaw]");
+    expect(output).toContain("regent techtree bbh run solve [path] --solver hermes|openclaw|skydiscover");
+    expect(output).toContain("BBH after setup");
+    expect(output).toContain("run exec creates the BBH run folder");
+    expect(output).toContain("SkyDiscover adds the search pass inside the run folder");
+    expect(output).toContain("Hypotest scores the run and checks replay during validation");
     expect(output).toContain("regent techtree bbh genome init [path] [--lane climb|benchmark|challenge] [--sample-size 3] [--budget 6]");
     expect(output).toContain("regent techtree bbh genome improve [path]");
   });

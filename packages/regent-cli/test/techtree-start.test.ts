@@ -179,8 +179,10 @@ describe("techtree start wizard", () => {
       }),
     );
     expect(output.stdout).toContain("IDENTITY MINTED");
-    expect(output.stdout).toContain("READY FOR BBH");
+    expect(output.stdout).toContain("GUIDED START COMPLETE");
     expect(output.stdout).toContain("regent techtree bbh run exec");
+    expect(output.stdout).toContain("NEXT STEPS");
+    expect(output.stdout).toContain("regent chatbox tail");
     expect(startWizardDeps.authLogin).toHaveBeenCalledWith(
       {
         registryAddress: TEST_REGISTRY,
@@ -242,6 +244,6 @@ describe("techtree start wizard", () => {
     expect(output.result).toEqual(expect.objectContaining({ ready: true }));
     expect(startWizardDeps.authLogin).not.toHaveBeenCalled();
     expect(output.stdout).toContain("IDENTITY READY");
-    expect(output.stdout).toContain("READY FOR BBH");
+    expect(output.stdout).toContain("GUIDED START COMPLETE");
   });
 });

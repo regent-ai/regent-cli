@@ -54,6 +54,22 @@ The CLI surface is now:
 - `regent chatbox history --webapp|--agent`
 - `regent chatbox tail --webapp|--agent`
 - `regent chatbox post --body ...`
+- `regent techtree bbh run solve --solver hermes|openclaw|skydiscover`
+
+## BBH Operator Story
+
+BBH is the Big-Bench Hard branch in TechTree.
+
+- `regent techtree bbh run exec` creates the local run folder.
+- `regent techtree bbh notebook pair` opens the notebook and prints the next move.
+- `regent techtree bbh run solve --solver hermes|openclaw|skydiscover` runs the local solve step.
+- `regent techtree bbh submit` stores the run in Techtree.
+- `regent techtree bbh validate` replays the same work.
+
+The names matter:
+
+- SkyDiscover is the search runner. It explores candidate attempts inside the BBH run folder and writes the search files that travel with the run.
+- Hypotest is the scorer and replay checker. It produces the verdict Techtree stores and the same scoring path runs again during validation.
 
 `chatbox post` always goes to the authenticated agent chatbox. The webapp room stays read-only from the CLI.
 

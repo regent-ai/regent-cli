@@ -107,12 +107,26 @@ const renderUsageGroup = (title: string, commands: string[]): string[] => [
   "",
 ];
 
+const renderUsageNotes = (title: string, notes: string[]): string[] => [
+  tone(`▷ ${title}`, CLI_PALETTE.secondary, true),
+  ...notes.map((note) => `${tone("·", CLI_PALETTE.secondary)} ${note}`),
+  "",
+];
+
 export function renderUsageScreen(configPath: string): string {
   const lines = [
-    tone("quiet operator shell for Regent", CLI_PALETTE.secondary),
+    tone("local control layer for Regent", CLI_PALETTE.secondary),
     tone(`default config`, CLI_PALETTE.secondary) + ` ${tone(configPath, CLI_PALETTE.primary, true)}`,
     "",
-    ...renderUsageGroup("Core", [
+    ...renderUsageNotes("Guided start first", [
+      "use regents.sh/services for guided setup, billing, claimed names, and company launch",
+      "use regent techtree start first for most Techtree setups",
+      "it checks local config, the runtime, identity, Techtree readiness, and BBH readiness",
+      "when that finishes, move into the next Techtree task or the BBH branch you need",
+      "drop to the lower-level commands below only when you need tighter control",
+    ]),
+    ...renderUsageGroup("Start Here", [
+      "regent techtree start",
       "regent run",
       "regent create init",
       "regent create wallet",
@@ -120,7 +134,7 @@ export function renderUsageScreen(configPath: string): string {
       "regent config read",
       "regent config write",
     ]),
-    ...renderUsageGroup("Auth + Agent", [
+    ...renderUsageGroup("Identity + Lower-Level Setup", [
       "regent auth siwa login",
       "regent auth siwa status",
       "regent auth siwa logout",
@@ -129,8 +143,7 @@ export function renderUsageScreen(configPath: string): string {
       "regent techtree identities list",
       "regent techtree identities mint",
     ]),
-    ...renderUsageGroup("Techtree + BBH", [
-      "regent techtree start",
+    ...renderUsageGroup("Techtree Next Commands", [
       "regent techtree status",
       "regent techtree activity",
       "regent techtree search",
@@ -155,11 +168,13 @@ export function renderUsageScreen(configPath: string): string {
       "regent chatbox history --webapp|--agent",
       "regent chatbox tail --webapp|--agent",
       "regent chatbox post --body ...",
+    ]),
+    ...renderUsageGroup("BBH Next Loop", [
       "regent techtree bbh capsules list [--lane climb|benchmark|challenge]",
       "regent techtree bbh capsules get <capsule-id>",
       "regent techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]",
       "regent techtree bbh notebook pair [path]",
-      "regent techtree bbh run solve [path] [--agent hermes|openclaw]",
+      "regent techtree bbh run solve [path] --solver hermes|openclaw|skydiscover",
       "regent techtree bbh draft init [path]",
       "regent techtree bbh draft create [path] --title ...",
       "regent techtree bbh genome init [path] [--lane climb|benchmark|challenge] [--sample-size 3] [--budget 6]",
@@ -174,7 +189,13 @@ export function renderUsageScreen(configPath: string): string {
       "regent techtree bbh leaderboard --lane benchmark",
       "regent techtree bbh sync",
     ]),
-    ...renderUsageGroup("Messaging + Other", [
+    ...renderUsageNotes("BBH after setup", [
+      "run exec -> notebook pair -> run solve --solver ... -> submit -> validate",
+      "run exec creates the BBH run folder",
+      "SkyDiscover adds the search pass inside the run folder",
+      "Hypotest scores the run and checks replay during validation",
+    ]),
+    ...renderUsageGroup("Messaging + Adjacent Work", [
       "regent bug --summary \"can't do xyz\" --details \"any more details here\"",
       "regent security-report --summary \"private vuln\" --details \"steps and impact\" --contact \"@xyz on telegram\"",
       "regent xmtp init",
@@ -194,7 +215,7 @@ export function renderUsageScreen(configPath: string): string {
     tone("tip", CLI_PALETTE.secondary, true) + " add " + tone("--config /absolute/path.json", CLI_PALETTE.primary, true) + " to pin a non-default config.",
   ];
 
-  return renderPanel("◆ R E G E N T  S U R F A C E", lines, {
+  return renderPanel("◆ R E G E N T   C L I", lines, {
     borderColor: CLI_PALETTE.chrome,
     titleColor: CLI_PALETTE.title,
   });

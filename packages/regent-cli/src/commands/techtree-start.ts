@@ -201,12 +201,12 @@ export const startWizardDeps: StartWizardDeps = {
 
 const wizardHeader = (configPath: string): string =>
   renderPanel("◆ T E C H T R E E   S T A R T", [
-    tone("quiet operator onboarding", CLI_PALETTE.secondary),
+    tone("guided local setup for Techtree", CLI_PALETTE.secondary),
     `${tone("config", CLI_PALETTE.secondary)} ${tone(configPath, CLI_PALETTE.primary, true)}`,
     "",
-    `${tone("prep", CLI_PALETTE.accent, true)} wallet key required before protected Techtree work`,
-    `${tone("prep", CLI_PALETTE.accent, true)} Sepolia RPC plus Sepolia ETH only matter if this wizard needs to mint a new agent identity`,
-    `${tone("prep", CLI_PALETTE.accent, true)} Phoenix and the SIWA sidecar must already be reachable for local testing`,
+    `${tone("checks", CLI_PALETTE.accent, true)} local config, wallet, runtime, identity, and readiness`,
+    `${tone("prep", CLI_PALETTE.accent, true)} Sepolia RPC plus Sepolia ETH only matter if this start needs to mint a new agent identity`,
+    `${tone("prep", CLI_PALETTE.accent, true)} Techtree services must already be reachable for local testing`,
   ], {
     borderColor: CLI_PALETTE.chrome,
     titleColor: CLI_PALETTE.title,
@@ -283,7 +283,7 @@ const chooseIdentity = async (
   }
 
   startWizardDeps.printText(stepPanel("◆ IDENTITY PICK", choices.map((choice, index) => `${index + 1}. ${choice}`)));
-  const selected = await startWizardDeps.promptChoice("Choose the Techtree identity to bind into SIWA", choices);
+  const selected = await startWizardDeps.promptChoice("Choose the Techtree identity to use for this machine", choices);
   const identity = identities.launchable[selected];
   return {
     registryAddress: identity.registry_address,
@@ -318,7 +318,7 @@ const ensureIdentity = async (
   const rpcReady = Boolean(getFlag(identityArgs, "rpc-url") || process.env.ETH_SEPOLIA_RPC_URL);
   if (!rpcReady) {
     startWizardDeps.printText(blockerPanel("identity", "No Techtree agent identity was found.", [
-      "To mint one from this wizard, set ETH_SEPOLIA_RPC_URL first.",
+      "To mint one from this guided start, set ETH_SEPOLIA_RPC_URL first.",
       "Minting is a real Sepolia transaction, so the wallet also needs Sepolia ETH.",
       "",
       `Rerun: ${configRerunCommand(configPath, ["--mint"])}`,
@@ -331,21 +331,21 @@ const ensureIdentity = async (
   if (!shouldMint) {
     if (!startWizardDeps.isHumanTerminal()) {
       startWizardDeps.printText(blockerPanel("identity", "No Techtree agent identity was found.", [
-        "This wizard can mint one, but only with explicit confirmation.",
+        "This guided start can mint one, but only with explicit confirmation.",
         "Rerun with `--mint` after confirming the wallet has Sepolia ETH.",
       ]));
       return null;
     }
 
     shouldMint = await startWizardDeps.promptConfirm(
-      "No Techtree identity is ready. Mint a new Sepolia ERC-8004 identity now?",
+      "No Techtree identity is ready. Mint a new Sepolia ERC-8004 identity now so the guided start can continue?",
     );
   }
 
   if (!shouldMint) {
     startWizardDeps.printText(blockerPanel("identity", "Identity minting was declined.", [
       "Nothing was changed.",
-      "When you are ready, rerun `regent techtree start --mint`.",
+      "When you are ready, rerun `regent techtree start --mint` to continue the guided start.",
     ]));
     return null;
   }
@@ -369,7 +369,7 @@ const ensureIdentity = async (
   if (!tokenId) {
     startWizardDeps.printText(blockerPanel("identity", "Identity minting finished, but the new token id could not be read.", [
       `transaction ${minted.tx_hash}`,
-      "Re-run `regent techtree identities list --chain sepolia` and then `regent auth siwa login` manually.",
+      "Re-run `regent techtree start --mint`, or inspect the identity manually with `regent techtree identities list --chain sepolia`.",
     ]));
     return null;
   }
@@ -407,7 +407,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   const runtimeBlocking = runtimeReport.checks.find((check) => check.id === "runtime.wallet.source" && check.status === "fail");
   if (runtimeBlocking) {
     startWizardDeps.printText(blockerPanel("wallet", runtimeBlocking.message, [
-      `Set ${config.wallet.privateKeyEnv} before rerunning the wizard.`,
+      `Set ${config.wallet.privateKeyEnv} before rerunning the guided start.`,
       `If you need a throwaway wallet file first, run \`regent create wallet --write-env\`.`,
       "",
       `Rerun: ${configRerunCommand(resolvedConfigPath)}`,
@@ -435,8 +435,8 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
         { scope: "runtime" },
         { configPath: resolvedConfigPath },
       );
-      startWizardDeps.printText(blockerPanel("runtime", "The Regent daemon did not come up in time.", [
-        "The wizard tried to start it automatically, but the runtime socket never became reachable.",
+      startWizardDeps.printText(blockerPanel("runtime", "The local Regent runtime did not come up in time.", [
+        "The guided start tried to start it automatically, but the runtime socket never became reachable.",
         `Try this manually: regent run --config ${resolvedConfigPath}`,
       ]));
       startWizardDeps.printText(doctorFailures(refreshedRuntimeReport));
@@ -453,7 +453,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   }
 
   startWizardDeps.printText(stepPanel("◆ RUNTIME READY", [
-    daemonStarted ? "Started the local Regent daemon in the background." : "Local Regent daemon already reachable.",
+    daemonStarted ? "Started the local Regent runtime in the background." : "Local Regent runtime already reachable.",
     `${tone("socket", CLI_PALETTE.secondary)} ${config.runtime.socketPath}`,
   ]));
 
@@ -487,10 +487,10 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
       );
     } catch (error) {
       const authReport = await startWizardDeps.runScopedDoctor({ scope: "auth" }, { configPath: resolvedConfigPath });
-      startWizardDeps.printText(blockerPanel("auth", "SIWA login did not complete.", [
+      startWizardDeps.printText(blockerPanel("auth", "Techtree sign-in did not complete.", [
         error instanceof Error ? error.message : String(error),
         "",
-        "The doctor panel below shows the current auth blockers.",
+        "The doctor panel below shows what is still blocking the guided start.",
       ]));
       startWizardDeps.printText(doctorFailures(authReport));
       return {
@@ -508,7 +508,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   const techtreeReport = await startWizardDeps.runScopedDoctor({ scope: "techtree" }, { configPath: resolvedConfigPath });
   if (techtreeReport.summary.fail > 0) {
     startWizardDeps.printText(blockerPanel("techtree", "Techtree is not fully reachable with the current session.", [
-      "The local wallet and identity are ready, but the backend or SIWA bridge still has a blocker.",
+      "The local wallet and identity are ready, but Techtree access still has a blocker.",
     ]));
     startWizardDeps.printText(doctorFailures(techtreeReport));
     return {
@@ -525,10 +525,10 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   try {
     await startWizardDeps.bbhProbe(resolvedConfigPath);
   } catch (error) {
-    startWizardDeps.printText(blockerPanel("bbh", "Techtree auth is ready, but the BBH surface is not responding cleanly yet.", [
+    startWizardDeps.printText(blockerPanel("bbh", "Techtree access is ready, but the BBH path is not responding cleanly yet.", [
       error instanceof Error ? error.message : String(error),
       "",
-      "Fix the BBH backend path, then rerun the start wizard.",
+      "Fix the BBH backend path, then rerun the guided start.",
     ]));
     return {
       ready: false,
@@ -541,13 +541,14 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
     };
   }
 
-  startWizardDeps.printText(stepPanel("◆ READY FOR BBH", [
-    "Config, daemon, wallet, identity, SIWA, backend reachability, and BBH public reads are all ready.",
+  startWizardDeps.printText(stepPanel("◆ GUIDED START COMPLETE", [
+    "Local config, runtime, wallet, identity, Techtree access, and BBH public reads are all ready.",
     `${tone("bound identity", CLI_PALETTE.secondary)} ${identity.registryAddress} · token ${identity.tokenId}`,
   ]));
-  startWizardDeps.printText(nextCommandPanel("◆ NEXT COMMANDS", [
+  startWizardDeps.printText(nextCommandPanel("◆ NEXT STEPS", [
     `regent techtree bbh run exec --config ${resolvedConfigPath} --lane climb ~/regent-bbh/climb-run`,
     `regent techtree bbh leaderboard --config ${resolvedConfigPath} --lane benchmark`,
+    `regent chatbox tail --config ${resolvedConfigPath} --webapp`,
   ]));
 
   return {

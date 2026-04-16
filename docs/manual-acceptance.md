@@ -23,9 +23,16 @@ What still must already exist before the guided flow can finish:
 
 - a wallet key in `REGENT_WALLET_PRIVATE_KEY`
 - a reachable Techtree backend and SIWA sidecar
-- a Sepolia RPC URL plus Sepolia ETH only if the wizard needs to mint a fresh Techtree identity
+- a Sepolia RPC URL plus Sepolia ETH only if the guided start needs to mint a fresh Techtree identity
 
 The rest of this document remains the explicit operator-by-operator version of the same flow.
+
+## Key Concepts
+
+- Guided start: `regent techtree start` is the first step. It prepares local config, checks the runtime, helps bind identity, and confirms readiness.
+- Run folder: the local folder for one active run. After the guided start, the usual next move is to open the next Techtree task or start the BBH loop.
+- Live tree: the public map of seeds, nodes, and branches.
+- BBH branch: the Big-Bench Hard research branch. It gives you a notebook flow, optional SkyDiscover search, and Hypotest replay validation.
 
 ## 1. Set wallet env
 
