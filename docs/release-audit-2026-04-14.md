@@ -1,8 +1,8 @@
-# Regent CLI Release Audit — 2026-04-14
+# Regents CLI Release Audit — 2026-04-14
 
 ## Scope
 
-- Repository: `regent-cli`
+- Repository: `regents-cli`
 - Focus areas: CLI release health, API contract alignment, and EVM transaction handoff paths for staking and prepared writes.
 - Methods used:
   - Static code review of command handlers, generated OpenAPI bindings, and contract files.
@@ -29,9 +29,9 @@ If the backend follows the contract shape (`data.tx_request`), CLI submit mode w
 
 Impact:
 
-- `regent regent-staking claim-usdc --submit`
-- `regent regent-staking claim-regent --submit`
-- `regent regent-staking claim-and-restake-regent --submit`
+- `regents regent-staking claim-usdc --submit`
+- `regents regent-staking claim-regent --submit`
+- `regents regent-staking claim-and-restake-regent --submit`
 
 can fail to submit while appearing successful in JSON output.
 

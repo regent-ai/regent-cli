@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
-const packageDir = path.join(repoRoot, "packages", "regent-cli");
+const packageDir = path.join(repoRoot, "packages", "regents-cli");
 
 const result = spawnSync("npm", ["pack", "--dry-run", "--json"], {
   cwd: packageDir,

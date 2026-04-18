@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: regent-cli
+        working-directory: regents-cli
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          path: regent-cli
+          path: regents-cli
 
       - name: Check out Techtree contract source
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: regent-cli/pnpm-lock.yaml
+          cache-dependency-path: regents-cli/pnpm-lock.yaml
           registry-url: https://registry.npmjs.org
 
       - name: Upgrade npm for trusted publishing
@@ -56,7 +56,7 @@ jobs:
 
       - name: Verify tag matches package version
         run: |
-          PACKAGE_VERSION=$(node -p "require('./packages/regent-cli/package.json').version")
+          PACKAGE_VERSION=$(node -p "require('./packages/regents-cli/package.json').version")
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
             echo "Tag version ${TAG_VERSION} does not match package version ${PACKAGE_VERSION}."
@@ -82,7 +82,7 @@ jobs:
         run: pnpm test:pack-smoke
 
       - name: Publish package
-        working-directory: regent-cli/packages/regent-cli
+        working-directory: regents-cli/packages/regents-cli
         run: npm publish --access public --provenance
 
       - name: Create GitHub release

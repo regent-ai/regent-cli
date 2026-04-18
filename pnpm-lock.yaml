@@ -24,7 +24,7 @@ importers:
         specifier: ^2.8.1
         version: 2.8.3
 
-  packages/regent-cli:
+  packages/regents-cli:
     dependencies:
       '@safe-global/protocol-kit':
         specifier: ^7.1.0

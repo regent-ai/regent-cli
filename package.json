@@ -1,5 +1,5 @@
 {
-  "name": "regent-cli-workspace",
+  "name": "regents-cli-workspace",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
@@ -8,11 +8,11 @@
     "lint": "pnpm --filter @regentslabs/cli lint",
     "test": "pnpm --filter @regentslabs/cli test",
     "generate:openapi": "node scripts/generate-openapi-types.mjs",
-    "check:openapi": "pnpm generate:openapi && git diff --exit-code -- packages/regent-cli/src/generated",
+    "check:openapi": "pnpm generate:openapi && git diff --exit-code -- packages/regents-cli/src/generated",
     "check:cli-contract": "node scripts/check-cli-contract.mjs",
     "check:pack-cli-contents": "node scripts/check-packed-cli-package.mjs",
     "test:integration": "pnpm --filter @regentslabs/cli --if-present test:integration",
-    "pack:cli": "bash -lc 'mkdir -p .packed && cd packages/regent-cli && pnpm pack --pack-destination ../../.packed'",
+    "pack:cli": "bash -lc 'mkdir -p .packed && cd packages/regents-cli && pnpm pack --pack-destination ../../.packed'",
     "test:pack-smoke": "bash scripts/packed-install-smoke.sh",
     "release:cli": "bash scripts/release-cli.sh",
     "clean": "pnpm --filter @regentslabs/cli clean"

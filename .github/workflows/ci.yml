@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: regent-cli
+        working-directory: regents-cli
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          path: regent-cli
+          path: regents-cli
 
       - name: Check out Techtree contract source
         uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: regent-cli/pnpm-lock.yaml
+          cache-dependency-path: regents-cli/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

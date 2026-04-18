@@ -1,4 +1,4 @@
-# Regent CLI Release Runbook
+# Regents CLI Release Runbook
 
 This is the package release runbook for `@regentslabs/cli`.
 
@@ -15,7 +15,7 @@ This runbook covers four things:
 
 If you remember only one thing, remember this:
 
-- `regent-cli` is released like a package
+- `regents-cli` is released like a package
 - `techtree` and `autolaunch` are operated like systems
 
 ## Current release gate
@@ -200,7 +200,7 @@ The publish workflow rejects mismatches. If the package version is `0.2.0`, the 
 
 For this repo, the important artifacts are:
 
-- the npm package version in `packages/regent-cli/package.json`
+- the npm package version in `packages/regents-cli/package.json`
 - the packed tarball
 - the generated OpenAPI-backed code
 - the release notes or changelog entry
@@ -221,7 +221,7 @@ This runbook explains how the package itself should be released.
 
 ## Bottom line
 
-`regent-cli` is already set up for a disciplined local release flow.
+`regents-cli` is already set up for a disciplined local release flow.
 
 What is still missing is the external repo configuration around the checked-in workflows:
 

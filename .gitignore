@@ -9,3 +9,10 @@ package-lock.json
 *.log
 *.tsbuildinfo
 .DS_Store
+.codex/
+.claude/
+PLAN.md
+NOTES.md
+SCRATCH.md
+WORKFLOW.md
+codeplan.md

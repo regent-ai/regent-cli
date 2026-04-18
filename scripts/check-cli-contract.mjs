@@ -17,8 +17,8 @@ const cliContractFiles = {
   "shared-services": resolve(root, "docs/shared-cli-contract.yaml"),
 };
 
-const ownershipPath = resolve(root, "packages/regent-cli/src/contracts/api-ownership.ts");
-const cliIndexPath = resolve(root, "packages/regent-cli/src/index.ts");
+const ownershipPath = resolve(root, "packages/regents-cli/src/contracts/api-ownership.ts");
+const cliIndexPath = resolve(root, "packages/regents-cli/src/index.ts");
 
 const parseYaml = (file) => YAML.parse(fs.readFileSync(file, "utf8"));
 

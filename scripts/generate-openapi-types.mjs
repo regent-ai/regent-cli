@@ -9,15 +9,15 @@ const root = resolve(scriptDir, "..");
 const targets = [
   {
     input: resolve(root, "../techtree/docs/api-contract.openapiv3.yaml"),
-    output: resolve(root, "packages/regent-cli/src/generated/techtree-openapi.ts"),
+    output: resolve(root, "packages/regents-cli/src/generated/techtree-openapi.ts"),
   },
   {
     input: resolve(root, "../autolaunch/docs/api-contract.openapiv3.yaml"),
-    output: resolve(root, "packages/regent-cli/src/generated/autolaunch-openapi.ts"),
+    output: resolve(root, "packages/regents-cli/src/generated/autolaunch-openapi.ts"),
   },
   {
     input: resolve(root, "docs/regent-services-contract.openapiv3.yaml"),
-    output: resolve(root, "packages/regent-cli/src/generated/regent-services-openapi.ts"),
+    output: resolve(root, "packages/regents-cli/src/generated/regent-services-openapi.ts"),
   },
 ];
 
