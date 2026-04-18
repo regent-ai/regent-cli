@@ -1,0 +1,175 @@
+import type {
+  AuthStatusResponse,
+  RequiredAgentIdentityField,
+  RegentIdentityNetwork,
+  SiwaAudience,
+  SiwaVerifyResponse,
+} from "../../internal-types/index.js";
+
+import { deriveWalletAddress, signPersonalMessage } from "../agent/wallet.js";
+import { AuthError } from "../errors.js";
+import { readIdentityReceipt } from "../identity/cache.js";
+import { ensureIdentity } from "../identity/ensure.js";
+import { receiptToIdentity } from "../identity/shared.js";
+import type { RuntimeContext } from "../runtime.js";
+import { buildSiwaMessage, SiwaClient } from "../techtree/siwa.js";
+
+const chainIdToIdentityNetwork = (chainId: number): RegentIdentityNetwork => {
+  switch (chainId) {
+    case 8453:
+      return "base";
+    case 84532:
+      return "base-sepolia";
+    default:
+      throw new AuthError(
+        "unsupported_chain_id",
+        "Shared Regent auth only supports Base and Base Sepolia for agent sign-in.",
+      );
+  }
+};
+
+const normalizeAudience = (value: string): SiwaAudience => {
+  switch (value) {
+    case "platform":
+    case "autolaunch":
+    case "techtree":
+    case "regent-services":
+      return value;
+    default:
+      throw new AuthError(
+        "invalid_audience",
+        "Shared Regent auth audience must be one of platform, autolaunch, techtree, or regent-services.",
+      );
+  }
+};
+
+export async function handleAuthSiwaLogin(
+  ctx: RuntimeContext,
+  params: {
+    walletAddress?: `0x${string}`;
+    chainId?: number;
+    registryAddress?: never;
+    tokenId?: never;
+    audience?: string;
+  },
+): Promise<SiwaVerifyResponse> {
+  const privateKey = await ctx.walletSecretSource.getPrivateKeyHex();
+  const walletHint = params.walletAddress ?? (await deriveWalletAddress(privateKey));
+  const chainId = params.chainId ?? ctx.config.auth.defaultChainId;
+  const network = chainIdToIdentityNetwork(chainId);
+  const audience = normalizeAudience(params.audience ?? ctx.config.auth.audience);
+  const authClient = new SiwaClient(ctx.config.auth.baseUrl, ctx.config.auth.requestTimeoutMs);
+
+  await ensureIdentity({
+    network,
+    forceRefresh: false,
+    walletHint,
+    timeoutSeconds: Math.max(1, Math.ceil(ctx.config.auth.requestTimeoutMs / 1000)),
+    config: ctx.config,
+  });
+
+  const identityReceipt = readIdentityReceipt();
+  if (!identityReceipt) {
+    throw new AuthError(
+      "agent_identity_missing",
+      "Regent could not load the Base ERC-8004 identity needed for shared agent sign-in.",
+    );
+  }
+
+  const identity = receiptToIdentity(identityReceipt);
+  const walletAddress = identity.walletAddress;
+  const registryAddress = identity.registryAddress;
+  const tokenId = identity.tokenId;
+
+  if (!registryAddress || !tokenId) {
+    throw new AuthError(
+      "agent_identity_missing",
+      "Regent could not load the Base ERC-8004 identity needed for shared agent sign-in.",
+    );
+  }
+
+  const nonceResponse = await authClient.requestNonce({
+    wallet_address: walletAddress,
+    chain_id: identity.chainId,
+    registry_address: registryAddress,
+    token_id: tokenId,
+    audience,
+  });
+
+  const message = buildSiwaMessage({
+    domain: "regent.cx",
+    uri: "https://regent.cx/login",
+    walletAddress,
+    chainId: identity.chainId,
+    nonce: nonceResponse.data.nonce,
+    statement: "Sign in to Regents CLI.",
+  });
+
+  const signature = await signPersonalMessage(privateKey, message);
+  const verifyResponse = await authClient.verify({
+    wallet_address: walletAddress,
+    chain_id: identity.chainId,
+    registry_address: registryAddress,
+    token_id: tokenId,
+    audience,
+    nonce: nonceResponse.data.nonce,
+    message,
+    signature,
+  });
+
+  const session = {
+    walletAddress: verifyResponse.data.walletAddress,
+    chainId: verifyResponse.data.chainId,
+    registryAddress: verifyResponse.data.registryAddress,
+    tokenId: verifyResponse.data.tokenId,
+    audience: verifyResponse.data.audience,
+    nonce: verifyResponse.data.nonce,
+    keyId: verifyResponse.data.keyId,
+    receipt: verifyResponse.data.receipt,
+    receiptIssuedAt: verifyResponse.data.receiptIssuedAt,
+    receiptExpiresAt: verifyResponse.data.receiptExpiresAt,
+  };
+
+  ctx.sessionStore.setSiwaSession(session);
+  ctx.stateStore.patch({ agent: identity });
+
+  return verifyResponse;
+}
+
+export async function handleAuthSiwaStatus(ctx: RuntimeContext): Promise<AuthStatusResponse> {
+  const session = ctx.sessionStore.getSiwaSession();
+  const agentIdentity = ctx.stateStore.read().agent ?? null;
+  const authenticated = !!session && !ctx.sessionStore.isReceiptExpired();
+  const missingIdentityFields: RequiredAgentIdentityField[] = [
+    agentIdentity?.walletAddress ? null : "walletAddress",
+    typeof agentIdentity?.chainId === "number" ? null : "chainId",
+    agentIdentity?.registryAddress ? null : "registryAddress",
+    agentIdentity?.tokenId ? null : "tokenId",
+  ].filter((field): field is RequiredAgentIdentityField => field !== null);
+  const protectedRoutesReady = authenticated && missingIdentityFields.length === 0;
+
+  if (!authenticated) {
+    return {
+      authenticated: false,
+      session,
+      agentIdentity,
+      protectedRoutesReady,
+      missingIdentityFields,
+      appSessions: ctx.sessionStore.getAppSiwaSessions(),
+    };
+  }
+
+  return {
+    authenticated: true,
+    session,
+    agentIdentity,
+    protectedRoutesReady,
+    missingIdentityFields,
+    appSessions: ctx.sessionStore.getAppSiwaSessions(),
+  };
+}
+
+export async function handleAuthSiwaLogout(ctx: RuntimeContext): Promise<{ ok: true }> {
+  ctx.sessionStore.clearSiwaSession();
+  return { ok: true };
+}

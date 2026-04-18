@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: >
     Source-of-truth contract for shared Regent service rails that are not product-owned.
-    This file owns Regent staking plus shared operator reporting rails.
+    This file owns shared SIWA auth, Regent staking, and shared operator reporting rails.
 tags:
   - name: identity
   - name: auth
@@ -126,6 +126,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdentitySiwaVerifyResponse"
+        "400":
+          description: Invalid SIWA verification request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Signature or nonce validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/agent/siwa/nonce:
+    post:
+      operationId: createSharedAgentSiwaNonce
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiwaNonceRequest"
+      responses:
+        "200":
+          description: Shared SIWA nonce issued for one app audience
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiwaNonceResponse"
+        "400":
+          description: Invalid SIWA nonce request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/agent/siwa/verify:
+    post:
+      operationId: verifySharedAgentSiwaSession
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiwaVerifyRequest"
+      responses:
+        "200":
+          description: Shared SIWA identity verified for one app audience
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiwaVerifyResponse"
         "400":
           description: Invalid SIWA verification request
           content:
@@ -504,6 +556,9 @@ components:
     Address:
       type: string
       pattern: "^0x[a-fA-F0-9]{40}$"
+    BaseChainId:
+      type: integer
+      enum: [84532, 8453]
     HexData:
       type: string
       pattern: "^0x[a-fA-F0-9]*$"
@@ -514,7 +569,7 @@ components:
       enum: [base, base-sepolia]
     IdentityProvider:
       type: string
-      enum: [regent, moonpay, bankr, privy]
+      enum: [coinbase-cdp]
     IdentityVerificationStatus:
       type: string
       enum: [unregistered, onchain]
@@ -747,6 +802,124 @@ components:
         meta:
           $ref: "#/components/schemas/LooseObject"
       additionalProperties: false
+    SiwaNonceRequest:
+      type: object
+      required: [wallet_address, chain_id, registry_address, token_id, audience]
+      properties:
+        wallet_address:
+          $ref: "#/components/schemas/Address"
+        chain_id:
+          type: integer
+          minimum: 1
+        registry_address:
+          $ref: "#/components/schemas/Address"
+        token_id:
+          type: string
+        audience:
+          type: string
+      additionalProperties: false
+    SiwaNonceResponse:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          enum: [nonce_issued]
+        data:
+          type: object
+          required: [nonce, walletAddress, chainId, registryAddress, tokenId, audience, expiresAt]
+          properties:
+            nonce:
+              type: string
+            walletAddress:
+              $ref: "#/components/schemas/Address"
+            chainId:
+              type: integer
+              minimum: 1
+            registryAddress:
+              $ref: "#/components/schemas/Address"
+            tokenId:
+              type: string
+            audience:
+              type: string
+            expiresAt:
+              type: string
+              format: date-time
+          additionalProperties: false
+        meta:
+          $ref: "#/components/schemas/LooseObject"
+      additionalProperties: false
+    SiwaVerifyRequest:
+      type: object
+      required: [wallet_address, chain_id, registry_address, token_id, audience, nonce, message, signature]
+      properties:
+        wallet_address:
+          $ref: "#/components/schemas/Address"
+        chain_id:
+          type: integer
+          minimum: 1
+        audience:
+          type: string
+        nonce:
+          type: string
+        message:
+          type: string
+        signature:
+          $ref: "#/components/schemas/HexData"
+        registry_address:
+          $ref: "#/components/schemas/Address"
+        token_id:
+          type: string
+      additionalProperties: false
+    SiwaVerifyResponse:
+      type: object
+      required: [ok, code, data]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          enum: [siwa_verified]
+        data:
+          type: object
+          required: [verified, walletAddress, chainId, registryAddress, tokenId, audience, nonce, keyId, signatureScheme, receipt, receiptIssuedAt, receiptExpiresAt]
+          properties:
+            verified:
+              type: boolean
+              enum: [true]
+            walletAddress:
+              $ref: "#/components/schemas/Address"
+            chainId:
+              type: integer
+              minimum: 1
+            registryAddress:
+              $ref: "#/components/schemas/Address"
+            tokenId:
+              type: string
+            audience:
+              type: string
+            nonce:
+              type: string
+            keyId:
+              type: string
+            signatureScheme:
+              type: string
+            receipt:
+              type: string
+            receiptIssuedAt:
+              type: string
+              format: date-time
+            receiptExpiresAt:
+              type: string
+              format: date-time
+          additionalProperties: false
+        meta:
+          $ref: "#/components/schemas/LooseObject"
+      additionalProperties: false
     SiwaHttpVerifyRequest:
       type: object
       required: [method, path, headers]
@@ -816,7 +989,7 @@ components:
         wallet_address:
           $ref: "#/components/schemas/Address"
         chain_id:
-          type: integer
+          $ref: "#/components/schemas/BaseChainId"
         registry_address:
           $ref: "#/components/schemas/Address"
         token_id:
@@ -963,7 +1136,7 @@ components:
       type: object
       properties:
         chain_id:
-          type: integer
+          $ref: "#/components/schemas/BaseChainId"
         to:
           $ref: "#/components/schemas/Address"
         value:
@@ -979,7 +1152,7 @@ components:
         action:
           type: string
         chain_id:
-          type: integer
+          $ref: "#/components/schemas/BaseChainId"
         target:
           $ref: "#/components/schemas/Address"
         calldata:
@@ -1001,7 +1174,7 @@ components:
       type: object
       properties:
         chain_id:
-          type: integer
+          $ref: "#/components/schemas/BaseChainId"
         chain_label:
           type: string
         contract_address:

@@ -22,14 +22,14 @@ The Techtree contract includes:
 
 ## Preferred Agent Path
 
-For agents, the normal way into Techtree is through Regent CLI, not by hand-calling SIWA routes:
+For agents, the normal way into Techtree is through Regents CLI, not by hand-calling SIWA routes:
 
-1. `regent techtree identities list --chain sepolia` or mint if needed
-2. `regent identity ensure`
-3. `regent doctor techtree`
+1. `regents techtree identities list --chain base-sepolia` or mint if needed
+2. `regents identity ensure`
+3. `regents doctor techtree`
 4. run the protected Techtree command you actually need
 
-That keeps the identity-login step on Ethereum Sepolia and the publishing step on Base Sepolia without making the caller assemble the SIWA payload itself.
+That keeps the identity-login step and the publishing step on the Base family without making the caller assemble the SIWA payload itself.
 
 If you do call the SIWA routes directly, send only the current request shape:
 
@@ -51,20 +51,20 @@ These are real CLI surfaces, but they are not part of the Techtree OpenAPI file:
 
 The CLI surface is now:
 
-- `regent chatbox history --webapp|--agent`
-- `regent chatbox tail --webapp|--agent`
-- `regent chatbox post --body ...`
-- `regent techtree bbh run solve --solver hermes|openclaw|skydiscover`
+- `regents chatbox history --webapp|--agent`
+- `regents chatbox tail --webapp|--agent`
+- `regents chatbox post --body ...`
+- `regents techtree bbh run solve --solver hermes|openclaw|skydiscover`
 
 ## BBH Operator Story
 
 BBH is the Big-Bench Hard branch in TechTree.
 
-- `regent techtree bbh run exec` creates the local run folder.
-- `regent techtree bbh notebook pair` opens the notebook and prints the next move.
-- `regent techtree bbh run solve --solver hermes|openclaw|skydiscover` runs the local solve step.
-- `regent techtree bbh submit` stores the run in Techtree.
-- `regent techtree bbh validate` replays the same work.
+- `regents techtree bbh run exec` creates the local run folder.
+- `regents techtree bbh notebook pair` opens the notebook and prints the next move.
+- `regents techtree bbh run solve --solver hermes|openclaw|skydiscover` runs the local solve step.
+- `regents techtree bbh submit` stores the run in Techtree.
+- `regents techtree bbh validate` replays the same work.
 
 The names matter:
 
@@ -75,11 +75,11 @@ The names matter:
 
 ## Chain Story For v0.1
 
-Keep these stories separate:
+Use one Base-family story:
 
-- `autolaunch` launch creation is Ethereum Sepolia only
-- `techtree` agent identity login uses Ethereum Sepolia
-- `techtree` publishing and paid node settlement use the current Base path
+- `autolaunch` launch creation uses Base Sepolia for rehearsal and Base mainnet for production
+- `techtree` agent identity login uses Base Sepolia for rehearsal and Base mainnet for production
+- `techtree` publishing and paid node settlement use the same Base-family chain choice
 - the CLI chat transport is local-only and is not part of the HTTP contract
 
 ## Required Change Order
@@ -87,7 +87,7 @@ Keep these stories separate:
 When a Techtree HTTP route changes:
 
 1. Edit [`../../techtree/docs/api-contract.openapiv3.yaml`](/Users/sean/Documents/regent/techtree/docs/api-contract.openapiv3.yaml).
-2. Run `pnpm generate:openapi` in [`regent-cli`](/Users/sean/Documents/regent/regent-cli).
+2. Run `pnpm generate:openapi` in [`regents-cli`](/Users/sean/Documents/regent/regents-cli).
 3. Update Techtree backend code.
 4. Update CLI code and tests.
 5. Run `pnpm check:openapi` and the relevant test slices.

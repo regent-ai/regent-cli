@@ -1,36 +1,37 @@
 # Autolaunch CLI
 
-`autolaunch` is now a command group inside `regent-cli`.
+`autolaunch` is now a command group inside `regents-cli`.
 
 The source of truth for Autolaunch HTTP routes is now the OpenAPI file at [`../../autolaunch/docs/api-contract.openapiv3.yaml`](/Users/sean/Documents/regent/autolaunch/docs/api-contract.openapiv3.yaml).
 
-The shared `regent-staking` rail is no longer documented as part of the Autolaunch contract. Its source of truth is [`regent-services-contract.openapiv3.yaml`](/Users/sean/Documents/regent/regent-cli/docs/regent-services-contract.openapiv3.yaml).
+The shared `regent-staking` rail is no longer documented as part of the Autolaunch contract. Its source of truth is [`regent-services-contract.openapiv3.yaml`](/Users/sean/Documents/regent/regents-cli/docs/regent-services-contract.openapiv3.yaml).
 
 Chain language for this command group:
 
-- `autolaunch` launch creation is Ethereum Sepolia only
-- this is distinct from `Techtree`, which uses Ethereum Sepolia for agent identity login and Base Sepolia for the registry publishing test path
+- test and rehearsal launches use Base Sepolia
+- production launches use Base mainnet
+- the `autolaunch` contract-linked path is Base-family only
 
 There is no standalone `autolaunch` binary anymore. The only supported CLI surface is:
 
 ```bash
-regent autolaunch ...
+regents autolaunch ...
 ```
 
 The separate company-token rewards rail is:
 
 ```bash
-regent regent-staking ...
+regents regent-staking ...
 ```
 
 The product rules for this CLI surface are:
 
-- recognized subject revenue is Sepolia USDC only
+- recognized subject revenue is the configured Base-family USDC only
 - that revenue only counts once it reaches the subject splitter
 - launch operators should use the CLI-first flow
 - launch participants should use the browser for auctions, claims, staking, and subject rewards
 - ingress is a receive-and-sweep wrapper, not a second accounting system
-- the Regent-side fee lane is a treasury payout path, not part of the active Sepolia launch rewards path
+- the Regent-side fee lane is a treasury payout path, not part of the active launch rewards path
 
 ## Environment
 
@@ -49,18 +50,18 @@ If `AUTOLAUNCH_SESSION_COOKIE` is not set and `AUTOLAUNCH_PRIVY_BEARER_TOKEN` is
 
 ## Agent quick start
 
-If you are operating Autolaunch as an agent, use the guided lifecycle through `regent autolaunch ...`.
+If you are operating Autolaunch as an agent, use the guided lifecycle through `regents autolaunch ...`.
 
 From an installed package:
 
 ```bash
-regent autolaunch ...
+regents autolaunch ...
 ```
 
 From the source checkout:
 
 ```bash
-pnpm --filter @regentslabs/cli exec regent autolaunch ...
+pnpm --filter @regentslabs/cli exec regents autolaunch ...
 ```
 
 Before a real launch, the Autolaunch launch node should pass:
@@ -78,20 +79,20 @@ mix autolaunch.verify_deploy --job <job-id>
 
 `mix autolaunch.doctor` is the stop sign for missing launch dependencies. In particular, it now catches a deploy binary that exists on disk but cannot actually run.
 
-If Sepolia congestion or node slowness makes a legitimate deploy run longer than expected, increase `AUTOLAUNCH_DEPLOY_TIMEOUT_MS` on the Autolaunch launch node. The default is `180000`.
+If Base-network congestion or node slowness makes a legitimate deploy run longer than expected, increase `AUTOLAUNCH_DEPLOY_TIMEOUT_MS` on the Autolaunch launch node. The default is `180000`.
 
 The recommended agent order is:
 
 ```bash
-regent autolaunch safe wizard --backup-signer-address <address>
-regent autolaunch safe create --backup-signer-address <address> --website-wallet-address <address>
-regent autolaunch prelaunch wizard --agent <agent-id> --name "Agent Coin Name" --symbol "AGENT" --agent-safe-address <safe-address>
-regent autolaunch prelaunch validate --plan <id>
-regent autolaunch prelaunch publish --plan <id>
-regent autolaunch launch run --plan <id>
-regent autolaunch launch monitor --job <job-id> --watch
-regent autolaunch launch finalize --job <job-id> [--submit]
-regent autolaunch vesting status --job <job-id>
+regents autolaunch safe wizard --backup-signer-address <address>
+regents autolaunch safe create --backup-signer-address <address> --website-wallet-address <address>
+regents autolaunch prelaunch wizard --agent <agent-id> --name "Agent Coin Name" --symbol "AGENT" --agent-safe-address <safe-address>
+regents autolaunch prelaunch validate --plan <id>
+regents autolaunch prelaunch publish --plan <id>
+regents autolaunch launch run --plan <id>
+regents autolaunch launch monitor --job <job-id> --watch
+regents autolaunch launch finalize --job <job-id> [--submit]
+regents autolaunch vesting status --job <job-id>
 ```
 
 Skip the Safe commands only when the agent Safe already exists and the launch plan already points to it.
@@ -103,17 +104,17 @@ The main Autolaunch product is now a guided lifecycle, not a bag of raw contract
 Start here:
 
 ```bash
-regent autolaunch prelaunch wizard
-regent autolaunch prelaunch validate [--plan <id>]
-regent autolaunch prelaunch publish [--plan <id>]
-regent autolaunch launch run [--plan <id>]
-regent autolaunch launch monitor --job <job-id> [--watch]
-regent autolaunch launch finalize --job <job-id> [--submit]
-regent autolaunch vesting status --job <job-id>
-regent autolaunch vesting release --job <job-id> [--submit]
-regent autolaunch vesting propose-beneficiary-rotation --job <job-id> --beneficiary <address> [--json]
-regent autolaunch vesting cancel-beneficiary-rotation --job <job-id> [--json]
-regent autolaunch vesting execute-beneficiary-rotation --job <job-id> [--json]
+regents autolaunch prelaunch wizard
+regents autolaunch prelaunch validate [--plan <id>]
+regents autolaunch prelaunch publish [--plan <id>]
+regents autolaunch launch run [--plan <id>]
+regents autolaunch launch monitor --job <job-id> [--watch]
+regents autolaunch launch finalize --job <job-id> [--submit]
+regents autolaunch vesting status --job <job-id>
+regents autolaunch vesting release --job <job-id> [--submit]
+regents autolaunch vesting propose-beneficiary-rotation --job <job-id> --beneficiary <address> [--json]
+regents autolaunch vesting cancel-beneficiary-rotation --job <job-id> [--json]
+regents autolaunch vesting execute-beneficiary-rotation --job <job-id> [--json]
 ```
 
 These commands assume the Phoenix backend is alive and act as the guided operator front door.
@@ -121,7 +122,7 @@ These commands assume the Phoenix backend is alive and act as the guided operato
 ### Prelaunch
 
 ```bash
-regent autolaunch prelaunch wizard \
+regents autolaunch prelaunch wizard \
   --agent <agent-id> \
   --name "Agent Coin Name" \
   --symbol "AGENT" \
@@ -133,9 +134,9 @@ regent autolaunch prelaunch wizard \
   [--website-url <url>] \
   [--image-url <url> | --image-file <path>]
 
-regent autolaunch prelaunch show [--plan <id>]
-regent autolaunch prelaunch validate [--plan <id>]
-regent autolaunch prelaunch publish [--plan <id>]
+regents autolaunch prelaunch show [--plan <id>]
+regents autolaunch prelaunch validate [--plan <id>]
+regents autolaunch prelaunch publish [--plan <id>]
 ```
 
 `prelaunch wizard` creates or updates the saved launch draft, uploads the hosted image if needed, validates the draft, and saves the canonical local copy under the CLI state directory.
@@ -143,11 +144,11 @@ regent autolaunch prelaunch publish [--plan <id>]
 ### Launch lifecycle
 
 ```bash
-regent autolaunch launch run [--plan <id>] [--wallet-address <address>] [--watch] [--interval <seconds>]
-regent autolaunch launch monitor --job <job-id> [--watch] [--interval <seconds>]
-regent autolaunch launch finalize --job <job-id> [--submit]
-regent autolaunch vesting status --job <job-id>
-regent autolaunch vesting release --job <job-id> [--submit]
+regents autolaunch launch run [--plan <id>] [--wallet-address <address>] [--watch] [--interval <seconds>]
+regents autolaunch launch monitor --job <job-id> [--watch] [--interval <seconds>]
+regents autolaunch launch finalize --job <job-id> [--submit]
+regents autolaunch vesting status --job <job-id>
+regents autolaunch vesting release --job <job-id> [--submit]
 ```
 
 `launch run` loads the saved plan, revalidates it, obtains the SIWA signature bundle, queues the launch, and immediately reads back the job state.
@@ -175,11 +176,11 @@ Everything below still exists, but it is advanced or later-lifecycle tooling. Do
 Use it when Regent income has already reached Base USDC:
 
 ```bash
-regent regent-staking show
-regent regent-staking account <wallet-address>
-regent regent-staking stake --amount <regent-amount>
-regent regent-staking unstake --amount <regent-amount>
-regent regent-staking claim-usdc
+regents regent-staking show
+regents regent-staking account <wallet-address>
+regents regent-staking stake --amount <regent-amount>
+regents regent-staking unstake --amount <regent-amount>
+regents regent-staking claim-usdc
 ```
 
 Operational rule for v1:
@@ -192,15 +193,15 @@ Operational rule for v1:
 ### Agents
 
 ```bash
-regent autolaunch agents list [--launchable] [--json]
-regent autolaunch agent <agent-id> [--json]
-regent autolaunch agent readiness <agent-id> [--json]
+regents autolaunch agents list [--launchable] [--json]
+regents autolaunch agent <agent-id> [--json]
+regents autolaunch agent readiness <agent-id> [--json]
 ```
 
 ### Trust
 
 ```bash
-regent autolaunch trust x-link --agent <agent-id>
+regents autolaunch trust x-link --agent <agent-id>
 ```
 
 This helper starts the X-link browser flow for one Autolaunch agent identity.
@@ -219,18 +220,18 @@ For read surfaces, trust data now lives under the nested `trust` object:
 ### Low-level launches
 
 ```bash
-regent autolaunch launch preview \
+regents autolaunch launch preview \
   --agent <agent-id> \
-  --chain-id <11155111> \
+  --chain-id <84532> \
   --name "Agent Coin Name" \
   --symbol "AGENT" \
   --agent-safe-address <safe-address> \
   [--launch-notes <text>] \
   [--json]
 
-regent autolaunch launch create \
+regents autolaunch launch create \
   --agent <agent-id> \
-  --chain-id <11155111> \
+  --chain-id <84532> \
   --name "Agent Coin Name" \
   --symbol "AGENT" \
   --agent-safe-address <safe-address> \
@@ -242,15 +243,15 @@ regent autolaunch launch create \
   [--launch-notes <text>] \
   [--json]
 
-regent autolaunch jobs watch <job-id> [--watch] [--interval <seconds>] [--json]
+regents autolaunch jobs watch <job-id> [--watch] [--interval <seconds>] [--json]
 ```
 
 `--chain` aliases are also accepted for launch creation:
 
-- `sepolia` -> `11155111`
-- `ethereum` / `ethereum-sepolia` -> `11155111`
+- `base-sepolia` -> `84532`
+- `base` / `base-mainnet` -> `8453`
 
-Autolaunch launch creation is Ethereum Sepolia only.
+Autolaunch launch creation accepts only Base Sepolia and Base mainnet.
 
 Successful launch output now includes the live V2 stack fields:
 
@@ -265,7 +266,7 @@ Successful launch output now includes the live V2 stack fields:
 - `default_ingress_address`
 - `pool_id`
 
-Autolaunch still does not route the Sepolia Regent fee lane automatically into REGENT rewards. The Regent-side launch fee lane is still a direct treasury payout. The separate Base `regent-staking` rail is fed manually after bridging.
+Autolaunch still does not route the launch fee lane automatically into REGENT rewards. The Regent-side launch fee lane is still a direct treasury payout. The separate Base `regent-staking` rail is fed manually after bridging.
 
 `launch preview`, `launch create`, and `jobs watch` return a `reputation_prompt` object in the JSON payload. It is the CLI-safe version of the optional follow-up step shown in the web app:
 
@@ -276,26 +277,26 @@ Autolaunch still does not route the Sepolia Regent fee lane automatically into R
 ### Auctions
 
 ```bash
-regent autolaunch auctions list \
+regents autolaunch auctions list \
   [--sort hottest|recently_launched|expired] \
   [--status active|expired] \
   [--chain <chain-id>] \
   [--mine-only] \
   [--json]
 
-regent autolaunch auction <auction-id> [--json]
+regents autolaunch auction <auction-id> [--json]
 ```
 
 ### Bids
 
 ```bash
-regent autolaunch bids quote \
+regents autolaunch bids quote \
   --auction <auction-id> \
   --amount <currency-amount> \
   --max-price <price-q96-or-ratio> \
   [--json]
 
-regent autolaunch bids place \
+regents autolaunch bids place \
   --auction <auction-id> \
   --amount <currency-amount> \
   --max-price <price-q96-or-ratio> \
@@ -308,24 +309,24 @@ regent autolaunch bids place \
   [--status-band <value>] \
   [--json]
 
-regent autolaunch bids mine \
+regents autolaunch bids mine \
   [--auction <auction-id>] \
   [--status active|borderline|inactive|claimable|exited|claimed] \
   [--json]
 
-regent autolaunch bids exit <bid-id> --tx-hash <hash> [--json]
-regent autolaunch bids claim <bid-id> --tx-hash <hash> [--json]
+regents autolaunch bids exit <bid-id> --tx-hash <hash> [--json]
+regents autolaunch bids claim <bid-id> --tx-hash <hash> [--json]
 ```
 
 ### Subjects
 
 ```bash
-regent autolaunch subjects show <subject-id> [--json]
-regent autolaunch subjects ingress <subject-id> [--json]
-regent autolaunch subjects stake <subject-id> --amount <token-amount> [--json]
-regent autolaunch subjects unstake <subject-id> --amount <token-amount> [--json]
-regent autolaunch subjects claim-usdc <subject-id> [--json]
-regent autolaunch subjects sweep-ingress <subject-id> --address <ingress-address> [--json]
+regents autolaunch subjects show <subject-id> [--json]
+regents autolaunch subjects ingress <subject-id> [--json]
+regents autolaunch subjects stake <subject-id> --amount <token-amount> [--json]
+regents autolaunch subjects unstake <subject-id> --amount <token-amount> [--json]
+regents autolaunch subjects claim-usdc <subject-id> [--json]
+regents autolaunch subjects sweep-ingress <subject-id> --address <ingress-address> [--json]
 ```
 
 These commands use the same session-backed subject endpoints as the web app. They are useful after launch, but they are not the primary launch lifecycle.
@@ -333,9 +334,9 @@ These commands use the same session-backed subject endpoints as the web app. The
 ### Contract reads
 
 ```bash
-regent autolaunch contracts admin [--json]
-regent autolaunch contracts job --job <job-id> [--json]
-regent autolaunch contracts subject --subject <subject-id> [--json]
+regents autolaunch contracts admin [--json]
+regents autolaunch contracts job --job <job-id> [--json]
+regents autolaunch contracts subject --subject <subject-id> [--json]
 ```
 
 These commands expose the same read model that powers the `/contracts` page in the Phoenix app.
@@ -343,40 +344,40 @@ These commands expose the same read model that powers the `/contracts` page in t
 ### Prepare-only contract actions
 
 ```bash
-regent autolaunch strategy migrate --job <job-id> [--json]
-regent autolaunch strategy sweep-token --job <job-id> [--json]
-regent autolaunch strategy sweep-currency --job <job-id> [--json]
-regent autolaunch vesting release --job <job-id> [--json]
+regents autolaunch strategy migrate --job <job-id> [--json]
+regents autolaunch strategy sweep-token --job <job-id> [--json]
+regents autolaunch strategy sweep-currency --job <job-id> [--json]
+regents autolaunch vesting release --job <job-id> [--json]
 
-regent autolaunch fee-registry show --job <job-id> [--json]
+regents autolaunch fee-registry show --job <job-id> [--json]
 
-regent autolaunch fee-vault show --job <job-id> [--json]
-regent autolaunch fee-vault withdraw-treasury --job <job-id> --currency <address> --amount <raw-units> --recipient <address> [--json]
-regent autolaunch fee-vault withdraw-regent --job <job-id> --currency <address> --amount <raw-units> --recipient <address> [--json]
+regents autolaunch fee-vault show --job <job-id> [--json]
+regents autolaunch fee-vault withdraw-treasury --job <job-id> --currency <address> --amount <raw-units> --recipient <address> [--json]
+regents autolaunch fee-vault withdraw-regent --job <job-id> --currency <address> --amount <raw-units> --recipient <address> [--json]
 
-regent autolaunch splitter show --subject <subject-id> [--json]
-regent autolaunch splitter set-paused --subject <subject-id> --paused true|false [--json]
-regent autolaunch splitter set-label --subject <subject-id> --label <text> [--json]
-regent autolaunch splitter propose-treasury-recipient-rotation --subject <subject-id> --recipient <address> [--json]
-regent autolaunch splitter cancel-treasury-recipient-rotation --subject <subject-id> [--json]
-regent autolaunch splitter execute-treasury-recipient-rotation --subject <subject-id> [--json]
-regent autolaunch splitter set-protocol-recipient --subject <subject-id> --recipient <address> [--json]
-regent autolaunch splitter sweep-treasury-residual --subject <subject-id> --amount <raw-units> [--json]
-regent autolaunch splitter sweep-protocol-reserve --subject <subject-id> --amount <raw-units> [--json]
-regent autolaunch splitter reassign-dust --subject <subject-id> --amount <raw-units> [--json]
+regents autolaunch splitter show --subject <subject-id> [--json]
+regents autolaunch splitter set-paused --subject <subject-id> --paused true|false [--json]
+regents autolaunch splitter set-label --subject <subject-id> --label <text> [--json]
+regents autolaunch splitter propose-treasury-recipient-rotation --subject <subject-id> --recipient <address> [--json]
+regents autolaunch splitter cancel-treasury-recipient-rotation --subject <subject-id> [--json]
+regents autolaunch splitter execute-treasury-recipient-rotation --subject <subject-id> [--json]
+regents autolaunch splitter set-protocol-recipient --subject <subject-id> --recipient <address> [--json]
+regents autolaunch splitter sweep-treasury-residual --subject <subject-id> --amount <raw-units> [--json]
+regents autolaunch splitter sweep-protocol-reserve --subject <subject-id> --amount <raw-units> [--json]
+regents autolaunch splitter reassign-dust --subject <subject-id> --amount <raw-units> [--json]
 
-regent autolaunch ingress create --subject <subject-id> --label <text> [--make-default true|false] [--json]
-regent autolaunch ingress set-default --subject <subject-id> --address <ingress-address> [--json]
-regent autolaunch ingress set-label --subject <subject-id> --address <ingress-address> --label <text> [--json]
-regent autolaunch ingress rescue --subject <subject-id> --address <ingress-address> --token <address> --amount <raw-units> --recipient <address> [--json]
+regents autolaunch ingress create --subject <subject-id> --label <text> [--make-default true|false] [--json]
+regents autolaunch ingress set-default --subject <subject-id> --address <ingress-address> [--json]
+regents autolaunch ingress set-label --subject <subject-id> --address <ingress-address> --label <text> [--json]
+regents autolaunch ingress rescue --subject <subject-id> --address <ingress-address> --token <address> --amount <raw-units> --recipient <address> [--json]
 
-regent autolaunch registry show --subject <subject-id> [--json]
-regent autolaunch registry set-subject-manager --subject <subject-id> --account <address> --enabled true|false [--json]
-regent autolaunch registry link-identity --subject <subject-id> --identity-chain-id <id> --identity-registry <address> --identity-agent-id <id> [--json]
-regent autolaunch registry rotate-safe --subject <subject-id> --new-safe <address> [--json]
+regents autolaunch registry show --subject <subject-id> [--json]
+regents autolaunch registry set-subject-manager --subject <subject-id> --account <address> --enabled true|false [--json]
+regents autolaunch registry link-identity --subject <subject-id> --identity-chain-id <id> --identity-registry <address> --identity-agent-id <id> [--json]
+regents autolaunch registry rotate-safe --subject <subject-id> --new-safe <address> [--json]
 
-regent autolaunch factory revenue-share set-authorized-creator --account <address> --enabled true|false [--json]
-regent autolaunch factory revenue-ingress set-authorized-creator --account <address> --enabled true|false [--json]
+regents autolaunch factory revenue-share set-authorized-creator --account <address> --enabled true|false [--json]
+regents autolaunch factory revenue-ingress set-authorized-creator --account <address> --enabled true|false [--json]
 ```
 
 These commands do not sign or broadcast. They return prepared transaction payloads so operators can submit them through the right signer or multisig flow.
@@ -448,7 +449,7 @@ That backend must have:
   The CLI uses it for session exchange, authenticated launch and subject flows, quote reads, contract-read aggregation, and prepared transaction generation.
 - Postgres running
   Launch jobs, bids, and subject action registrations are persisted there.
-- Sepolia RPC configured and reachable
+- launch-chain RPC configured and reachable
   The backend needs it for launch-state reads, bid verification, and subject verification.
 - the SIWA sidecar reachable
   Launch creation depends on backend-side signature verification.

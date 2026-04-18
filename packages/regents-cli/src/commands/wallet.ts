@@ -1,0 +1,92 @@
+import type { ParsedCliArgs } from "../parse.js";
+
+import { coinbaseStatus, loadConfig, setupCoinbaseWallet } from "../internal-runtime/index.js";
+import { CommandExitError } from "../internal-runtime/errors.js";
+import { getBooleanFlag, getFlag } from "../parse.js";
+import { printJson, printText } from "../printer.js";
+
+const renderWalletStatus = (status: Awaited<ReturnType<typeof coinbaseStatus>>): string => {
+  if (status.ok && status.account) {
+    return [
+      "Coinbase wallet ready.",
+      `wallet: ${status.account.name}`,
+      `address: ${status.account.address}`,
+      `identity_ready: ${status.identity_ready ? "yes" : "no"}`,
+    ].join("\n");
+  }
+
+  return [
+    "Coinbase wallet is not ready.",
+    ...(status.next_action ? [`next: ${status.next_action.command}`] : []),
+  ].join("\n");
+};
+
+const failurePayload = (error: CommandExitError) => ({
+  ok: false,
+  provider: "coinbase-cdp",
+  code: error.code,
+  message: error.message,
+  details: (error.details as Record<string, unknown> | undefined) ?? undefined,
+});
+
+export async function runWalletStatus(
+  args: readonly string[] | ParsedCliArgs,
+  configPath?: string,
+): Promise<number> {
+  const json = getBooleanFlag(args, "json");
+
+  try {
+    const config = loadConfig(configPath);
+    const status = await coinbaseStatus(config, {
+      walletHint: getFlag(args, "wallet"),
+    });
+    if (json) {
+      printJson(status);
+    } else {
+      printText(renderWalletStatus(status));
+    }
+    return status.ok ? 0 : 1;
+  } catch (error) {
+    const failure =
+      error instanceof CommandExitError
+        ? error
+        : new CommandExitError("COINBASE_CDP_MISSING", error instanceof Error ? error.message : "Wallet status failed.", 10);
+    if (json) {
+      printJson(failurePayload(failure));
+    } else {
+      printText(failure.message);
+    }
+    return failure.exitCode;
+  }
+}
+
+export async function runWalletSetup(
+  args: readonly string[] | ParsedCliArgs,
+  configPath?: string,
+): Promise<number> {
+  const json = getBooleanFlag(args, "json");
+
+  try {
+    const config = loadConfig(configPath);
+    const result = await setupCoinbaseWallet(config, {
+      walletName: getFlag(args, "wallet") ?? undefined,
+    });
+    if (json) {
+      printJson(result);
+    } else {
+      printText(["Coinbase wallet ready.", `wallet: ${result.wallet.name}`, `address: ${result.wallet.address}`].join("\n"));
+    }
+    return 0;
+  } catch (error) {
+    const failure =
+      error instanceof CommandExitError
+        ? error
+        : new CommandExitError("COINBASE_CDP_MISSING", error instanceof Error ? error.message : "Wallet setup failed.", 10);
+    if (json) {
+      printJson(failurePayload(failure));
+    } else {
+      printText(failure.message);
+    }
+    return failure.exitCode;
+  }
+}

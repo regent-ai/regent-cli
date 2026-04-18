@@ -1,6 +1,6 @@
 # JSON-RPC Methods
 
-`regent-cli` uses JSON-RPC 2.0 over a Unix domain socket. Each request and response is one JSON line.
+`regents-cli` uses JSON-RPC 2.0 over a Unix domain socket. Each request and response is one JSON line.
 
 This file is generated from the current runtime method registry.
 

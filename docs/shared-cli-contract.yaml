@@ -1,11 +1,19 @@
 version: 1
 product: shared-services
 command_groups:
+  - name: wallet
+    interface: runtime
+    auth_mode: none
+    output_envelope: loose-object
+    commands:
+      - wallet status
+      - wallet setup
   - name: identity
     interface: http
     auth_mode: none
     output_envelope: loose-object
     commands:
+      - identity status
       - identity ensure
     path_templates:
       - /v1/identity/status
@@ -13,6 +21,32 @@ command_groups:
       - /v1/identity/registration-completions
       - /v1/identity/siwa/nonce
       - /v1/identity/siwa/verify
+  - name: auth
+    interface: http
+    auth_mode: none
+    output_envelope: loose-object
+    commands:
+      - auth login
+      - auth status
+      - auth logout
+    path_templates:
+      - /v1/agent/siwa/nonce
+      - /v1/agent/siwa/verify
+      - /v1/identity/status
+      - /v1/identity/siwa/nonce
+      - /v1/identity/siwa/verify
+  - name: mcp
+    interface: runtime
+    auth_mode: none
+    output_envelope: loose-object
+    commands:
+      - mcp export hermes
+  - name: doctor
+    interface: runtime
+    auth_mode: none
+    output_envelope: loose-object
+    commands:
+      - doctor
   - name: regent-staking
     interface: http
     auth_mode: agent-siwa

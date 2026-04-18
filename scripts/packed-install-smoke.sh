@@ -17,9 +17,11 @@ SERVER_LOG="${WORK_DIR}/mock-server.log"
 TEST_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
 TEST_WALLET="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 TEST_REGISTRY="0x2222222222222222222222222222222222222222"
+TEST_SIGNATURE="0x1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 
 RUNTIME_PID=""
 SERVER_PID=""
+ORIGINAL_PATH="${PATH}"
 
 cleanup() {
   if [[ -n "${RUNTIME_PID}" ]] && kill -0 "${RUNTIME_PID}" >/dev/null 2>&1; then
@@ -58,6 +60,45 @@ pack_workspace_package() {
   )
 }
 
+write_fake_cdp() {
+  local bin_dir="${WORK_DIR}/bin"
+  mkdir -p "${bin_dir}"
+  cat > "${bin_dir}/cdp" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "\$#" -ge 4 && "\$1" == "evm" && "\$2" == "accounts" && "\$3" == "by-name" && "\$4" == "main" ]]; then
+  printf '{"name":"main","address":"${TEST_WALLET,,}"}\n'
+  exit 0
+fi
+
+if [[ "\$#" -ge 3 && "\$1" == "evm" && "\$2" == "accounts" && "\$3" == "list" ]]; then
+  printf '{"accounts":[{"name":"main","address":"${TEST_WALLET,,}"}]}\n'
+  exit 0
+fi
+
+if [[ "\$#" -ge 4 && "\$1" == "evm" && "\$2" == "accounts" && "\$3" == "create" ]]; then
+  printf '{"name":"main","address":"${TEST_WALLET,,}"}\n'
+  exit 0
+fi
+
+if [[ "\$#" -ge 5 && "\$1" == "evm" && "\$2" == "accounts" && "\$3" == "sign" && "\$4" == "message" ]]; then
+  printf '{"signature":"${TEST_SIGNATURE}"}\n'
+  exit 0
+fi
+
+if [[ "\$#" -ge 1 && "\$1" == "mcp" ]]; then
+  printf '{"ok":true}\n'
+  exit 0
+fi
+
+echo "unsupported cdp command: \$*" >&2
+exit 1
+EOF
+  chmod +x "${bin_dir}/cdp"
+  export PATH="${bin_dir}:${ORIGINAL_PATH}"
+}
+
 trap cleanup EXIT
 
 cd "${ROOT}"
@@ -81,6 +122,7 @@ import fs from "node:fs";
 
 const portFile = process.argv[2];
 let nextNodeId = 100;
+const issuedAgentNonces = new Map();
 
 const json = (res, statusCode, payload) => {
   res.statusCode = statusCode;
@@ -113,7 +155,7 @@ const server = http.createServer(async (req, res) => {
       data: {
         network: body?.network ?? "base",
         address: String(body?.address ?? "0x0").toLowerCase(),
-        provider: body?.provider ?? "regent",
+        provider: body?.provider ?? "coinbase-cdp",
         registered: false,
         verified: "unregistered"
       }
@@ -184,6 +226,74 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "POST" && requestUrl.pathname === "/v1/agent/siwa/nonce") {
+    const walletAddress = String(body?.wallet_address ?? "0x0").toLowerCase();
+    const chainId = Number(body?.chain_id ?? 8453);
+    const registryAddress = String(body?.registry_address ?? "0x2222222222222222222222222222222222222222").toLowerCase();
+    const tokenId = String(body?.token_id ?? "99");
+    const audience = String(body?.audience ?? "techtree");
+    const nonce = `agent-nonce-${Date.now()}`;
+
+    issuedAgentNonces.set(nonce, {
+      walletAddress,
+      chainId,
+      registryAddress,
+      tokenId,
+      audience
+    });
+
+    json(res, 200, {
+      ok: true,
+      code: "nonce_issued",
+      data: {
+        nonce,
+        walletAddress,
+        chainId,
+        registryAddress,
+        tokenId,
+        audience,
+        expiresAt: "2999-01-01T00:00:00.000Z"
+      }
+    });
+    return;
+  }
+
+  if (req.method === "POST" && requestUrl.pathname === "/v1/agent/siwa/verify") {
+    const walletAddress = String(body?.wallet_address ?? "0x0").toLowerCase();
+    const chainId = Number(body?.chain_id ?? 8453);
+    const registryAddress = String(body?.registry_address ?? "0x2222222222222222222222222222222222222222").toLowerCase();
+    const tokenId = String(body?.token_id ?? "99");
+    const audience = String(body?.audience ?? "techtree");
+    const nonce = String(body?.nonce ?? "");
+    const issuedNonce = issuedAgentNonces.get(nonce);
+
+    if (!issuedNonce) {
+      json(res, 422, { error: { code: "siwa_verify_invalid", message: "nonce was not issued" } });
+      return;
+    }
+
+    issuedAgentNonces.delete(nonce);
+    json(res, 200, {
+      ok: true,
+      code: "siwa_verified",
+      data: {
+        verified: true,
+        walletAddress,
+        chainId,
+        registryAddress,
+        tokenId,
+        audience,
+        nonce,
+        keyId: walletAddress,
+        signatureScheme: "evm_personal_sign",
+        receipt: "receipt-valid.eyJ3YWxsZXRBZGRyZXNzIjoiMHg3MDk5Nzk3MGM1MTgxMmRjM2EwMTBjN2QwMWI1MGUwZDE3ZGM3OWM4IiwiY2hhaW5JZCI6ODQ1MywicmVnaXN0cnlBZGRyZXNzIjoiMHgyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIiLCJ0b2tlbklkIjoiOTkiLCJrZXlJZCI6IjB4NzA5OTc5NzBjNTE4MTJkYzNhMDEwYzdkMDFiNTBlMGQxN2RjNzljOCIsImV4cGlyZXNBdCI6IjI5OTktMDEtMDFUMDA6MDA6MDAuMDAwWiJ9",
+        receiptIssuedAt: "2026-03-10T00:00:00.000Z",
+        receiptExpiresAt: "2999-01-01T00:00:00.000Z"
+      }
+    });
+    return;
+  }
+
   if (req.method === "GET" && requestUrl.pathname === "/v1/tree/nodes") {
     json(res, 200, {
       data: [{
@@ -247,8 +357,10 @@ SERVER_PID=$!
 wait_for_file "${SERVER_PORT_FILE}"
 BASE_URL="http://127.0.0.1:$(cat "${SERVER_PORT_FILE}")"
 
-pnpm --dir "${WORK_DIR}" exec regent create init --config "${CONFIG_PATH}" >/dev/null
-pnpm --dir "${WORK_DIR}" exec regent create wallet --dev-file "${WORK_DIR}/wallet.json" >/dev/null
+write_fake_cdp
+
+pnpm --dir "${WORK_DIR}" exec regents create init --config "${CONFIG_PATH}" >/dev/null
+pnpm --dir "${WORK_DIR}" exec regents create wallet --dev-file "${WORK_DIR}/wallet.json" >/dev/null
 
 cat > "${WORK_DIR}/replacement.json" <<EOF
 {
@@ -259,12 +371,14 @@ cat > "${WORK_DIR}/replacement.json" <<EOF
   },
   "auth": {
     "baseUrl": "${BASE_URL}",
-    "audience": "regent-cli",
-    "defaultChainId": 11155111,
+    "audience": "regents-cli",
+    "defaultChainId": 84532,
     "requestTimeoutMs": 1000
   },
   "techtree": {
     "baseUrl": "${BASE_URL}",
+    "audience": "regents-cli",
+    "defaultChainId": 84532,
     "requestTimeoutMs": 1000
   },
   "wallet": {
@@ -331,36 +445,37 @@ cat > "${WORK_DIR}/replacement.json" <<EOF
 }
 EOF
 
-pnpm --dir "${WORK_DIR}" exec regent config write --config "${CONFIG_PATH}" --input "@${WORK_DIR}/replacement.json" >/dev/null
+pnpm --dir "${WORK_DIR}" exec regents config write --config "${CONFIG_PATH}" --input "@${WORK_DIR}/replacement.json" >/dev/null
 
-mkdir -p "${WORK_DIR}/.regent"
-cat > "${WORK_DIR}/.regent/managed-identity.json" <<EOF
-{
-  "provider": "regent",
-  "network": "base",
-  "address": "${TEST_WALLET}"
-}
-EOF
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents wallet setup \
+    --config "${CONFIG_PATH}" \
+    >/dev/null
 
-HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" \
-  pnpm --dir "${WORK_DIR}" exec regent run --config "${CONFIG_PATH}" >"${RUNTIME_LOG}" 2>&1 &
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents identity ensure \
+    --config "${CONFIG_PATH}" \
+    --network base >/dev/null
+
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents run --config "${CONFIG_PATH}" >"${RUNTIME_LOG}" 2>&1 &
 RUNTIME_PID=$!
 
 wait_for_file "${WORK_DIR}/regent.sock"
 
-HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" \
-  pnpm --dir "${WORK_DIR}" exec regent identity ensure \
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents auth login \
     --config "${CONFIG_PATH}" \
-    --provider regent \
-    --network base >/dev/null
+    --audience techtree \
+    >/dev/null
 
-HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" \
-  pnpm --dir "${WORK_DIR}" exec regent techtree nodes list --config "${CONFIG_PATH}" --limit 1 >/dev/null
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents techtree nodes list --config "${CONFIG_PATH}" --limit 1 >/dev/null
 
 printf "print('packed install smoke')\n" > "${NOTEBOOK_PATH}"
 
-HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" \
-  pnpm --dir "${WORK_DIR}" exec regent techtree node create \
+HOME="${WORK_DIR}" REGENT_WALLET_PRIVATE_KEY="${TEST_PRIVATE_KEY}" CDP_KEY_ID="test-key" CDP_KEY_SECRET="test-secret" CDP_WALLET_SECRET="test-wallet-secret" PATH="${PATH}" \
+  pnpm --dir "${WORK_DIR}" exec regents techtree node create \
     --config "${CONFIG_PATH}" \
     --seed ml \
     --kind hypothesis \

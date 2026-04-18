@@ -20,13 +20,13 @@ import type {
   TreeNode,
   WatchRecord,
   WorkPacketResponse,
-} from "../packages/regent-cli/src/internal-types/index.js";
+} from "../packages/regents-cli/src/internal-types/index.js";
 
 import {
   buildHttpSignatureSigningMessage,
   HTTP_SIGNATURE_BASE_COMPONENTS,
   parseSignatureInputHeader,
-} from "../packages/regent-cli/src/internal-runtime/techtree/signing.js";
+} from "../packages/regents-cli/src/internal-runtime/techtree/signing.js";
 
 const REQUIRED_AUTH_HEADERS = [
   "x-siwa-receipt",
@@ -83,7 +83,7 @@ interface RegistrationIntentRecord {
   intentId: string;
   address: `0x${string}`;
   network: "base" | "base-sepolia";
-  provider: "regent" | "moonpay" | "bankr" | "privy";
+  provider: "coinbase-cdp";
   message: string;
 }
 
@@ -508,7 +508,7 @@ export class TechtreeContractServer {
       const payload = body as {
         network?: "base" | "base-sepolia";
         address?: `0x${string}`;
-        provider?: "regent" | "moonpay" | "bankr" | "privy";
+        provider?: "coinbase-cdp";
       };
       const network = payload.network ?? "base";
       const address = (payload.address ?? TEST_AGENT_WALLET).toLowerCase() as `0x${string}`;
@@ -519,7 +519,7 @@ export class TechtreeContractServer {
         data: {
           network,
           address,
-          provider: payload.provider ?? "regent",
+          provider: payload.provider ?? "coinbase-cdp",
           registered: registered !== undefined,
           verified: registered ? "onchain" : "unregistered",
           ...(registered
@@ -539,7 +539,7 @@ export class TechtreeContractServer {
       const payload = body as {
         network?: "base" | "base-sepolia";
         address?: `0x${string}`;
-        provider?: "regent" | "moonpay" | "bankr" | "privy";
+        provider?: "coinbase-cdp";
       };
       const network = payload.network ?? "base";
       const address = (payload.address ?? TEST_AGENT_WALLET).toLowerCase() as `0x${string}`;
@@ -549,7 +549,7 @@ export class TechtreeContractServer {
         intentId,
         address,
         network,
-        provider: payload.provider ?? "regent",
+        provider: payload.provider ?? "coinbase-cdp",
         message,
       });
       const response: IdentityRegistrationIntentResponse = {
@@ -761,6 +761,7 @@ export class TechtreeContractServer {
       const payload = body as {
         wallet_address?: `0x${string}`;
         chain_id?: number;
+        audience?: string;
         nonce?: string;
         message?: string;
         signature?: `0x${string}`;
@@ -783,6 +784,9 @@ export class TechtreeContractServer {
       }
       if (!payload.signature) {
         issues.push("signature is required");
+      }
+      if (!payload.audience) {
+        issues.push("audience is required");
       }
 
       const issuedNonce = payload.nonce ? this.issuedNonces.get(payload.nonce) : undefined;
@@ -846,10 +850,14 @@ export class TechtreeContractServer {
           verified: true,
           walletAddress,
           chainId: payload.chain_id as number,
+          registryAddress: payload.registry_address as `0x${string}`,
+          tokenId: payload.token_id as string,
+          audience: payload.audience as "platform" | "autolaunch" | "techtree" | "regent-services",
           nonce: payload.nonce as string,
           keyId: walletAddress.toLowerCase(),
           signatureScheme: "evm_personal_sign",
           receipt: makeReceipt(receiptClaims),
+          receiptIssuedAt: "2026-03-10T00:00:00.000Z",
           receiptExpiresAt: "2999-01-01T00:00:00.000Z",
         },
       };

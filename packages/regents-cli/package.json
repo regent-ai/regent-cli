@@ -1,0 +1,50 @@
+{
+  "name": "@regentslabs/cli",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Regents CLI package for the published regents command.",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "regents": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/regent-ai/regents-cli.git",
+    "directory": "packages/regents-cli"
+  },
+  "homepage": "https://github.com/regent-ai/regents-cli",
+  "bugs": {
+    "url": "https://github.com/regent-ai/regents-cli/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@safe-global/protocol-kit": "^7.1.0",
+    "@worldcoin/idkit-core": "^4.0.15",
+    "viem": "^2.38.2",
+    "zod": "^4.1.11"
+  },
+  "scripts": {
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc -p tsconfig.json",
+    "prepack": "pnpm build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  }
+}

@@ -1,12 +1,12 @@
 # Regent Doctor Spec
 
 Status: draft v0.1  
-Audience: coding agent implementing `regent-cli` and `regent-runtime`  
-Scope: local diagnostics for `regent-cli` against the current `regent-ai/techtree` Phoenix + SIWA-sidecar architecture
+Audience: coding agent implementing `regents-cli` and `regent-runtime`
+Scope: local diagnostics for `regents-cli` against the current `regent-ai/techtree` Phoenix + SIWA-sidecar architecture
 
 ## 1. Purpose
 
-`regent doctor` is the diagnostic surface for the local Regent agent runtime.
+`regents doctor` is the diagnostic surface for the local Regent agent runtime.
 
 It answers one question:
 
@@ -28,7 +28,7 @@ The current Techtree API contract already exposes:
 
 ## 2. Non-goals
 
-`regent doctor` v0.1 must not:
+`regents doctor` v0.1 must not:
 - mutate Techtree state by default
 - create wallets silently
 - perform SIWA login silently without user intent
@@ -39,31 +39,31 @@ The current Techtree API contract already exposes:
 ### 3.1 Top-level commands
 
 ```bash
-regent doctor
-regent doctor --json
-regent doctor --verbose
-regent doctor --fix
-regent doctor --full
+regents doctor
+regents doctor --json
+regents doctor --verbose
+regents doctor --fix
+regents doctor --full
 ```
 
 ### 3.2 Scoped commands
 
 ```bash
-regent doctor runtime
-regent doctor auth
-regent doctor techtree
-regent doctor transports
-regent doctor xmtp
+regents doctor runtime
+regents doctor auth
+regents doctor techtree
+regents doctor transports
+regents doctor xmtp
 ```
 
 ### 3.3 Semantics
 
-- `regent doctor` runs the safe, non-mutating default check set.
-- `regent doctor --json` emits machine-readable JSON only.
-- `regent doctor --verbose` includes structured check details.
-- `regent doctor --fix` may apply safe local remediations.
-- `regent doctor --full` may perform a real authenticated write proof.
-- `regent doctor runtime|auth|techtree|transports|xmtp` runs only the named scope.
+- `regents doctor` runs the safe, non-mutating default check set.
+- `regents doctor --json` emits machine-readable JSON only.
+- `regents doctor --verbose` includes structured check details.
+- `regents doctor --fix` may apply safe local remediations.
+- `regents doctor --full` may perform a real authenticated write proof.
+- `regents doctor runtime|auth|techtree|transports|xmtp` runs only the named scope.
 
 ## 4. Architecture placement
 
@@ -79,7 +79,7 @@ Bundled runtime layer:
 - talks to Techtree
 - returns structured `DoctorReport`
 
-`regent-cli`:
+`regents-cli`:
 - parses flags/subcommands
 - invokes runtime JSON-RPC methods
 - renders human or JSON output
@@ -226,7 +226,7 @@ Regent Doctor
 [skip] authenticated probe skipped (login required)
 
 Summary: 5 ok, 1 warn, 1 skip
-Next: run `regent identity ensure`
+Next: run `regents identity ensure`
 ```
 
 ### 7.4 JSON output format
@@ -243,13 +243,13 @@ Next: run `regent identity ensure`
       "status": "warn",
       "title": "SIWA session",
       "message": "No active SIWA session found",
-      "remediation": "Run `regent identity ensure`",
+      "remediation": "Run `regents identity ensure`",
       "startedAt": "2026-03-11T15:00:00.000Z",
       "finishedAt": "2026-03-11T15:00:00.010Z",
       "durationMs": 10
     }
   ],
-  "nextSteps": ["Run `regent identity ensure`"],
+  "nextSteps": ["Run `regents identity ensure`"],
   "generatedAt": "2026-03-11T15:00:00.011Z"
 }
 ```
@@ -272,7 +272,7 @@ Fail when:
 - required fields structurally invalid
 
 Possible remediation:
-- `regent create init`
+- `regents create init`
 
 #### `runtime.paths.ensure`
 Checks:
@@ -290,7 +290,7 @@ Checks:
 
 Possible remediation:
 - remove stale socket under `--fix`
-- suggest `regent run`
+- suggest `regents run`
 
 #### `runtime.wallet.source`
 Checks:
@@ -419,7 +419,7 @@ No real libp2p dial in v0.1.
 
 ## 9. Full mode checks
 
-`regent doctor --full` is opt-in and may mutate Techtree state.
+`regents doctor --full` is opt-in and may mutate Techtree state.
 
 ### 9.1 Preconditions
 
@@ -551,12 +551,12 @@ Add:
 - `src/printers/doctorPrinter.ts`
 
 Extend parser:
-- `regent doctor`
-- `regent doctor runtime`
-- `regent doctor auth`
-- `regent doctor techtree`
-- `regent doctor transports`
-- `regent doctor xmtp`
+- `regents doctor`
+- `regents doctor runtime`
+- `regents doctor auth`
+- `regents doctor techtree`
+- `regents doctor transports`
+- `regents doctor xmtp`
 - flags `--json`, `--verbose`, `--fix`, `--full`
 
 ## 13. Detailed method behavior
@@ -618,7 +618,7 @@ Examples:
 
 ### 15.1 Unit tests
 
-`packages/regent-cli/test/internal-runtime/doctor/*.test.ts`
+`packages/regents-cli/test/internal-runtime/doctor/*.test.ts`
 
 Must cover:
 - report summarization
@@ -638,14 +638,14 @@ Must cover:
 ### 15.3 Live integration target
 
 For milestone proof, run against true local Phoenix + sidecar and verify:
-- `regent doctor` passes through authenticated probe
-- `regent doctor --full` proves node create + comment add + readback
+- `regents doctor` passes through authenticated probe
+- `regents doctor --full` proves node create + comment add + readback
 
 ## 16. Acceptance criteria
 
 ### 16.1 v0.1 acceptance
 
-`regent doctor` is complete when:
+`regents doctor` is complete when:
 - it exists in the CLI
 - it returns human output and `--json`
 - it validates config/runtime/wallet presence
@@ -657,7 +657,7 @@ For milestone proof, run against true local Phoenix + sidecar and verify:
 
 ### 16.2 v0.2 acceptance
 
-`regent doctor --full` is complete when:
+`regents doctor --full` is complete when:
 - it creates a real test node
 - it adds a real comment
 - it reads the comment back
@@ -666,10 +666,10 @@ For milestone proof, run against true local Phoenix + sidecar and verify:
 ## 17. Recommended default next-step messages
 
 Examples:
-- missing config -> `Run \`regent create init\``
+- missing config -> `Run \`regents create init\``
 - missing wallet source -> `Set AGENT_WALLET_KEY or configure a wallet file`
-- no SIWA session -> `Run \`regent identity ensure\``
-- runtime not running -> `Run \`regent run\``
+- no SIWA session -> `Run \`regents identity ensure\``
+- runtime not running -> `Run \`regents run\``
 - authenticated probe failed -> `Inspect auth headers and SIWA sidecar configuration`
 - full proof needs parent -> `Re-run with --full --known-parent-id <id>`
 
@@ -722,4 +722,4 @@ async function runDoctor(mode: "default" | "scoped" | "full", opts: DoctorOpts):
 
 ## 20. Short version for the coding agent
 
-Implement `regent doctor` in the runtime, not the CLI. The default command must be safe and non-mutating. It must validate local config/runtime, wallet and protected-route identity readiness, Techtree connectivity, SIWA session freshness, local HTTP signature-envelope construction, and then perform one real authenticated read-only probe against a current Techtree protected route such as `GET /v1/agent/opportunities`. Add `--json`, scoped subcommands, `--fix` for safe local remediations, and `--full` for an opt-in real proof that creates a node, adds a comment, and reads it back.
+Implement `regents doctor` in the runtime, not the CLI. The default command must be safe and non-mutating. It must validate local config/runtime, wallet and protected-route identity readiness, Techtree connectivity, SIWA session freshness, local HTTP signature-envelope construction, and then perform one real authenticated read-only probe against a current Techtree protected route such as `GET /v1/agent/opportunities`. Add `--json`, scoped subcommands, `--fix` for safe local remediations, and `--full` for an opt-in real proof that creates a node, adds a comment, and reads it back.
