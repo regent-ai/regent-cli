@@ -21,14 +21,14 @@ jobs:
       - name: Check out Techtree contract source
         uses: actions/checkout@v4
         with:
-          repository: regent-ai/techtree
+          repository: regents-ai/techtree
           path: techtree
           fetch-depth: 0
 
       - name: Check out Autolaunch contract source
         uses: actions/checkout@v4
         with:
-          repository: regent-ai/autolaunch
+          repository: regents-ai/autolaunch
           path: autolaunch
           fetch-depth: 0
 

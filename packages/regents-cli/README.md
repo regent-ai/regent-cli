@@ -52,7 +52,7 @@ regent security-report --summary "private vuln" --details "steps and impact" --c
 
 ## Links
 
-- Workspace repository: https://github.com/regent-ai/regents-cli
-- Changelog: https://github.com/regent-ai/regents-cli/blob/main/CHANGELOG.md
-- Release runbook: https://github.com/regent-ai/regents-cli/blob/main/docs/release-runbook.md
-- API contract workflow: https://github.com/regent-ai/regents-cli/blob/main/docs/api-contract-workflow.md
+- Workspace repository: https://github.com/regents-ai/regents-cli
+- Changelog: https://github.com/regents-ai/regents-cli/blob/main/CHANGELOG.md
+- Release runbook: https://github.com/regents-ai/regents-cli/blob/main/docs/release-runbook.md
+- API contract workflow: https://github.com/regents-ai/regents-cli/blob/main/docs/api-contract-workflow.md

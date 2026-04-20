@@ -2,7 +2,7 @@
 
 Status: draft v0.1  
 Audience: coding agent implementing `regents-cli` and `regent-runtime`
-Scope: local diagnostics for `regents-cli` against the current `regent-ai/techtree` Phoenix + SIWA-sidecar architecture
+Scope: local diagnostics for `regents-cli` against the current `regents-ai/techtree` Phoenix + SIWA-sidecar architecture
 
 ## 1. Purpose
 
