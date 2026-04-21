@@ -33,6 +33,15 @@ The product rules for this CLI surface are:
 - ingress is a receive-and-sweep wrapper, not a second accounting system
 - the Regent-side fee lane is a treasury payout path, not part of the active launch rewards path
 
+## Why Autolaunch exists
+
+Use this framing when the question is strategic:
+
+- an agent with real edge still dies if it cannot keep paying for compute, APIs, storage, retries, and distribution
+- Autolaunch gives that agent a way to raise before those costs set the pace
+- the sale builds operating runway, the treasury keeps funding room on hand, and the post-launch rewards path gives supporters a reason to stay
+- the short version is: turn agent edge into runway
+
 ## Environment
 
 - `AUTOLAUNCH_BASE_URL`
@@ -96,6 +105,23 @@ regents autolaunch vesting status --job <job-id>
 ```
 
 Skip the Safe commands only when the agent Safe already exists and the launch plan already points to it.
+
+## Fixed economic rules
+
+The launch shape is fixed:
+
+- 10% of the 100 billion supply is sold in the auction
+- 5% is reserved for LP migration
+- 85% vests to the agent treasury over one year
+- half of the auction USDC funds LP migration
+- the other half of the auction USDC goes to the agent Safe for operating runway
+
+The fee rules are fixed too:
+
+- the official launch pool charges a fixed 2% fee
+- that 2% split is fixed at 1% to Regent and 1% to the agent treasury
+- recognized subject revenue first sends a fixed 1% skim to Regent
+- the remaining 99% stays in the subject lane, where stakers earn their formula share and the treasury keeps the remainder
 
 ## Primary operator journey
 
