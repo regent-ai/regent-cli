@@ -46,6 +46,98 @@ const padRight = (value: string, width: number): string => {
   return visible >= width ? value : `${value}${" ".repeat(width - visible)}`;
 };
 
+const padLeft = (value: string, width: number): string => {
+  const visible = stripAnsi(value).length;
+  return visible >= width ? value : `${" ".repeat(width - visible)}${value}`;
+};
+
+const padCenter = (value: string, width: number): string => {
+  const visible = stripAnsi(value).length;
+  if (visible >= width) {
+    return value;
+  }
+
+  const totalPadding = width - visible;
+  const leftPadding = Math.floor(totalPadding / 2);
+  const rightPadding = totalPadding - leftPadding;
+  return `${" ".repeat(leftPadding)}${value}${" ".repeat(rightPadding)}`;
+};
+
+const alignCell = (value: string, width: number, align: "left" | "right" | "center" = "left"): string => {
+  if (align === "right") {
+    return padLeft(value, width);
+  }
+
+  if (align === "center") {
+    return padCenter(value, width);
+  }
+
+  return padRight(value, width);
+};
+
+export interface KeyValueRow {
+  label: string;
+  value: string;
+  labelColor?: string;
+  valueColor?: string;
+}
+
+export interface TableColumn {
+  header: string;
+  align?: "left" | "right" | "center";
+  color?: string;
+  minWidth?: number;
+}
+
+export interface TableRow {
+  cells: readonly string[];
+  colors?: readonly (string | undefined)[];
+}
+
+export const renderKeyValueLines = (rows: readonly KeyValueRow[]): string[] => {
+  const labelWidth = rows.reduce((max, row) => Math.max(max, stripAnsi(row.label).length), 0);
+  return rows.map((row) => {
+    const label = tone(row.label, row.labelColor ?? CLI_PALETTE.secondary, true);
+    const value = tone(row.value, row.valueColor ?? CLI_PALETTE.primary, row.valueColor === CLI_PALETTE.error);
+    return `${alignCell(label, labelWidth, "right")}  ${value}`;
+  });
+};
+
+export const renderKeyValuePanel = (
+  title: string,
+  rows: readonly KeyValueRow[],
+  options?: { borderColor?: string; titleColor?: string },
+): string => renderPanel(title, renderKeyValueLines(rows), options);
+
+export const renderTablePanel = (
+  title: string,
+  columns: readonly TableColumn[],
+  rows: readonly TableRow[],
+  options?: { borderColor?: string; titleColor?: string },
+): string => {
+  const widths = columns.map((column, index) => {
+    const headerWidth = stripAnsi(column.header).length;
+    const rowWidths = rows.map((row) => stripAnsi(row.cells[index] ?? "").length);
+    return Math.max(column.minWidth ?? 0, headerWidth, ...rowWidths, 3);
+  });
+
+  const header = columns
+    .map((column, index) => alignCell(tone(column.header, column.color ?? CLI_PALETTE.title, true), widths[index] ?? 3, column.align))
+    .join(" │ ");
+  const separator = widths.map((width) => "─".repeat(width)).join("─┼─");
+  const body = rows.map((row) =>
+    columns
+      .map((column, index) => {
+        const cell = row.cells[index] ?? "";
+        const cellColor = row.colors?.[index] ?? column.color ?? CLI_PALETTE.primary;
+        return alignCell(tone(cell, cellColor), widths[index] ?? 3, column.align);
+      })
+      .join(" │ "),
+  );
+
+  return renderPanel(title, [header, separator, ...body], options);
+};
+
 export const renderPanel = (
   title: string,
   lines: string[],
@@ -92,40 +184,141 @@ const jsonTitle = (value: unknown): string => {
   return "◆ REGENT OUTPUT DECK";
 };
 
+const summarizeRecord = (value: unknown): KeyValueRow[] => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+
+  const record = value as Record<string, unknown>;
+  const rows: KeyValueRow[] = [];
+  const addRow = (label: string, raw: unknown, options?: { labelColor?: string; valueColor?: string }): void => {
+    if (raw === undefined || raw === null) {
+      return;
+    }
+
+    rows.push({
+      label,
+      value: typeof raw === "string" ? raw : JSON.stringify(raw),
+      ...(options?.labelColor ? { labelColor: options.labelColor } : {}),
+      ...(options?.valueColor ? { valueColor: options.valueColor } : {}),
+    });
+  };
+
+  if (typeof record.ok === "boolean") {
+    addRow("ok", record.ok ? "yes" : "no", {
+      valueColor: record.ok ? CLI_PALETTE.emphasis : CLI_PALETTE.error,
+    });
+  }
+  addRow("status", typeof record.status === "string" ? record.status : undefined, {
+    valueColor:
+      record.status === "error" || record.status === "failed"
+        ? CLI_PALETTE.error
+        : record.status === "ready" || record.status === "ok"
+          ? CLI_PALETTE.emphasis
+          : CLI_PALETTE.primary,
+  });
+  addRow("mode", typeof record.mode === "string" ? record.mode : undefined);
+  addRow("scope", typeof record.scope === "string" ? record.scope : undefined);
+  addRow("state", typeof record.state === "string" ? record.state : undefined);
+  addRow("network", typeof record.network === "string" ? record.network : undefined);
+  addRow("provider", typeof record.provider === "string" ? record.provider : undefined);
+  addRow("address", typeof record.address === "string" ? record.address : undefined);
+  addRow("state dir", typeof record.stateDir === "string" ? record.stateDir : undefined);
+  addRow("socket", typeof record.socketPath === "string" ? record.socketPath : undefined);
+  addRow("socket dir", typeof record.socketDir === "string" ? record.socketDir : undefined);
+  addRow("config", typeof record.configPath === "string" ? record.configPath : undefined);
+  addRow("config created", typeof record.configCreated === "boolean" ? (record.configCreated ? "yes" : "no") : undefined);
+  addRow("keystore dir", typeof record.keystoreDir === "string" ? record.keystoreDir : undefined);
+  addRow("gossipsub dir", typeof record.gossipsubDir === "string" ? record.gossipsubDir : undefined);
+  addRow("xmtp dir", typeof record.xmtpDir === "string" ? record.xmtpDir : undefined);
+  addRow("xmtp policy", typeof record.xmtpPolicyDir === "string" ? record.xmtpPolicyDir : undefined);
+  addRow("dev file", typeof record.devFile === "string" ? record.devFile : undefined);
+  addRow("session", typeof record.session_id === "string" ? record.session_id : undefined);
+  addRow("registry", typeof record.registry_address === "string" ? record.registry_address : undefined);
+  addRow("token", typeof record.token_id === "string" ? record.token_id : undefined);
+  addRow("chain", typeof record.chain_id === "number" ? String(record.chain_id) : undefined);
+  addRow("tx", typeof record.tx_hash === "string" ? record.tx_hash : undefined);
+  addRow("export", typeof record.export === "string" ? record.export : undefined);
+  addRow("generated", typeof record.generated_at === "string" ? record.generated_at : undefined);
+  addRow("created", typeof record.created_at === "string" ? record.created_at : undefined);
+
+  if (record.summary && typeof record.summary === "object" && !Array.isArray(record.summary)) {
+    const summary = record.summary as Record<string, unknown>;
+    addRow("summary ok", typeof summary.ok === "number" ? String(summary.ok) : undefined);
+    addRow("summary warn", typeof summary.warn === "number" ? String(summary.warn) : undefined);
+    addRow("summary fail", typeof summary.fail === "number" ? String(summary.fail) : undefined);
+    addRow("summary skip", typeof summary.skip === "number" ? String(summary.skip) : undefined);
+  }
+
+  if (Array.isArray(record.next_steps) && record.next_steps.length > 0) {
+    addRow("next", String(record.next_steps[0]));
+  }
+
+  if (record.next_action && typeof record.next_action === "object" && !Array.isArray(record.next_action)) {
+    const nextAction = record.next_action as Record<string, unknown>;
+    if (typeof nextAction.command === "string") {
+      addRow("next", nextAction.command);
+    }
+    if (typeof nextAction.reason === "string") {
+      addRow("reason", nextAction.reason, { labelColor: CLI_PALETTE.secondary });
+    }
+  }
+
+  if (record.session && typeof record.session === "object" && !Array.isArray(record.session)) {
+    const session = record.session as Record<string, unknown>;
+    addRow("session status", typeof session.status === "string" ? session.status : undefined);
+    addRow("session id", typeof session.session_id === "string" ? session.session_id : undefined);
+    addRow("session approval", typeof session.approval_url === "string" ? session.approval_url : undefined);
+    addRow("session expires", typeof session.expires_at === "string" ? session.expires_at : undefined);
+  }
+
+  if (record.error && typeof record.error === "object" && !Array.isArray(record.error)) {
+    const error = record.error as Record<string, unknown>;
+    addRow("error code", typeof error.code === "string" ? error.code : undefined, {
+      valueColor: CLI_PALETTE.error,
+    });
+    addRow("error message", typeof error.message === "string" ? error.message : undefined, {
+      valueColor: CLI_PALETTE.error,
+    });
+  }
+
+  return rows;
+};
+
 const humanJson = (value: unknown): string => {
   const raw = JSON.stringify(value, null, 2).split("\n");
   const lines = raw.map((line) => (line.length > 0 ? highlightJsonLine(line) : ""));
-  return renderPanel(jsonTitle(value), lines, {
+  const summaryRows = summarizeRecord(value);
+  const summaryPanel = summaryRows.length > 0 ? renderKeyValuePanel("◆ REGENT SUMMARY", summaryRows) : undefined;
+  const payloadPanel = renderPanel(jsonTitle(value), lines, {
     borderColor: CLI_PALETTE.chrome,
     titleColor: CLI_PALETTE.title,
   });
+
+  return summaryPanel ? `${summaryPanel}\n\n${payloadPanel}` : payloadPanel;
 };
-
-const renderUsageGroup = (title: string, commands: string[]): string[] => [
-  tone(`▶ ${title}`, CLI_PALETTE.accent, true),
-  ...commands.map((command) => `${tone("•", CLI_PALETTE.emphasis)} ${command}`),
-  "",
-];
-
-const renderUsageNotes = (title: string, notes: string[]): string[] => [
-  tone(`▷ ${title}`, CLI_PALETTE.secondary, true),
-  ...notes.map((note) => `${tone("·", CLI_PALETTE.secondary)} ${note}`),
-  "",
-];
 
 export function renderUsageScreen(configPath: string): string {
   const lines = [
     tone("local control layer for Regent", CLI_PALETTE.secondary),
-    tone(`default config`, CLI_PALETTE.secondary) + ` ${tone(configPath, CLI_PALETTE.primary, true)}`,
+    `${tone("default config", CLI_PALETTE.secondary)} ${tone(configPath, CLI_PALETTE.primary, true)}`,
     "",
-    ...renderUsageNotes("Guided start first", [
-      "use regents.sh/services for guided setup, billing, claimed names, and company launch",
-      "use regents techtree start first for most Techtree setups",
-      "it checks local config, the runtime, identity, Techtree readiness, and BBH readiness",
-      "when that finishes, move into the next Techtree task or the BBH branch you need",
-      "drop to the lower-level commands below only when you need tighter control",
-    ]),
-    ...renderUsageGroup("Start Here", [
+    tone("start with the guided path", CLI_PALETTE.accent, true),
+    "use regents.sh/services for guided setup, billing, claimed names, and company launch",
+    "use regents techtree start for most Techtree setups",
+    "it checks local config, the runtime, identity, Techtree readiness, and BBH readiness",
+    "",
+    tone("if you know the job already", CLI_PALETTE.secondary, true),
+    "drop to the lower-level commands only when you need tighter control",
+    "if this is not the page you expected, check the command spelling or run `regents --help`",
+  ];
+
+  return [
+    renderPanel("◆ R E G E N T   C L I", lines, {
+      borderColor: CLI_PALETTE.chrome,
+      titleColor: CLI_PALETTE.title,
+    }),
+    renderPanel("◆ START HERE", [
       "regents techtree start",
       "regents run",
       "regents create init",
@@ -134,14 +327,14 @@ export function renderUsageScreen(configPath: string): string {
       "regents config read",
       "regents config write",
     ]),
-    ...renderUsageGroup("Identity + Lower-Level Setup", [
+    renderPanel("◆ IDENTITY + SETUP", [
       "regents identity ensure",
       "regents agent init",
       "regents agent status",
       "regents techtree identities list",
       "regents techtree identities mint",
     ]),
-    ...renderUsageGroup("Techtree Next Commands", [
+    renderPanel("◆ TECHTREE", [
       "regents techtree status",
       "regents techtree activity",
       "regents techtree search",
@@ -167,7 +360,7 @@ export function renderUsageScreen(configPath: string): string {
       "regents chatbox tail --webapp|--agent",
       "regents chatbox post --body ...",
     ]),
-    ...renderUsageGroup("BBH Next Loop", [
+    renderPanel("◆ BBH LOOP", [
       "regents techtree bbh capsules list [--lane climb|benchmark|challenge]",
       "regents techtree bbh capsules get <capsule-id>",
       "regents techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]",
@@ -187,13 +380,7 @@ export function renderUsageScreen(configPath: string): string {
       "regents techtree bbh leaderboard --lane benchmark",
       "regents techtree bbh sync",
     ]),
-    ...renderUsageNotes("BBH after setup", [
-      "run exec -> notebook pair -> run solve --solver ... -> submit -> validate",
-      "run exec creates the BBH run folder",
-      "SkyDiscover adds the search pass inside the run folder",
-      "Hypotest scores the run and checks replay during validation",
-    ]),
-    ...renderUsageGroup("Messaging + Adjacent Work", [
+    renderPanel("◆ MESSAGING + ADJACENT WORK", [
       "regents bug --summary \"can't do xyz\" --details \"any more details here\"",
       "regents security-report --summary \"private vuln\" --details \"steps and impact\" --contact \"@xyz on telegram\"",
       "regents xmtp init",
@@ -208,15 +395,16 @@ export function renderUsageScreen(configPath: string): string {
       "regents autolaunch trust x-link --agent <id>",
       "regents regent-staking ...",
       "regents agentbook ...",
-      "regent gossipsub status",
+      "regents gossipsub status",
+    ]),
+    renderPanel("◆ BBH AFTER SETUP", [
+      "run exec -> notebook pair -> run solve --solver ... -> submit -> validate",
+      "run exec creates the BBH run folder",
+      "SkyDiscover adds the search pass inside the run folder",
+      "Hypotest scores the run and checks replay during validation",
     ]),
     tone("tip", CLI_PALETTE.secondary, true) + " add " + tone("--config /absolute/path.json", CLI_PALETTE.primary, true) + " to pin a non-default config.",
-  ];
-
-  return renderPanel("◆ R E G E N T   C L I", lines, {
-    borderColor: CLI_PALETTE.chrome,
-    titleColor: CLI_PALETTE.title,
-  });
+  ].join("\n\n");
 }
 
 export function printJson(value: unknown): void {
@@ -240,6 +428,7 @@ const renderErrorPanel = (message: string, code?: string): string =>
         ? [`${tone("code", CLI_PALETTE.secondary)} ${tone(code, CLI_PALETTE.error, true)}`]
         : []),
       `${tone("message", CLI_PALETTE.secondary)} ${tone(message, CLI_PALETTE.primary, true)}`,
+      `${tone("next", CLI_PALETTE.secondary)} ${tone("regents --help", CLI_PALETTE.emphasis, true)}`,
     ],
     { borderColor: CLI_PALETTE.error, titleColor: CLI_PALETTE.title },
   );

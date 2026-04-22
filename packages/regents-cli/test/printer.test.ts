@@ -29,14 +29,16 @@ describe("printer surface", () => {
     const output = renderUsageScreen("/tmp/regent.json");
 
     expect(output).toContain("R E G E N T   C L I");
-    expect(output).toContain("Start Here");
-    expect(output).toContain("Techtree Next Commands");
-    expect(output).toContain("BBH Next Loop");
-    expect(output).toContain("Guided start first");
+    expect(output).toContain("START HERE");
+    expect(output).toContain("IDENTITY + SETUP");
+    expect(output).toContain("TECHTREE");
+    expect(output).toContain("BBH LOOP");
+    expect(output).toContain("MESSAGING + ADJACENT WORK");
+    expect(output).toContain("start with the guided path");
     expect(output).toContain("use regents.sh/services for guided setup, billing, claimed names, and company launch");
-    expect(output).toContain("use regents techtree start first for most Techtree setups");
+    expect(output).toContain("use regents techtree start for most Techtree setups");
     expect(output).toContain("it checks local config, the runtime, identity, Techtree readiness, and BBH readiness");
-    expect(output).toContain("when that finishes, move into the next Techtree task or the BBH branch you need");
+    expect(output).toContain("if this is not the page you expected, check the command spelling or run `regents --help`");
     expect(output).toContain("regents techtree start");
     expect(output).toContain("regents techtree node lineage list <id>");
     expect(output).toContain("regents techtree node cross-chain-links create <id> --input @file.json");
@@ -58,12 +60,33 @@ describe("printer surface", () => {
     expect(output).toContain("regents techtree bbh run exec [path] --capsule <capsule-id> [--lane climb|benchmark|challenge]");
     expect(output).toContain("regents techtree bbh notebook pair [path]");
     expect(output).toContain("regents techtree bbh run solve [path] --solver hermes|openclaw|skydiscover");
-    expect(output).toContain("BBH after setup");
+    expect(output).toContain("◆ BBH AFTER SETUP");
     expect(output).toContain("run exec creates the BBH run folder");
     expect(output).toContain("SkyDiscover adds the search pass inside the run folder");
     expect(output).toContain("Hypotest scores the run and checks replay during validation");
     expect(output).toContain("regents techtree bbh genome init [path] [--lane climb|benchmark|challenge] [--sample-size 3] [--budget 6]");
     expect(output).toContain("regents techtree bbh genome improve [path]");
+  });
+
+  it("renders a receipt-style summary for setup records", async () => {
+    setStdoutTty(true);
+    delete process.env.NO_COLOR;
+
+    const output = await captureOutput(async () => {
+      printJson({
+        ok: true,
+        configPath: "/tmp/regent.json",
+        configCreated: true,
+        stateDir: "/tmp/state",
+        socketPath: "/tmp/run/regent.sock",
+      });
+    });
+
+    expect(output.stdout).toContain("REGENT SUMMARY");
+    expect(output.stdout).toContain("config created");
+    expect(output.stdout).toContain("state dir");
+    expect(output.stdout).toContain("/tmp/regent.json");
+    expect(output.stdout).toContain("REGENT OUTPUT DECK");
   });
 
   it("renders framed JSON output for human terminals", async () => {

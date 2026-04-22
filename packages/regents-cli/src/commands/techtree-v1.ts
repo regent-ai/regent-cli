@@ -47,25 +47,36 @@ export const readRunMetadata = (args: ParsedCliArgs): RegentRunMetadata | undefi
   };
 };
 
-async function runWorkspaceCommand(
-  method:
-    | "techtree.v1.artifact.init"
-    | "techtree.v1.artifact.compile"
-    | "techtree.v1.artifact.pin"
-    | "techtree.v1.artifact.publish"
-    | "techtree.v1.run.exec"
-    | "techtree.v1.run.compile"
-    | "techtree.v1.run.pin"
-    | "techtree.v1.run.publish"
-    | "techtree.v1.review.exec"
-    | "techtree.v1.review.compile"
-    | "techtree.v1.review.pin"
-    | "techtree.v1.review.publish",
+type WorkspaceTreeMethod =
+  | "techtree.v1.artifact.init"
+  | "techtree.v1.artifact.compile"
+  | "techtree.v1.artifact.pin"
+  | "techtree.v1.artifact.publish"
+  | "techtree.v1.run.init"
+  | "techtree.v1.run.exec"
+  | "techtree.v1.run.compile"
+  | "techtree.v1.run.pin"
+  | "techtree.v1.run.publish"
+  | "techtree.v1.review.init"
+  | "techtree.v1.review.exec"
+  | "techtree.v1.review.compile"
+  | "techtree.v1.review.pin"
+  | "techtree.v1.review.publish";
+
+type TreeCommandExtraParams = (args: ParsedCliArgs) => Record<string, unknown> | undefined;
+type TreeCommandRunner = (
+  treeValue: string,
+  args: ParsedCliArgs,
+  configPath?: string,
+) => Promise<void>;
+
+const runTreeWorkspaceCommand = async (
+  method: WorkspaceTreeMethod,
   tree: TechtreeTreeName,
   args: ParsedCliArgs,
   configPath?: string,
   extraParams?: Record<string, unknown>,
-): Promise<void> {
+): Promise<void> => {
   printJson(
     await daemonCall(
       method,
@@ -77,142 +88,70 @@ async function runWorkspaceCommand(
       configPath,
     ),
   );
-}
+};
 
-export async function runTechtreeArtifactInit(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  const tree = normalizeTree(treeValue);
-  printJson(await daemonCall("techtree.v1.artifact.init", {
-    tree,
-    workspace_path: normalizeWorkspacePath(args, 4),
-  }, configPath));
-}
+const createTreeWorkspaceRunner = (
+  method: WorkspaceTreeMethod,
+  extraParams?: TreeCommandExtraParams,
+): TreeCommandRunner => {
+  return async (treeValue, args, configPath) => {
+    await runTreeWorkspaceCommand(
+      method,
+      normalizeTree(treeValue),
+      args,
+      configPath,
+      extraParams?.(args),
+    );
+  };
+};
 
-export async function runTechtreeArtifactCompile(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.artifact.compile", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeArtifactInit = createTreeWorkspaceRunner("techtree.v1.artifact.init");
 
-export async function runTechtreeArtifactPin(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.artifact.pin", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeArtifactCompile = createTreeWorkspaceRunner("techtree.v1.artifact.compile");
 
-export async function runTechtreeArtifactPublish(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.artifact.publish", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeArtifactPin = createTreeWorkspaceRunner("techtree.v1.artifact.pin");
 
-export async function runTechtreeRunInit(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  const tree = normalizeTree(treeValue);
+export const runTechtreeArtifactPublish = createTreeWorkspaceRunner("techtree.v1.artifact.publish");
+
+export const runTechtreeRunInit = createTreeWorkspaceRunner("techtree.v1.run.init", (args) => {
   const metadata = readRunMetadata(args);
-  printJson(await daemonCall("techtree.v1.run.init", {
-    tree,
-    workspace_path: normalizeWorkspacePath(args, 4),
-    artifact_id: normalizeNodeId(getFlag(args, "artifact") ?? getFlag(args, "artifact-id"), "artifact id"),
+
+  return {
+    artifact_id: normalizeNodeId(
+      getFlag(args, "artifact") ?? getFlag(args, "artifact-id"),
+      "artifact id",
+    ),
     ...(metadata ? { metadata } : {}),
-  }, configPath));
-}
+  };
+});
 
-export async function runTechtreeRunExec(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
+export const runTechtreeRunExec = createTreeWorkspaceRunner("techtree.v1.run.exec", (args) => {
   const metadata = readRunMetadata(args);
-  await runWorkspaceCommand(
-    "techtree.v1.run.exec",
-    normalizeTree(treeValue),
-    args,
-    configPath,
-    metadata ? { metadata } : undefined,
-  );
-}
+  return metadata ? { metadata } : undefined;
+});
 
-export async function runTechtreeRunCompile(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.run.compile", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeRunCompile = createTreeWorkspaceRunner("techtree.v1.run.compile");
 
-export async function runTechtreeRunPin(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.run.pin", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeRunPin = createTreeWorkspaceRunner("techtree.v1.run.pin");
 
-export async function runTechtreeRunPublish(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.run.publish", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeRunPublish = createTreeWorkspaceRunner("techtree.v1.run.publish");
 
-export async function runTechtreeReviewInit(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  const tree = normalizeTree(treeValue);
-  printJson(await daemonCall("techtree.v1.review.init", {
-    tree,
-    workspace_path: normalizeWorkspacePath(args, 4),
-    target_id: normalizeNodeId(getFlag(args, "target") ?? getFlag(args, "target-id"), "target id"),
-  }, configPath));
-}
+export const runTechtreeReviewInit = createTreeWorkspaceRunner("techtree.v1.review.init", (args) => {
+  return {
+    target_id: normalizeNodeId(
+      getFlag(args, "target") ?? getFlag(args, "target-id"),
+      "target id",
+    ),
+  };
+});
 
-export async function runTechtreeReviewExec(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.review.exec", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeReviewExec = createTreeWorkspaceRunner("techtree.v1.review.exec");
 
-export async function runTechtreeReviewCompile(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.review.compile", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeReviewCompile = createTreeWorkspaceRunner("techtree.v1.review.compile");
 
-export async function runTechtreeReviewPin(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.review.pin", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeReviewPin = createTreeWorkspaceRunner("techtree.v1.review.pin");
 
-export async function runTechtreeReviewPublish(
-  treeValue: string,
-  args: ParsedCliArgs,
-  configPath?: string,
-): Promise<void> {
-  await runWorkspaceCommand("techtree.v1.review.publish", normalizeTree(treeValue), args, configPath);
-}
+export const runTechtreeReviewPublish = createTreeWorkspaceRunner("techtree.v1.review.publish");
 
 export async function runTechtreeFetch(
   treeValue: string,

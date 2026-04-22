@@ -1,34 +1,20 @@
-import { CLI_PALETTE } from "../printer.js";
+import { CLI_PALETTE, renderKeyValuePanel, renderPanel, renderTablePanel } from "../printer.js";
 
 const ANSI = {
     reset: "\x1b[0m",
     bold: "\x1b[1m",
-    dim: "\x1b[2m",
     charcoalBlue: CLI_PALETTE.chrome,
     yaleBlue: CLI_PALETTE.emphasis,
     ivoryMist: CLI_PALETTE.primary,
     sunlitClay: CLI_PALETTE.accent,
     greyOlive: CLI_PALETTE.secondary,
 };
-const stripAnsi = (value) => value.replace(/\x1b\[[0-9;]*m/g, "");
 const useColor = () => Boolean(process.stdout?.isTTY) && process.env.NO_COLOR !== "1";
 const tone = (value, color, bold = false) => {
     if (!useColor()) {
         return value;
     }
     return `${bold ? ANSI.bold : ""}${color}${value}${ANSI.reset}`;
-};
-const padRight = (value, width) => {
-    const visible = stripAnsi(value).length;
-    return visible >= width ? value : `${value}${" ".repeat(width - visible)}`;
-};
-const frame = (title, lines) => {
-    const contentWidth = Math.max(stripAnsi(title).length, ...lines.map((line) => stripAnsi(line).length), 28);
-    const horizontal = "─".repeat(contentWidth + 2);
-    const top = `${ANSI.charcoalBlue}╭─ ${tone(title, ANSI.ivoryMist, true)} ${"─".repeat(Math.max(0, contentWidth - stripAnsi(title).length))}╮${ANSI.reset}`;
-    const body = lines.map((line) => `│ ${padRight(line, contentWidth)} │`);
-    const bottom = `${ANSI.charcoalBlue}╰${horizontal}╯${ANSI.reset}`;
-    return [top, ...body, bottom].join("\n");
 };
 const reportState = (report) => {
     if (report.summary.fail > 0) {
@@ -63,46 +49,81 @@ const scopeLabel = (report) => {
     return "default sweep";
 };
 const renderSummaryBand = (report) => {
-    const parts = [
-        `${tone("ok", ANSI.greyOlive)} ${tone(String(report.summary.ok), ANSI.yaleBlue, true)}`,
-        `${tone("warn", ANSI.greyOlive)} ${tone(String(report.summary.warn), ANSI.sunlitClay, true)}`,
-        `${tone("fail", ANSI.greyOlive)} ${tone(String(report.summary.fail), ANSI.sunlitClay, true)}`,
-        `${tone("skip", ANSI.greyOlive)} ${tone(String(report.summary.skip), ANSI.greyOlive, true)}`,
-    ];
-    return `ledger  ${parts.join("   ")}`;
+    return renderTablePanel("◆ SUMMARY LEDGER", [
+        { header: "metric", color: ANSI.greyOlive },
+        { header: "count", align: "right", color: ANSI.greyOlive },
+    ], [
+        { cells: ["ok", String(report.summary.ok)], colors: [ANSI.yaleBlue, ANSI.yaleBlue] },
+        { cells: ["warn", String(report.summary.warn)], colors: [ANSI.sunlitClay, ANSI.sunlitClay] },
+        { cells: ["fail", String(report.summary.fail)], colors: [ANSI.sunlitClay, ANSI.sunlitClay] },
+        { cells: ["skip", String(report.summary.skip)], colors: [ANSI.greyOlive, ANSI.greyOlive] },
+    ], {
+        borderColor: ANSI.charcoalBlue,
+        titleColor: ANSI.ivoryMist,
+    });
 };
-const formatCheck = (check, verbose) => {
+const formatCheckRow = (check, verbose) => {
     const status = statusMeta(check.status);
-    const lines = [
-        `${tone(status.glyph, status.color, true)} ${tone(status.label.toUpperCase(), status.color, true)}  ${tone(check.title, ANSI.ivoryMist, true)}`,
-        `   ${check.message}`,
-    ];
-    if (check.remediation) {
-        lines.push(`   ${tone("→", ANSI.sunlitClay, true)} ${check.remediation}`);
-    }
-    if (check.fixApplied) {
-        lines.push(`   ${tone("✓", ANSI.yaleBlue, true)} local fix applied`);
-    }
-    if (verbose) {
-        lines.push(`   ${tone("duration", ANSI.greyOlive)} ${tone(`${check.durationMs}ms`, ANSI.ivoryMist, true)}`);
-        if (check.details) {
-            lines.push(`   ${tone("details", ANSI.greyOlive)} ${JSON.stringify(check.details)}`);
-        }
-    }
-    return lines;
+    return {
+        cells: [
+            status.label.toUpperCase(),
+            check.title,
+            check.message,
+            check.remediation ?? (check.fixApplied ? "local fix applied" : ""),
+            `${check.durationMs}ms`,
+            ...(verbose ? [check.details ? JSON.stringify(check.details) : ""] : []),
+        ],
+        colors: [
+            status.color,
+            ANSI.ivoryMist,
+            ANSI.ivoryMist,
+            check.remediation || check.fixApplied ? ANSI.sunlitClay : ANSI.greyOlive,
+            ANSI.greyOlive,
+            ...(verbose ? [ANSI.greyOlive] : []),
+        ],
+    };
 };
 const renderCiReport = (report, checks) => {
     const scope = report.mode === "scoped" && report.scope ? ` ${report.scope}` : "";
-    const lines = [
-        `${reportState(report).toUpperCase()}${scope} ${report.summary.ok} ok, ${report.summary.warn} warn, ${report.summary.fail} fail, ${report.summary.skip} skip`,
-    ];
-    for (const check of checks) {
-        lines.push(`${check.status.toUpperCase()} ${check.id} :: ${check.message}`);
-    }
-    if (report.nextSteps[0]) {
-        lines.push(`NEXT ${report.nextSteps[0]}`);
-    }
-    return lines.join("\n");
+    const stateColor = reportState(report) === "ready" ? ANSI.yaleBlue : ANSI.sunlitClay;
+    const rows = checks.map((check) => {
+        const status = statusMeta(check.status);
+        return {
+            cells: [
+                status.label.toUpperCase(),
+                check.id,
+                check.message,
+            ],
+            colors: [status.color, ANSI.ivoryMist, ANSI.ivoryMist],
+        };
+    });
+    const summary = renderKeyValuePanel("◆ CI SUMMARY", [
+        { label: "state", value: `${reportState(report).toUpperCase()}${scope}`, valueColor: stateColor },
+        { label: "ok", value: String(report.summary.ok), valueColor: ANSI.yaleBlue },
+        { label: "warn", value: String(report.summary.warn), valueColor: ANSI.sunlitClay },
+        { label: "fail", value: String(report.summary.fail), valueColor: ANSI.sunlitClay },
+        { label: "skip", value: String(report.summary.skip), valueColor: ANSI.greyOlive },
+    ], {
+        borderColor: ANSI.charcoalBlue,
+        titleColor: ANSI.ivoryMist,
+    });
+    const table = rows.length > 0
+        ? renderTablePanel("◆ CI CHECKS", [
+            { header: "status", color: ANSI.greyOlive },
+            { header: "check", color: ANSI.greyOlive },
+            { header: "message", color: ANSI.greyOlive },
+        ], rows, {
+            borderColor: ANSI.charcoalBlue,
+            titleColor: ANSI.ivoryMist,
+        })
+        : renderPanel("◆ CI CHECKS", ["no failing checks"], {
+            borderColor: ANSI.charcoalBlue,
+            titleColor: ANSI.ivoryMist,
+        });
+    return [summary, table, ...(report.nextSteps[0] ? [renderPanel("◆ NEXT STEP", [report.nextSteps[0]], {
+        borderColor: ANSI.charcoalBlue,
+        titleColor: ANSI.ivoryMist,
+    })] : [])].join("\n\n");
 };
 export function renderDoctorReport(report, options) {
     const selectedChecks = report.checks.filter((check) => {
@@ -116,31 +137,36 @@ export function renderDoctorReport(report, options) {
         return renderCiReport(report, ciChecks);
     }
     const state = reportState(report);
-    const stateTone = state === "ready"
-        ? tone("READY", ANSI.yaleBlue, true)
-        : state === "degraded"
-            ? tone("DEGRADED", ANSI.sunlitClay, true)
-            : tone("BLOCKED", ANSI.sunlitClay, true);
-    const summaryLines = [
-        `${tone("mode", ANSI.greyOlive)} ${tone(scopeLabel(report), ANSI.ivoryMist, true)}`,
-        `${tone("state", ANSI.greyOlive)} ${stateTone}`,
-        renderSummaryBand(report),
-        `${tone("generated", ANSI.greyOlive)} ${report.generatedAt}`,
-    ];
-    const sections = [frame("◆ R E G E N T   D O C T O R", summaryLines)];
+    const sections = [renderKeyValuePanel("◆ R E G E N T   D O C T O R", [
+            { label: "mode", value: scopeLabel(report), valueColor: ANSI.ivoryMist },
+            { label: "state", value: state.toUpperCase(), valueColor: state === "ready" ? ANSI.yaleBlue : ANSI.sunlitClay },
+            { label: "generated", value: report.generatedAt, valueColor: ANSI.ivoryMist },
+        ], {
+            borderColor: ANSI.charcoalBlue,
+            titleColor: ANSI.ivoryMist,
+        }), renderSummaryBand(report)];
     if (!options?.quiet) {
-        const checkLines = [];
-        for (const check of selectedChecks) {
-            checkLines.push(...formatCheck(check, options?.verbose ?? false), "");
-        }
-        if (checkLines.length > 0) {
-            checkLines.pop();
-            sections.push(frame("◆ CHECK GRID", checkLines));
+        const checkRows = selectedChecks.map((check) => formatCheckRow(check, options?.verbose ?? false));
+        if (checkRows.length > 0) {
+            sections.push(renderTablePanel("◆ CHECK GRID", [
+                { header: "status", color: ANSI.greyOlive },
+                { header: "check", color: ANSI.greyOlive },
+                { header: "message", color: ANSI.greyOlive },
+                { header: "fix", color: ANSI.greyOlive },
+                { header: "time", align: "right", color: ANSI.greyOlive },
+                ...(options?.verbose ? [{ header: "details", color: ANSI.greyOlive }] : []),
+            ], checkRows, {
+                borderColor: ANSI.charcoalBlue,
+                titleColor: ANSI.ivoryMist,
+            }));
         }
     }
     const nextStepLines = report.nextSteps.length > 0
         ? report.nextSteps.map((step, index) => `${index === 0 ? tone("▶ now", ANSI.sunlitClay, true) : tone("• later", ANSI.greyOlive)} ${step}`)
         : [tone("no follow-up needed", ANSI.yaleBlue, true)];
-    sections.push(frame("◆ NEXT MOVES", nextStepLines));
+    sections.push(renderPanel("◆ NEXT MOVES", nextStepLines, {
+        borderColor: ANSI.charcoalBlue,
+        titleColor: ANSI.ivoryMist,
+    }));
     return sections.join("\n\n");
 }

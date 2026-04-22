@@ -4,7 +4,7 @@ import type { GossipsubStatus, ChatboxLiveEvent } from "../internal-types/index.
 
 import { daemonCall } from "../daemon-client.js";
 import { getBooleanFlag, getFlag, parseIntegerFlag, requireArg, type ParsedCliArgs } from "../parse.js";
-import { printJson } from "../printer.js";
+import { CLI_PALETTE, isHumanTerminal, printJson, renderPanel, tone } from "../printer.js";
 
 type ChatboxRoom = "webapp" | "agent";
 
@@ -15,6 +15,42 @@ const isChatboxLiveEvent = (payload: unknown): payload is ChatboxLiveEvent => {
 
   const candidate = payload as Partial<ChatboxLiveEvent>;
   return typeof candidate.event === "string" && !!candidate.message && typeof candidate.message === "object";
+};
+
+const truncate = (value: string, max = 96): string => {
+  if (value.length <= max) {
+    return value;
+  }
+
+  return `${value.slice(0, Math.max(0, max - 1))}…`;
+};
+
+const renderChatboxEvent = (event: ChatboxLiveEvent): string => {
+  const message = event.message as unknown as Record<string, unknown>;
+  const lines = [
+    `${tone("event", CLI_PALETTE.secondary)} ${tone(event.event, CLI_PALETTE.primary, true)}`,
+  ];
+
+  if (typeof message.id === "string" || typeof message.id === "number") {
+    lines.push(`${tone("id", CLI_PALETTE.secondary)} ${tone(String(message.id), CLI_PALETTE.primary)}`);
+  }
+
+  if (typeof message.body === "string" && message.body.trim() !== "") {
+    lines.push(`${tone("body", CLI_PALETTE.secondary)} ${tone(truncate(message.body.trim()), CLI_PALETTE.primary)}`);
+  }
+
+  if (typeof message.author === "string") {
+    lines.push(`${tone("author", CLI_PALETTE.secondary)} ${tone(message.author, CLI_PALETTE.primary)}`);
+  }
+
+  if (typeof message.created_at === "string") {
+    lines.push(`${tone("time", CLI_PALETTE.secondary)} ${tone(message.created_at, CLI_PALETTE.secondary)}`);
+  }
+
+  return renderPanel(`◆ CHATBOX · ${event.event}`, lines, {
+    borderColor: CLI_PALETTE.emphasis,
+    titleColor: CLI_PALETTE.title,
+  });
 };
 
 const parseRoomFlag = (args?: ParsedCliArgs): ChatboxRoom | undefined => {
@@ -127,6 +163,17 @@ export async function runChatboxTail(args?: ParsedCliArgs, configPath?: string):
     socket.setEncoding("utf8");
     socket.on("connect", () => {
       socket.write(`${JSON.stringify({ room })}\n`);
+      if (isHumanTerminal()) {
+        process.stdout.write(
+          `${renderPanel("◆ CHATBOX LISTENING", [
+            `${tone("room", CLI_PALETTE.secondary)} ${tone(room, CLI_PALETTE.primary, true)}`,
+            `${tone("socket", CLI_PALETTE.secondary)} ${tone(eventSocketPath, CLI_PALETTE.primary)}`,
+          ], {
+            borderColor: CLI_PALETTE.emphasis,
+            titleColor: CLI_PALETTE.title,
+          })}\n\n`,
+        );
+      }
     });
     socket.on("data", (chunk) => {
       buffer += chunk;
@@ -154,7 +201,11 @@ export async function runChatboxTail(args?: ParsedCliArgs, configPath?: string):
         }
 
         if (isChatboxLiveEvent(payload)) {
-          printJson(payload);
+          if (isHumanTerminal()) {
+            process.stdout.write(`${renderChatboxEvent(payload)}\n\n`);
+          } else {
+            printJson(payload);
+          }
           continue;
         }
 

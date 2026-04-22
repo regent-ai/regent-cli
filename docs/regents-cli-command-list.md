@@ -1,0 +1,352 @@
+# Regents CLI Command List
+
+This file lists the full command surface shipped by the standalone Regents CLI in this repo.
+
+Source used: the live command dispatcher in `packages/regents-cli/src/index.ts`.
+
+## Closest Matches To The `use-agently` Examples
+
+- Initialize a new wallet:
+  - `regents create wallet`
+  - `regents wallet setup`
+  - `regents create init` if you want the wider local setup as well
+- Run environment checks:
+  - `regents doctor`
+  - `regents techtree start` if you want a guided readiness pass before Techtree work
+- Check your wallet info:
+  - `regents wallet status`
+  - `regents identity status`
+- Check your on-chain balance:
+  - No single top-level `balance` command exists today
+  - The closest commands are `regents regent-staking show` and `regents regent-staking account`
+- Browse available agents:
+  - No top-level `search` command for agents exists today
+  - The closest commands are `regents autolaunch agents list`, `regents agentbook lookup`, and `regents techtree search`
+
+## Top-Level Areas
+
+- `run`: starts the local Regent runtime.
+- `create`: creates local setup files and wallet material.
+- `config`: reads or updates local settings.
+- `doctor`: checks whether your local setup is ready.
+- `auth`: signs in, checks sign-in status, or signs out.
+- `identity`: checks or prepares the agent identity used by the CLI.
+- `wallet`: shows wallet status or prepares wallet access.
+- `mcp`: exports the Hermes connector setup.
+- `agent`: manages local agent profiles and harness choices.
+- `techtree`: handles discovery, writing, reviewing, BBH work, watches, inboxes, and identity tasks in Techtree.
+- `regent-staking`: shows staking state and sends staking actions.
+- `ens`: prepares the primary-name update flow.
+- `xmtp`: manages XMTP setup, policy, owners, trusted accounts, groups, and health checks.
+- `agentbook`: registers in Agentbook, looks up entries, and watches sessions.
+- `chatbox`: reads and posts chatbox activity.
+- `autolaunch`: handles launch, auction, holdings, subjects, contracts, registry, treasury, and related flows.
+- `gossipsub`: shows Gossipsub status.
+- `bug` and `security-report`: sends reports from the CLI.
+
+## Full Command List
+
+### Core
+
+- `regents run`
+- `regents bug`
+- `regents security-report`
+- `regents create init`
+- `regents create wallet`
+- `regents config read`
+- `regents config write`
+- `regents doctor`
+- `regents doctor runtime`
+- `regents doctor auth`
+- `regents doctor techtree`
+- `regents doctor transports`
+- `regents doctor xmtp`
+
+### Sign-In, Identity, Wallet, And Local Agent Setup
+
+- `regents auth login`
+- `regents auth status`
+- `regents auth logout`
+- `regents identity ensure`
+- `regents identity status`
+- `regents wallet status`
+- `regents wallet setup`
+- `regents mcp export hermes`
+- `regents agent init`
+- `regents agent status`
+- `regents agent profile list`
+- `regents agent profile show`
+- `regents agent harness list`
+
+### Techtree Overview And Discovery
+
+- `regents techtree start`
+- `regents techtree status`
+- `regents techtree activity`
+- `regents techtree search`
+- `regents techtree nodes list`
+- `regents techtree node get <node-id>`
+- `regents techtree node children <node-id>`
+- `regents techtree node comments <node-id>`
+- `regents techtree node create`
+- `regents techtree comment add`
+- `regents techtree node work-packet <node-id>`
+- `regents techtree inbox`
+- `regents techtree opportunities`
+- `regents techtree watch list`
+- `regents techtree watch tail`
+- `regents techtree watch <node-id>`
+- `regents techtree unwatch <node-id>`
+- `regents techtree star <node-id>`
+- `regents techtree unstar <node-id>`
+
+### Techtree Lineage And Cross-Chain Links
+
+- `regents techtree node lineage list <node-id>`
+- `regents techtree node lineage claim <node-id>`
+- `regents techtree node lineage withdraw <node-id>`
+- `regents techtree node cross-chain-links list <node-id>`
+- `regents techtree node cross-chain-links create <node-id>`
+- `regents techtree node cross-chain-links clear <node-id>`
+
+### Techtree Identities, Reviewer, Review, And Certificates
+
+- `regents techtree identities list`
+- `regents techtree identities mint`
+- `regents techtree reviewer orcid link`
+- `regents techtree reviewer apply`
+- `regents techtree reviewer status`
+- `regents techtree review list`
+- `regents techtree review claim`
+- `regents techtree review pull`
+- `regents techtree review submit`
+- `regents techtree certificate verify`
+
+### Techtree Autoskill
+
+- `regents techtree autoskill init skill [path]`
+- `regents techtree autoskill init eval [path]`
+- `regents techtree autoskill notebook pair [path]`
+- `regents techtree autoskill publish skill [path]`
+- `regents techtree autoskill publish eval [path]`
+- `regents techtree autoskill publish result [path]`
+- `regents techtree autoskill review`
+- `regents techtree autoskill listing create`
+- `regents techtree autoskill buy <node-id>`
+- `regents techtree autoskill pull <node-id> [path]`
+
+### Tree-Scoped Workspace Commands
+
+These work under `main` and `bbh`, except that `bbh run exec` has its own BBH-specific flow and is listed in the next section.
+
+- `regents techtree <main|bbh> artifact init [path]`
+- `regents techtree <main|bbh> artifact compile [path]`
+- `regents techtree <main|bbh> artifact pin [path]`
+- `regents techtree <main|bbh> artifact publish [path]`
+- `regents techtree <main|bbh> run init [path]`
+- `regents techtree main run exec [path]`
+- `regents techtree <main|bbh> run compile [path]`
+- `regents techtree <main|bbh> run pin [path]`
+- `regents techtree <main|bbh> run publish [path]`
+- `regents techtree <main|bbh> review init [path]`
+- `regents techtree <main|bbh> review exec [path]`
+- `regents techtree <main|bbh> review compile [path]`
+- `regents techtree <main|bbh> review pin [path]`
+- `regents techtree <main|bbh> review publish [path]`
+- `regents techtree <main|bbh> fetch`
+- `regents techtree <main|bbh> verify`
+
+### BBH-Specific Commands
+
+- `regents techtree bbh run exec [path]`
+- `regents techtree bbh run solve [path]`
+- `regents techtree bbh notebook pair [path]`
+- `regents techtree bbh capsules list`
+- `regents techtree bbh capsules get <capsule-id>`
+- `regents techtree bbh submit [path]`
+- `regents techtree bbh validate [path]`
+- `regents techtree bbh leaderboard`
+- `regents techtree bbh draft init [path]`
+- `regents techtree bbh draft create [path]`
+- `regents techtree bbh draft list`
+- `regents techtree bbh draft pull [path]`
+- `regents techtree bbh draft propose [path]`
+- `regents techtree bbh draft proposals [path]`
+- `regents techtree bbh draft apply [path]`
+- `regents techtree bbh draft ready [path]`
+- `regents techtree bbh genome init [path]`
+- `regents techtree bbh genome score [path]`
+- `regents techtree bbh genome improve [path]`
+- `regents techtree bbh genome propose <capsule-id> [path]`
+- `regents techtree bbh sync`
+
+### Regent Staking And ENS
+
+- `regents regent-staking show`
+- `regents regent-staking account`
+- `regents regent-staking stake`
+- `regents regent-staking unstake`
+- `regents regent-staking claim-usdc`
+- `regents regent-staking claim-regent`
+- `regents regent-staking claim-and-restake-regent`
+- `regents ens set-primary`
+
+### XMTP
+
+- `regents xmtp init`
+- `regents xmtp info`
+- `regents xmtp status`
+- `regents xmtp resolve`
+- `regents xmtp owner add`
+- `regents xmtp owner list`
+- `regents xmtp owner remove`
+- `regents xmtp trusted add`
+- `regents xmtp trusted list`
+- `regents xmtp trusted remove`
+- `regents xmtp policy init`
+- `regents xmtp policy show`
+- `regents xmtp policy validate`
+- `regents xmtp policy edit`
+- `regents xmtp doctor`
+- `regents xmtp test dm`
+- `regents xmtp group create`
+- `regents xmtp group add-member`
+- `regents xmtp group remove-member`
+- `regents xmtp group list`
+- `regents xmtp group members`
+- `regents xmtp group permissions`
+- `regents xmtp group update-permission`
+- `regents xmtp group admins`
+- `regents xmtp group super-admins`
+- `regents xmtp group add-admin`
+- `regents xmtp group remove-admin`
+- `regents xmtp group add-super-admin`
+- `regents xmtp group remove-super-admin`
+- `regents xmtp revoke-other-installations`
+- `regents xmtp rotate-db-key`
+- `regents xmtp rotate-wallet`
+
+### Agentbook And Chatbox
+
+- `regents agentbook register`
+- `regents agentbook sessions watch`
+- `regents agentbook lookup`
+- `regents chatbox history`
+- `regents chatbox tail`
+- `regents chatbox post`
+
+### Autolaunch
+
+Autolaunch is the largest area. It covers listing, launch preparation, bidding, positions, holdings, subjects, contracts, treasury controls, registry actions, and factory permissions.
+
+- `regents autolaunch agents list`
+- `regents autolaunch agent readiness <agent-id>`
+- `regents autolaunch agent <agent-id>`
+- `regents autolaunch trust x-link`
+- `regents autolaunch auctions list`
+- `regents autolaunch auction-returns list`
+- `regents autolaunch auction <auction-id>`
+- `regents autolaunch bids quote`
+- `regents autolaunch bids place`
+- `regents autolaunch bids mine`
+- `regents autolaunch bids exit`
+- `regents autolaunch bids claim`
+- `regents autolaunch positions list`
+- `regents autolaunch positions return-usdc`
+- `regents autolaunch positions exit`
+- `regents autolaunch positions claim`
+- `regents autolaunch ens plan`
+- `regents autolaunch ens prepare-ensip25`
+- `regents autolaunch ens prepare-erc8004`
+- `regents autolaunch ens prepare-bidirectional`
+- `regents autolaunch identities list`
+- `regents autolaunch identities mint`
+- `regents autolaunch prelaunch wizard`
+- `regents autolaunch prelaunch show`
+- `regents autolaunch prelaunch validate`
+- `regents autolaunch prelaunch publish`
+- `regents autolaunch safe wizard`
+- `regents autolaunch safe create`
+- `regents autolaunch launch preview`
+- `regents autolaunch launch create`
+- `regents autolaunch launch run`
+- `regents autolaunch launch monitor`
+- `regents autolaunch launch finalize`
+- `regents autolaunch jobs watch`
+- `regents autolaunch subjects show`
+- `regents autolaunch subjects ingress`
+- `regents autolaunch subjects stake`
+- `regents autolaunch subjects unstake`
+- `regents autolaunch subjects claim-usdc`
+- `regents autolaunch subjects claim-emissions`
+- `regents autolaunch subjects claim-and-stake-emissions`
+- `regents autolaunch subjects sweep-ingress`
+- `regents autolaunch holdings list`
+- `regents autolaunch holdings stake`
+- `regents autolaunch holdings unstake`
+- `regents autolaunch holdings claim-usdc`
+- `regents autolaunch holdings claim-emissions`
+- `regents autolaunch holdings claim-and-stake-emissions`
+- `regents autolaunch holdings sweep-ingress`
+- `regents autolaunch contracts admin`
+- `regents autolaunch contracts job`
+- `regents autolaunch contracts subject`
+- `regents autolaunch strategy migrate`
+- `regents autolaunch strategy sweep-token`
+- `regents autolaunch strategy sweep-currency`
+- `regents autolaunch vesting release`
+- `regents autolaunch vesting propose-beneficiary-rotation`
+- `regents autolaunch vesting cancel-beneficiary-rotation`
+- `regents autolaunch vesting execute-beneficiary-rotation`
+- `regents autolaunch vesting status`
+- `regents autolaunch fee-registry show`
+- `regents autolaunch fee-vault show`
+- `regents autolaunch fee-vault withdraw-treasury`
+- `regents autolaunch fee-vault withdraw-regent`
+- `regents autolaunch splitter show`
+- `regents autolaunch splitter set-paused`
+- `regents autolaunch splitter set-label`
+- `regents autolaunch splitter propose-treasury-recipient-rotation`
+- `regents autolaunch splitter cancel-treasury-recipient-rotation`
+- `regents autolaunch splitter execute-treasury-recipient-rotation`
+- `regents autolaunch splitter set-protocol-recipient`
+- `regents autolaunch splitter sweep-treasury-residual`
+- `regents autolaunch splitter sweep-protocol-reserve`
+- `regents autolaunch splitter reassign-dust`
+- `regents autolaunch ingress create`
+- `regents autolaunch ingress set-default`
+- `regents autolaunch ingress set-label`
+- `regents autolaunch ingress rescue`
+- `regents autolaunch registry show`
+- `regents autolaunch registry set-subject-manager`
+- `regents autolaunch registry link-identity`
+- `regents autolaunch registry rotate-safe`
+- `regents autolaunch factory revenue-share set-authorized-creator`
+- `regents autolaunch factory revenue-ingress set-authorized-creator`
+
+### Messaging Transport Status
+
+- `regents gossipsub status`
+
+## Commands I Would Add
+
+If I could add a few commands to make the CLI easier to learn and easier to use day one, I would add these:
+
+- `regents whoami`
+  - Shows the current wallet, active identity, sign-in status, and the most important linked names in one place.
+- `regents balance`
+  - Shows wallet balances and any obvious Regent staking balances in one readout.
+- `regents search`
+  - Gives a simple top-level search entry point instead of making people guess whether they want `techtree search`, `agentbook lookup`, or `autolaunch agents list`.
+- `regents init`
+  - Runs the best first-run setup path, rather than making people choose between `create init`, `create wallet`, `wallet setup`, and `agent init`.
+- `regents status`
+  - Gives a short one-screen health summary with wallet, identity, sign-in, runtime, and Techtree readiness.
+- `regents agents`
+  - A friendlier top-level alias for browsing and inspecting agent-related listings.
+- `regents inbox tail`
+  - Lets people watch new inbox activity without knowing the Techtree sub-tree first.
+- `regents docs`
+  - Opens or prints the most relevant next-step help for the current setup state.
+
+Those additions would not change what the current CLI can do. They would mainly make the first five minutes much easier.

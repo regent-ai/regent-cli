@@ -212,6 +212,30 @@ const wizardHeader = (configPath: string): string =>
     titleColor: CLI_PALETTE.title,
   });
 
+const renderProgressPanel = (completed: readonly WizardStep[], current: WizardStep): string => {
+  const stages: readonly WizardStep[] = ["config", "runtime", "wallet", "identity", "auth", "techtree", "bbh"];
+  const labels: Record<WizardStep, string> = {
+    config: "Config",
+    runtime: "Runtime",
+    wallet: "Wallet",
+    identity: "Identity",
+    auth: "Auth",
+    techtree: "Techtree",
+    bbh: "BBH",
+  };
+  const completedSet = new Set(completed);
+  return renderPanel("◆ START PROGRESS", stages.map((stage, index) => {
+    const done = completedSet.has(stage);
+    const active = stage === current;
+    const glyph = done ? "✓" : active ? "▶" : "•";
+    const color = done ? CLI_PALETTE.emphasis : active ? CLI_PALETTE.accent : CLI_PALETTE.secondary;
+    return `${tone(`${index + 1}. ${labels[stage]}`, CLI_PALETTE.primary, done || active)} ${tone(glyph, color, true)} ${tone(done ? "done" : active ? "now" : "next", color)}`;
+  }), {
+    borderColor: CLI_PALETTE.emphasis,
+    titleColor: CLI_PALETTE.title,
+  });
+};
+
 const stepPanel = (title: string, lines: string[]): string =>
   renderPanel(title, lines, { borderColor: CLI_PALETTE.chrome, titleColor: CLI_PALETTE.title });
 
@@ -387,7 +411,7 @@ const ensureIdentity = async (
 };
 
 const configRerunCommand = (configPath: string, extra: string[] = []): string =>
-  ["regent", "techtree", "start", "--config", configPath, ...extra].join(" ");
+  ["regents", "techtree", "start", "--config", configPath, ...extra].join(" ");
 
 export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string): Promise<StartWizardResult> {
   const resolvedConfigPath = configPath ?? defaultConfigPath();
@@ -396,6 +420,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   const createdConfig = startWizardDeps.writeInitialConfigIfMissing(resolvedConfigPath);
   const config = startWizardDeps.loadConfig(resolvedConfigPath);
   ensureRuntimeDirs(config, resolvedConfigPath);
+  startWizardDeps.printText(renderProgressPanel([], "config"));
 
   startWizardDeps.printText(stepPanel("◆ LOCAL READY", [
     createdConfig ? "Created a fresh local Regent config." : "Reused the existing local Regent config.",
@@ -406,10 +431,10 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   const runtimeReport = await startWizardDeps.runScopedDoctor({ scope: "runtime" }, { configPath: resolvedConfigPath });
   const runtimeBlocking = runtimeReport.checks.find((check) => check.id === "runtime.wallet.source" && check.status === "fail");
   if (runtimeBlocking) {
+    startWizardDeps.printText(renderProgressPanel(["config"], "runtime"));
     startWizardDeps.printText(blockerPanel("wallet", runtimeBlocking.message, [
-      `Set ${config.wallet.privateKeyEnv} before rerunning the guided start.`,
+      `Fix now: set ${config.wallet.privateKeyEnv} before rerunning the guided start.`,
       `If you need a throwaway wallet file first, run \`regents create wallet --write-env\`.`,
-      "",
       `Rerun: ${configRerunCommand(resolvedConfigPath)}`,
     ]));
     startWizardDeps.printText(doctorFailures(runtimeReport));
@@ -436,6 +461,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
         { configPath: resolvedConfigPath },
       );
       startWizardDeps.printText(blockerPanel("runtime", "The local Regent runtime did not come up in time.", [
+        "Fix now: start the runtime manually with the command below, or rerun the guided start.",
         "The guided start tried to start it automatically, but the runtime socket never became reachable.",
         `Try this manually: regents run --config ${resolvedConfigPath}`,
       ]));
@@ -452,6 +478,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
     }
   }
 
+  startWizardDeps.printText(renderProgressPanel(["config", "runtime"], "wallet"));
   startWizardDeps.printText(stepPanel("◆ RUNTIME READY", [
     daemonStarted ? "Started the local Regent runtime in the background." : "Local Regent runtime already reachable.",
     `${tone("socket", CLI_PALETTE.secondary)} ${config.runtime.socketPath}`,
@@ -459,6 +486,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
 
   const identity = await ensureIdentity(args, resolvedConfigPath);
   if (!identity) {
+    startWizardDeps.printText(renderProgressPanel(["config", "runtime"], "identity"));
     return {
       ready: false,
       createdConfig,
@@ -487,7 +515,9 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
       );
     } catch (error) {
       const authReport = await startWizardDeps.runScopedDoctor({ scope: "auth" }, { configPath: resolvedConfigPath });
+      startWizardDeps.printText(renderProgressPanel(["config", "runtime", "wallet", "identity"], "auth"));
       startWizardDeps.printText(blockerPanel("auth", "Techtree sign-in did not complete.", [
+        "Fix now: complete Techtree sign-in, then rerun the guided start.",
         error instanceof Error ? error.message : String(error),
         "",
         "The doctor panel below shows what is still blocking the guided start.",
@@ -507,7 +537,9 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
 
   const techtreeReport = await startWizardDeps.runScopedDoctor({ scope: "techtree" }, { configPath: resolvedConfigPath });
   if (techtreeReport.summary.fail > 0) {
+    startWizardDeps.printText(renderProgressPanel(["config", "runtime", "wallet", "identity", "auth"], "techtree"));
     startWizardDeps.printText(blockerPanel("techtree", "Techtree is not fully reachable with the current session.", [
+      "Fix now: repair Techtree access, then rerun the guided start.",
       "The local wallet and identity are ready, but Techtree access still has a blocker.",
     ]));
     startWizardDeps.printText(doctorFailures(techtreeReport));
@@ -523,12 +555,12 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
   }
 
   try {
+    startWizardDeps.printText(renderProgressPanel(["config", "runtime", "wallet", "identity", "auth", "techtree"], "bbh"));
     await startWizardDeps.bbhProbe(resolvedConfigPath);
   } catch (error) {
     startWizardDeps.printText(blockerPanel("bbh", "Techtree access is ready, but the BBH path is not responding cleanly yet.", [
+      "Fix now: repair the BBH backend path, then rerun the guided start.",
       error instanceof Error ? error.message : String(error),
-      "",
-      "Fix the BBH backend path, then rerun the guided start.",
     ]));
     return {
       ready: false,
@@ -541,6 +573,7 @@ export async function runTechtreeStart(args: ParsedCliArgs, configPath?: string)
     };
   }
 
+  startWizardDeps.printText(renderProgressPanel(["config", "runtime", "wallet", "identity", "auth", "techtree", "bbh"], "bbh"));
   startWizardDeps.printText(stepPanel("◆ GUIDED START COMPLETE", [
     "Local config, runtime, wallet, identity, Techtree access, and BBH public reads are all ready.",
     `${tone("bound identity", CLI_PALETTE.secondary)} ${identity.registryAddress} · token ${identity.tokenId}`,

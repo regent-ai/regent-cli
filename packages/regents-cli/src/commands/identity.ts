@@ -4,7 +4,7 @@ import { coinbaseStatus, ensureIdentity, IdentityServiceClient, loadConfig } fro
 import { CommandExitError } from "../internal-runtime/errors.js";
 import { readIdentityReceipt } from "../internal-runtime/identity/cache.js";
 import { getBooleanFlag, getFlag, parseIntegerFlag, type ParsedCliArgs } from "../parse.js";
-import { printJson, printText } from "../printer.js";
+import { CLI_PALETTE, printError, printJson, printText, renderKeyValuePanel, renderPanel, tone } from "../printer.js";
 
 const parseNetwork = (value: string | undefined): RegentIdentityNetwork => {
   if (!value || value === "base") {
@@ -25,14 +25,24 @@ const failurePayload = (error: CommandExitError): IdentityEnsureFailure => ({
 
 const renderHumanSuccess = (result: Awaited<ReturnType<typeof ensureIdentity>>): string =>
   [
-    "Regent identity ready.",
-    `provider: ${result.provider}`,
-    `network: ${result.network}`,
-    `address: ${result.address}`,
-    `agent_id: ${result.agent_id}`,
-    `verified_until: ${result.receipt_expires_at}`,
-    `cache: ${result.cache_path}`,
-  ].join("\n");
+    renderKeyValuePanel("◆ IDENTITY READY", [
+      { label: "provider", value: result.provider, valueColor: CLI_PALETTE.primary },
+      { label: "network", value: result.network, valueColor: CLI_PALETTE.primary },
+      { label: "address", value: result.address, valueColor: CLI_PALETTE.primary },
+      { label: "agent id", value: String(result.agent_id), valueColor: CLI_PALETTE.emphasis },
+      { label: "verified until", value: result.receipt_expires_at, valueColor: CLI_PALETTE.primary },
+      { label: "cache", value: result.cache_path, valueColor: CLI_PALETTE.primary },
+    ], {
+      borderColor: CLI_PALETTE.chrome,
+      titleColor: CLI_PALETTE.title,
+    }),
+    renderPanel("◆ NEXT STEP", [
+      `${tone("regents identity status", CLI_PALETTE.emphasis, true)} to check whether the saved identity is still ready.`,
+    ], {
+      borderColor: CLI_PALETTE.chrome,
+      titleColor: CLI_PALETTE.title,
+    }),
+  ].join("\n\n");
 
 const renderHumanStatus = (result: {
   ok: boolean;
@@ -41,16 +51,31 @@ const renderHumanStatus = (result: {
   wallet_ready: boolean;
   identity_ready: boolean;
   address?: `0x${string}`;
-  next_action?: { command: string };
+  next_action?: { command: string; reason?: string };
 }): string =>
   [
-    result.ok ? "Coinbase identity ready." : "Coinbase identity is not ready.",
-    `network: ${result.network}`,
-    `wallet_ready: ${result.wallet_ready ? "yes" : "no"}`,
-    `identity_ready: ${result.identity_ready ? "yes" : "no"}`,
-    ...(result.address ? [`address: ${result.address}`] : []),
-    ...(result.next_action ? [`next: ${result.next_action.command}`] : []),
-  ].join("\n");
+    renderKeyValuePanel("◆ COINBASE IDENTITY", [
+      { label: "status", value: result.ok ? "ready" : "not ready", valueColor: result.ok ? CLI_PALETTE.emphasis : CLI_PALETTE.error },
+      { label: "network", value: result.network, valueColor: CLI_PALETTE.primary },
+      { label: "wallet", value: result.wallet_ready ? "ready" : "missing", valueColor: result.wallet_ready ? CLI_PALETTE.emphasis : CLI_PALETTE.error },
+      { label: "identity", value: result.identity_ready ? "ready" : "missing", valueColor: result.identity_ready ? CLI_PALETTE.emphasis : CLI_PALETTE.error },
+      ...(result.address ? [{ label: "address", value: result.address, valueColor: CLI_PALETTE.primary }] : []),
+    ], {
+      borderColor: CLI_PALETTE.chrome,
+      titleColor: CLI_PALETTE.title,
+    }),
+    ...(result.next_action
+      ? [
+          renderPanel("◆ NEXT STEP", [
+            ...(result.next_action.reason ? [`${tone("why", CLI_PALETTE.secondary)} ${tone(result.next_action.reason, CLI_PALETTE.primary)}`] : []),
+            `Run ${tone(result.next_action.command, CLI_PALETTE.emphasis, true)} to refresh the Regent identity once the wallet is ready.`,
+          ], {
+            borderColor: CLI_PALETTE.chrome,
+            titleColor: CLI_PALETTE.title,
+          }),
+        ]
+      : []),
+  ].join("\n\n");
 
 export async function runIdentityStatus(
   args: readonly string[] | ParsedCliArgs,
@@ -172,7 +197,7 @@ export async function runIdentityStatus(
     if (json) {
       printJson(failurePayload(failure));
     } else {
-      printText(failure.message);
+      printError(failure);
     }
     return failure.exitCode;
   }
@@ -213,7 +238,7 @@ export async function runIdentityEnsure(
     if (json) {
       printJson(failurePayload(failure));
     } else {
-      printText(failure.message);
+      printError(failure);
     }
     return failure.exitCode;
   }

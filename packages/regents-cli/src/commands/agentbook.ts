@@ -3,7 +3,7 @@ import {
   updateIdentityReceipt,
 } from "../internal-runtime/identity/cache.js";
 import { getBooleanFlag, type ParsedCliArgs } from "../parse.js";
-import { printJson } from "../printer.js";
+import { CLI_PALETTE, printJson, renderPanel, tone } from "../printer.js";
 import { parsePollingIntervalSeconds, requirePositional } from "./autolaunch/shared.js";
 import { buildAgentAuthHeaders, requireAgentAuthState } from "./agent-auth.js";
 
@@ -177,7 +177,16 @@ const printApprovalHint = (session: AgentbookSessionPayload): void => {
   }
 
   if (typeof session.approval_url === "string" && session.approval_url !== "") {
-    process.stderr.write(`Open this approval page: ${session.approval_url}\n`);
+    process.stderr.write(
+      `${renderPanel("◆ APPROVAL NEEDED", [
+        `session ${tone(session.session_id, CLI_PALETTE.primary, true)}`,
+        `expires ${tone(session.expires_at, CLI_PALETTE.secondary)}`,
+        `open ${tone(session.approval_url, CLI_PALETTE.emphasis, true)}`,
+      ], {
+        borderColor: CLI_PALETTE.emphasis,
+        titleColor: CLI_PALETTE.title,
+      })}\n`,
+    );
   }
 };
 
