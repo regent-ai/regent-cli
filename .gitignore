@@ -3,6 +3,7 @@ node_modules/
 .packed/
 dist/
 coverage/
+output/
 package-lock.json
 *.tgz
 *.js.map
