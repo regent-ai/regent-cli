@@ -60,14 +60,18 @@ import {
   runAutolaunchRegistryShow,
   runAutolaunchRevenueIngressFactorySetAuthorizedCreator,
   runAutolaunchRevenueShareFactorySetAuthorizedCreator,
+  runAutolaunchSplitterActivateEligibleRevenueShare,
+  runAutolaunchSplitterCancelEligibleRevenueShare,
   runAutolaunchSplitterCancelTreasuryRecipientRotation,
   runAutolaunchSplitterExecuteTreasuryRecipientRotation,
+  runAutolaunchSplitterProposeEligibleRevenueShare,
   runAutolaunchSplitterProposeTreasuryRecipientRotation,
   runAutolaunchSplitterReassignDust,
   runAutolaunchSplitterSetLabel,
   runAutolaunchSplitterSetPaused,
   runAutolaunchSplitterSetProtocolRecipient,
   runAutolaunchSplitterSweepProtocolReserve,
+  runAutolaunchSplitterSweepTreasuryReserved,
   runAutolaunchSplitterSweepTreasuryResidual,
   runAutolaunchSplitterShow,
   runAutolaunchStrategyMigrate,
@@ -1446,6 +1450,33 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
     if (
       namespace === "autolaunch" &&
         subcommand === "splitter" &&
+        maybeThird === "propose-eligible-revenue-share"
+    ) {
+      await runAutolaunchSplitterProposeEligibleRevenueShare(parsedArgs);
+      return 0;
+    }
+
+    if (
+      namespace === "autolaunch" &&
+        subcommand === "splitter" &&
+        maybeThird === "cancel-eligible-revenue-share"
+    ) {
+      await runAutolaunchSplitterCancelEligibleRevenueShare(parsedArgs);
+      return 0;
+    }
+
+    if (
+      namespace === "autolaunch" &&
+        subcommand === "splitter" &&
+        maybeThird === "activate-eligible-revenue-share"
+    ) {
+      await runAutolaunchSplitterActivateEligibleRevenueShare(parsedArgs);
+      return 0;
+    }
+
+    if (
+      namespace === "autolaunch" &&
+        subcommand === "splitter" &&
         maybeThird === "propose-treasury-recipient-rotation"
     ) {
       await runAutolaunchSplitterProposeTreasuryRecipientRotation(parsedArgs);
@@ -1485,6 +1516,15 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
         maybeThird === "sweep-treasury-residual"
     ) {
       await runAutolaunchSplitterSweepTreasuryResidual(parsedArgs);
+      return 0;
+    }
+
+    if (
+      namespace === "autolaunch" &&
+        subcommand === "splitter" &&
+        maybeThird === "sweep-treasury-reserved"
+    ) {
+      await runAutolaunchSplitterSweepTreasuryReserved(parsedArgs);
       return 0;
     }
 

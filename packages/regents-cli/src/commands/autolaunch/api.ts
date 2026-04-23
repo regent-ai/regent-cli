@@ -1118,6 +1118,26 @@ export async function runAutolaunchSplitterSetLabel(
   });
 }
 
+export async function runAutolaunchSplitterProposeEligibleRevenueShare(
+  args: ParsedCliArgs,
+): Promise<void> {
+  await postPrepareSubjectAction(args, "splitter", "propose_eligible_revenue_share", {
+    share_bps: requireArg(getFlag(args, "share-bps"), "share-bps"),
+  });
+}
+
+export async function runAutolaunchSplitterCancelEligibleRevenueShare(
+  args: ParsedCliArgs,
+): Promise<void> {
+  await postPrepareSubjectAction(args, "splitter", "cancel_eligible_revenue_share");
+}
+
+export async function runAutolaunchSplitterActivateEligibleRevenueShare(
+  args: ParsedCliArgs,
+): Promise<void> {
+  await postPrepareSubjectAction(args, "splitter", "activate_eligible_revenue_share");
+}
+
 export async function runAutolaunchSplitterProposeTreasuryRecipientRotation(
   args: ParsedCliArgs,
 ): Promise<void> {
@@ -1163,6 +1183,14 @@ export async function runAutolaunchSplitterSweepTreasuryResidual(
   args: ParsedCliArgs,
 ): Promise<void> {
   await postPrepareSubjectAction(args, "splitter", "sweep_treasury_residual", {
+    amount: requireArg(getFlag(args, "amount"), "amount"),
+  });
+}
+
+export async function runAutolaunchSplitterSweepTreasuryReserved(
+  args: ParsedCliArgs,
+): Promise<void> {
+  await postPrepareSubjectAction(args, "splitter", "sweep_treasury_reserved", {
     amount: requireArg(getFlag(args, "amount"), "amount"),
   });
 }

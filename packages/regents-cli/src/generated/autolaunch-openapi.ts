@@ -2080,6 +2080,101 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        UintLike: number | string | null;
+        /** @enum {string} */
+        LifecycleSettlementState: "awaiting_migration" | "awaiting_auction_asset_return" | "failed_auction_recoverable" | "post_recovery_cleanup" | "awaiting_sweeps" | "ownership_acceptance_required" | "settled" | "wait";
+        /** @enum {string} */
+        LifecycleAction: "migrate" | "auction_sweep_currency" | "auction_sweep_unsold_tokens" | "recover_failed_auction" | "sweep_currency" | "sweep_token" | "accept_fee_registry_ownership" | "accept_fee_vault_ownership" | "accept_hook_ownership" | "release_vesting" | "wait";
+        LifecycleBalanceBucket: {
+            token_balance?: components["schemas"]["UintLike"];
+            usdc_balance?: components["schemas"]["UintLike"];
+        };
+        LifecycleBalanceSnapshot: {
+            strategy: components["schemas"]["LifecycleBalanceBucket"];
+            auction: components["schemas"]["LifecycleBalanceBucket"];
+        };
+        LifecycleOwnershipCard: {
+            owner_address?: components["schemas"]["Address"] | null;
+            pending_owner_address?: components["schemas"]["Address"] | null;
+            accepted?: boolean | null;
+            status?: string | null;
+        };
+        LifecycleOwnershipStatus: {
+            fee_registry: components["schemas"]["LifecycleOwnershipCard"];
+            fee_vault: components["schemas"]["LifecycleOwnershipCard"];
+            hook: components["schemas"]["LifecycleOwnershipCard"];
+            pending_actions: components["schemas"]["LifecycleAction"][];
+            all_accepted: boolean;
+        };
+        LifecycleSummary: {
+            current_block: number | null;
+            settlement_state: components["schemas"]["LifecycleSettlementState"];
+            blocked_reason: string | null;
+            recommended_action: components["schemas"]["LifecycleAction"];
+            allowed_actions: components["schemas"]["LifecycleAction"][];
+            required_actor: string | null;
+            balance_snapshot: components["schemas"]["LifecycleBalanceSnapshot"];
+            ownership_status: components["schemas"]["LifecycleOwnershipStatus"];
+        };
+        LifecycleJobEnvelope: {
+            /** @enum {boolean} */
+            ok: true;
+            job: components["schemas"]["LaunchJob"];
+            auction: {
+                [key: string]: unknown;
+            } | null;
+            strategy: {
+                [key: string]: unknown;
+            } | null;
+            vesting: {
+                [key: string]: unknown;
+            } | null;
+            current_block: number | null;
+            settlement_state: components["schemas"]["LifecycleSettlementState"];
+            blocked_reason: string | null;
+            recommended_action: components["schemas"]["LifecycleAction"];
+            allowed_actions: components["schemas"]["LifecycleAction"][];
+            required_actor: string | null;
+            balance_snapshot: components["schemas"]["LifecycleBalanceSnapshot"];
+            ownership_status: components["schemas"]["LifecycleOwnershipStatus"];
+        };
+        LifecycleFinalizeEnvelope: {
+            /** @enum {boolean} */
+            ok: true;
+            job: components["schemas"]["LaunchJob"];
+            auction: {
+                [key: string]: unknown;
+            } | null;
+            strategy: {
+                [key: string]: unknown;
+            } | null;
+            vesting: {
+                [key: string]: unknown;
+            } | null;
+            current_block: number | null;
+            settlement_state: components["schemas"]["LifecycleSettlementState"];
+            blocked_reason: string | null;
+            recommended_action: components["schemas"]["LifecycleAction"];
+            allowed_actions: components["schemas"]["LifecycleAction"][];
+            required_actor: string | null;
+            balance_snapshot: components["schemas"]["LifecycleBalanceSnapshot"];
+            ownership_status: components["schemas"]["LifecycleOwnershipStatus"];
+            prepared: components["schemas"]["PreparedAction"] | null;
+        };
+        LifecycleFinalizeRegisterRequest: {
+            tx_hash: components["schemas"]["HexData"];
+        };
+        LifecycleFinalizeRegisterEnvelope: {
+            /** @enum {boolean} */
+            ok: true;
+            job_id: string;
+            tx_hash: components["schemas"]["HexData"];
+            recommended_action: components["schemas"]["LifecycleAction"];
+            settlement_state: components["schemas"]["LifecycleSettlementState"];
+            /** @enum {string} */
+            status: "submitted";
+            next_summary: components["schemas"]["LifecycleJobEnvelope"];
+        };
         AuctionTrustErc8004: {
             /** @enum {boolean} */
             connected: true;
@@ -2282,8 +2377,26 @@ export interface components {
             }[];
             total_staked_raw?: number | null;
             total_staked?: components["schemas"]["DecimalString"] | null;
+            eligible_revenue_share_bps?: number | null;
+            eligible_revenue_share_percent?: components["schemas"]["DecimalString"] | null;
+            pending_eligible_revenue_share_bps?: number | null;
+            pending_eligible_revenue_share_percent?: components["schemas"]["DecimalString"] | null;
+            pending_eligible_revenue_share_eta_raw?: number | null;
+            pending_eligible_revenue_share_eta?: components["schemas"]["DateTime"] | null;
+            eligible_revenue_share_cooldown_end_raw?: number | null;
+            eligible_revenue_share_cooldown_end?: components["schemas"]["DateTime"] | null;
+            gross_inflow_usdc_raw?: number | null;
+            gross_inflow_usdc?: components["schemas"]["DecimalString"] | null;
+            regent_skim_usdc_raw?: number | null;
+            regent_skim_usdc?: components["schemas"]["DecimalString"] | null;
+            staker_eligible_inflow_usdc_raw?: number | null;
+            staker_eligible_inflow_usdc?: components["schemas"]["DecimalString"] | null;
+            treasury_reserved_inflow_usdc_raw?: number | null;
+            treasury_reserved_inflow_usdc?: components["schemas"]["DecimalString"] | null;
             treasury_residual_usdc_raw?: number | null;
             treasury_residual_usdc?: components["schemas"]["DecimalString"] | null;
+            treasury_reserved_usdc_raw?: number | null;
+            treasury_reserved_usdc?: components["schemas"]["DecimalString"] | null;
             protocol_reserve_usdc_raw?: number | null;
             protocol_reserve_usdc?: components["schemas"]["DecimalString"] | null;
             undistributed_dust_usdc_raw?: number | null;
@@ -2298,6 +2411,9 @@ export interface components {
             claimable_stake_token_raw?: number | null;
             claimable_stake_token?: components["schemas"]["DecimalString"] | null;
             can_manage_ingress?: boolean | null;
+            share_change_history?: {
+                [key: string]: unknown;
+            }[];
         };
         SubjectEnvelope: {
             /** @enum {boolean} */
@@ -2421,7 +2537,9 @@ export interface components {
         BidId: string;
         SubjectId: string;
         SessionId: string;
+        /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
         Resource: string;
+        /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
         Action: string;
     };
     requestBodies: never;
@@ -3167,7 +3285,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleJobEnvelope"];
                 };
             };
         };
@@ -3189,7 +3307,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleFinalizeEnvelope"];
                 };
             };
         };
@@ -3205,7 +3323,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["LifecycleFinalizeRegisterRequest"];
             };
         };
         responses: {
@@ -3215,7 +3333,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleFinalizeRegisterEnvelope"];
                 };
             };
         };
@@ -3960,7 +4078,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["JobId"];
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -3988,7 +4108,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["SubjectId"];
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4015,7 +4137,9 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4623,7 +4747,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleJobEnvelope"];
                 };
             };
         };
@@ -4645,7 +4769,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleFinalizeEnvelope"];
                 };
             };
         };
@@ -4661,7 +4785,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["LifecycleFinalizeRegisterRequest"];
             };
         };
         responses: {
@@ -4671,7 +4795,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["LifecycleFinalizeRegisterEnvelope"];
                 };
             };
         };
@@ -4768,7 +4892,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["JobId"];
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4796,7 +4922,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["SubjectId"];
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4823,7 +4951,9 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
                 resource: components["parameters"]["Resource"];
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;

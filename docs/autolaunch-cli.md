@@ -121,7 +121,8 @@ The fee rules are fixed too:
 - the official launch pool charges a fixed 2% fee
 - that 2% split is fixed at 1% to Regent and 1% to the agent treasury
 - recognized subject revenue first sends a fixed 1% skim to Regent
-- the remaining 99% stays in the subject lane, where stakers earn their formula share and the treasury keeps the remainder
+- the remaining 99% is governed by the live eligible revenue share
+- that live share decides how much stays in the staker-eligible lane and how much goes straight into the subject reserve lane
 
 ## Primary operator journey
 
