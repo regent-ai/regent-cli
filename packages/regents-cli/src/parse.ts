@@ -1,14 +1,26 @@
 export interface ParsedCliArgs {
   raw: readonly string[];
   positionals: readonly string[];
-  flags: ReadonlyMap<string, string | true>;
+  flags: ReadonlyMap<string, string | true | readonly (string | true)[]>;
 }
 
 const isFlagToken = (value: string): boolean => value.startsWith("--");
 
 export function parseCliArgs(args: readonly string[]): ParsedCliArgs {
   const positionals: string[] = [];
-  const flags = new Map<string, string | true>();
+  const flags = new Map<string, string | true | (string | true)[]>();
+  const setFlag = (name: string, value: string | true): void => {
+    const current = flags.get(name);
+    if (current === undefined) {
+      flags.set(name, value);
+      return;
+    }
+    if (Array.isArray(current)) {
+      current.push(value);
+      return;
+    }
+    flags.set(name, [current, value]);
+  };
 
   for (let index = 0; index < args.length; index += 1) {
     const value = args[index];
@@ -24,17 +36,17 @@ export function parseCliArgs(args: readonly string[]): ParsedCliArgs {
     if (isFlagToken(value)) {
       const equalsIndex = value.indexOf("=");
       if (equalsIndex > 0) {
-        flags.set(value.slice(2, equalsIndex), value.slice(equalsIndex + 1));
+        setFlag(value.slice(2, equalsIndex), value.slice(equalsIndex + 1));
         continue;
       }
 
       const next = args[index + 1];
       if (next === undefined || isFlagToken(next)) {
-        flags.set(value.slice(2), true);
+        setFlag(value.slice(2), true);
         continue;
       }
 
-      flags.set(value.slice(2), next);
+      setFlag(value.slice(2), next);
       index += 1;
       continue;
     }
@@ -55,15 +67,31 @@ const isParsedCliArgs = (args: readonly string[] | ParsedCliArgs): args is Parse
 const ensureParsed = (args: readonly string[] | ParsedCliArgs): ParsedCliArgs =>
   isParsedCliArgs(args) ? args : parseCliArgs(args);
 
+const isFlagValues = (value: unknown): value is readonly (string | true)[] => Array.isArray(value);
+
 export function getFlag(args: readonly string[] | ParsedCliArgs, name: string): string | undefined {
   const parsed = ensureParsed(args);
   const value = parsed.flags.get(name);
+  if (isFlagValues(value)) {
+    const lastValue = value.at(-1);
+    return lastValue === true ? undefined : lastValue;
+  }
   return value === true ? undefined : value;
 }
 
 export function getBooleanFlag(args: readonly string[] | ParsedCliArgs, name: string): boolean {
   const parsed = ensureParsed(args);
-  return parsed.flags.get(name) === true;
+  const value = parsed.flags.get(name);
+  return isFlagValues(value) ? value.includes(true) : value === true;
+}
+
+export function getFlags(args: readonly string[] | ParsedCliArgs, name: string): readonly string[] {
+  const parsed = ensureParsed(args);
+  const value = parsed.flags.get(name);
+  if (isFlagValues(value)) {
+    return value.filter((entry): entry is string => entry !== true);
+  }
+  return typeof value === "string" ? [value] : [];
 }
 
 export function requireArg(value: string | undefined, name: string): string {

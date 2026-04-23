@@ -194,6 +194,7 @@ export type RegentRpcMethod =
   | "techtree.scienceTasks.export"
   | "techtree.scienceTasks.submit"
   | "techtree.scienceTasks.reviewUpdate"
+  | "techtree.scienceTasks.reviewLoop"
   | "techtree.autoskill.initSkill"
   | "techtree.autoskill.initEval"
   | "techtree.autoskill.notebook.pair"
@@ -332,6 +333,11 @@ export interface RegentRpcParamsMap {
     latest_rerun_after_latest_fix?: boolean;
     latest_fix_at?: string | null;
     last_rerun_at?: string | null;
+  };
+  "techtree.scienceTasks.reviewLoop": {
+    workspace_path: string;
+    harbor_pr_url: string;
+    timeout_seconds?: number;
   };
   "techtree.autoskill.initSkill": { workspace_path: string };
   "techtree.autoskill.initEval": { workspace_path: string };
@@ -481,6 +487,16 @@ export interface RegentRpcResultMap {
   };
   "techtree.scienceTasks.submit": ScienceTaskMutationResponse;
   "techtree.scienceTasks.reviewUpdate": ScienceTaskMutationResponse;
+  "techtree.scienceTasks.reviewLoop": {
+    ok: true;
+    entrypoint: "science-tasks.review-loop";
+    workspace_path: string;
+    node_id: number;
+    harbor_pr_url: string;
+    output_path: string;
+    log_path: string;
+    workflow_state: string;
+  };
   "techtree.autoskill.initSkill": {
     ok: true;
     entrypoint: "autoskill.init.skill";

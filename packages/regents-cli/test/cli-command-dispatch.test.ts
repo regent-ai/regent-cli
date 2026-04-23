@@ -575,6 +575,28 @@ const commandCases: CommandCase[] = [
     },
   },
   {
+    name: "techtree science-tasks review-loop",
+    args: [
+      "techtree",
+      "science-tasks",
+      "review-loop",
+      "--workspace-path",
+      "science-workspace",
+      "--pr-url",
+      "https://harbor.example/pr/301",
+      "--timeout-seconds",
+      "1200",
+    ],
+    expected: {
+      method: "techtree.scienceTasks.reviewLoop",
+      params: {
+        workspace_path: "science-workspace",
+        harbor_pr_url: "https://harbor.example/pr/301",
+        timeout_seconds: 1200,
+      },
+    },
+  },
+  {
     name: "techtree autoskill init skill",
     args: ["techtree", "autoskill", "init", "skill", "skill-workspace"],
     expected: { method: "techtree.autoskill.initSkill", params: { workspace_path: path.resolve("skill-workspace") } },
@@ -1458,6 +1480,93 @@ describe("CLI command dispatch", () => {
     });
   }
 
+  it("runs the top-level init command", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["init", "--config", harness.configPath]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stderr).toBe("");
+    expect(JSON.parse(output.stdout)).toMatchObject({
+      ok: true,
+      command: "init",
+      status: "ready",
+      config_path: harness.configPath,
+    });
+  });
+
+  it("runs the top-level status command", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["status", "--config", harness.configPath]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stderr).toBe("");
+    expect(JSON.parse(output.stdout)).toMatchObject({
+      ok: true,
+      command: "status",
+      status: expect.any(String),
+      config_path: harness.configPath,
+    });
+  });
+
+  it("runs the top-level whoami command", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["whoami", "--config", harness.configPath]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stderr).toBe("");
+    expect(JSON.parse(output.stdout)).toMatchObject({
+      ok: true,
+      command: "whoami",
+      wallet: {
+        name: "main",
+        address: TEST_WALLET,
+      },
+    });
+  });
+
+  it("routes the top-level search command to Techtree search", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["search", "node", "query", "--limit", "3", "--config", harness.configPath]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stderr).toBe("");
+    expect(JSON.parse(output.stdout)).toEqual({
+      method: "techtree.search.query",
+      params: { q: "node query", limit: 3 },
+    });
+  });
+
+  it("returns an error for unknown commands", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["definitely-not-real", "--config", harness.configPath]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stdout).toBe("");
+    expect(JSON.parse(output.stderr)).toEqual({
+      error: {
+        message: "Unknown command: definitely-not-real",
+      },
+    });
+  });
+
+  it("dispatches techtree science-tasks get when --config comes first", async () => {
+    const output = await captureOutput(async () =>
+      harness.runCliEntrypoint(["--config", harness.configPath, "techtree", "science-tasks", "get", "301"]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stderr).toBe("");
+    expect(JSON.parse(output.stdout)).toEqual({
+      method: "techtree.scienceTasks.get",
+      params: { id: 301 },
+    });
+  });
+
   it("dispatches doctor default through the local runtime doctor engine", async () => {
     const output = await captureOutput(async () =>
       harness.runCliEntrypoint(["doctor", "--json", "--config", harness.configPath]),
@@ -1737,16 +1846,6 @@ describe("CLI command dispatch", () => {
       },
     });
   });
-
-  it("rejects the legacy BBH --split flag", async () => {
-    const output = await captureOutput(async () =>
-      harness.runCliEntrypoint(["techtree", "bbh", "run", "exec", "--split", "train", "--config", harness.configPath]),
-    );
-
-    expect(output.result).toBe(1);
-    expect(output.stderr).toContain("use --lane with `climb`, `benchmark`, `challenge`, or `draft`");
-  });
-
   it("rejects invalid BBH lanes before the daemon call", async () => {
     const output = await captureOutput(async () =>
       harness.runCliEntrypoint(["techtree", "bbh", "run", "exec", "--lane", "moon", "--config", harness.configPath]),

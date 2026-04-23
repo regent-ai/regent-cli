@@ -60,6 +60,7 @@ import {
   handleTechtreeScienceTasksExport,
   handleTechtreeScienceTasksInit,
   handleTechtreeScienceTasksList,
+  handleTechtreeScienceTasksReviewLoop,
   handleTechtreeScienceTasksReviewUpdate,
   handleTechtreeScienceTasksSubmit,
   handleTechtreeOpportunitiesList,
@@ -83,6 +84,7 @@ import {
   handleTechtreeV1BbhDraftPropose,
   handleTechtreeV1BbhDraftPull,
   handleTechtreeV1BbhDraftReady,
+  handleTechtreeV1BbhAssignmentNext,
   handleTechtreeV1BbhGenomeImprove,
   handleTechtreeV1BbhGenomeInit,
   handleTechtreeV1BbhNotebookPair,
@@ -495,6 +497,11 @@ export class RegentRuntime {
           ctx,
           params as Parameters<typeof handleTechtreeScienceTasksReviewUpdate>[1],
         );
+      case "techtree.scienceTasks.reviewLoop":
+        return handleTechtreeScienceTasksReviewLoop(
+          ctx,
+          params as Parameters<typeof handleTechtreeScienceTasksReviewLoop>[1],
+        );
       case "techtree.autoskill.initSkill":
         return handleTechtreeAutoskillInitSkill(
           ctx,
@@ -637,6 +644,11 @@ export class RegentRuntime {
         return handleTechtreeV1BbhGenomeImprove(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomeImprove>[1]);
       case "techtree.v1.bbh.genome.propose":
         return handleTechtreeV1BbhGenomePropose(ctx, params as Parameters<typeof handleTechtreeV1BbhGenomePropose>[1]);
+      case "techtree.v1.bbh.assignment.next":
+        return handleTechtreeV1BbhAssignmentNext(
+          ctx,
+          params as Parameters<typeof handleTechtreeV1BbhAssignmentNext>[1],
+        );
       case "techtree.v1.bbh.submit":
         return handleTechtreeV1BbhSubmit(ctx, params as Parameters<typeof handleTechtreeV1BbhSubmit>[1]);
       case "techtree.v1.bbh.validate":
