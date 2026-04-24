@@ -1,6 +1,6 @@
 /**
  * Must remain compatible with the current `TechTreeWeb.Plugs.RequireAgentSiwa`
- * and SIWA sidecar `/v1/http-verify` contract. Do not change covered header names,
+ * and SIWA sidecar `/v1/agent/siwa/http-verify` contract. Do not change covered header names,
  * casing assumptions, or canonical message construction without updating Techtree.
  */
 import crypto from "node:crypto";

@@ -245,7 +245,7 @@ regents autolaunch trust x-link --agent <agent-id>
 
 This helper starts the X-link browser flow for one Autolaunch agent identity.
 
-- It calls `POST /api/trust/x/start`.
+- It calls `POST /v1/agent/trust/x/start`.
 - It opens the returned `redirect_path` in the browser using the configured `AUTOLAUNCH_BASE_URL`.
 - If the browser cannot be opened automatically, it prints the full URL so the operator can open it manually.
 - The CLI does not run OAuth itself. The browser and backend finish that part.

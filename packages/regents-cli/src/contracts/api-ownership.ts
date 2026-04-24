@@ -241,9 +241,8 @@ export const autolaunchApiCommandGroups = [
   defineAutolaunchGroup({
     commands: ["autolaunch trust x-link"],
     owner: "autolaunch",
-    status: "current-hybrid",
-    note: "Local-only helper while the public Autolaunch contract does not yet publish the X-link route.",
-    pathTemplates: [],
+    status: "current",
+    pathTemplates: ["/v1/agent/trust/x/start"],
   }),
   defineAutolaunchGroup({
     commands: [
