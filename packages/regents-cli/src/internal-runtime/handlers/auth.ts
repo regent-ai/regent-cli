@@ -112,6 +112,7 @@ export async function handleAuthSiwaLogin(
     chain_id: identity.chainId,
     registry_address: registryAddress,
     token_id: tokenId,
+    audience,
     nonce: nonceResponse.data.nonce,
     message,
     signature,

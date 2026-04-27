@@ -233,6 +233,7 @@ export function authChecks(): DoctorCheckDefinition[] {
             chain_id: identity.chainId,
             registry_address: identity.registryAddress,
             token_id: identity.tokenId,
+            audience: ctx.config.auth.audience,
             nonce,
             message,
             signature: `0x${"00".repeat(65)}`,

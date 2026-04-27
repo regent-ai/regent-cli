@@ -616,6 +616,7 @@ export interface components {
             signature: components["schemas"]["HexData"];
             registry_address: components["schemas"]["Address"];
             token_id: string;
+            audience: string;
         };
         SiwaVerifyResponse: {
             /** @enum {boolean} */
