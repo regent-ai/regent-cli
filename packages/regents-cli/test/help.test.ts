@@ -25,6 +25,26 @@ describe("scoped CLI help", () => {
     expect(output.stdout).toContain("--interval <seconds>");
   });
 
+  it("renders command-level help when a required value is omitted", async () => {
+    const output = await captureOutput(() => runCliEntrypoint(["autolaunch", "agent", "--help"]));
+
+    expect(output.result).toBe(0);
+    expect(output.stdout).toContain("AUTOLAUNCH AGENT <ID> HELP");
+    expect(output.stdout).toContain("regents autolaunch agent <id>");
+  });
+
+  it("shows the required platform sign-in flags", async () => {
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["platform", "auth", "login", "--help"]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stdout).toContain("PLATFORM AUTH LOGIN HELP");
+    expect(output.stdout).toContain("--identity-token <token>");
+    expect(output.stdout).toContain("--session-file <path>");
+    expect(output.stdout).toContain("regents platform formation status");
+  });
+
   it("keeps command help stable", () => {
     expect(renderScopedHelp(["autolaunch", "jobs", "watch"], "/tmp/regent.json"))
       .toMatchInlineSnapshot(`

@@ -77,6 +77,35 @@ const commandHelp: Record<string, HelpEntry> = {
     output: "Shows staking balances and claimable amounts.",
     nextStep: "Use the stake, unstake, or claim command that matches the account state.",
   },
+  "platform auth login": {
+    summary: "Save a Regent website sign-in for platform account commands.",
+    usage:
+      "regents platform auth login [--identity-token <token> | --identity-token-env <name>]",
+    flags: [
+      "--identity-token <token>",
+      "--identity-token-env <name>",
+      "--display-name <name>",
+      "--origin <url>",
+      "--session-file <path>",
+      "--config <path>",
+    ],
+    examples: [
+      "regents platform auth login --identity-token <token>",
+      "regents platform auth login --identity-token-env REGENT_PLATFORM_IDENTITY_TOKEN",
+    ],
+    auth: "No saved platform sign-in is needed.",
+    output: "Shows the saved website account profile and where the session was stored.",
+    nextStep: "Run `regents platform formation status` or `regents platform auth status`.",
+  },
+  "platform company runtime": {
+    summary: "Show runtime status for one hosted company.",
+    usage: "regents platform company runtime --slug <company-slug>",
+    flags: ["--slug <slug>", "--origin <url>", "--session-file <path>", "--config <path>"],
+    examples: ["regents platform company runtime --slug acme-labs"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows runtime status for the selected hosted company.",
+    nextStep: "Use the company slug from the Regent website, then run the command again when you need a fresh status check.",
+  },
 };
 
 const groupHelp: Record<string, HelpGroup> = {
@@ -117,9 +146,62 @@ const groupHelp: Record<string, HelpGroup> = {
   },
 };
 
+const helpGroupForCommand = (command: string): HelpGroup | null => {
+  if (command.startsWith("autolaunch ")) {
+    return groupHelp.autolaunch;
+  }
+
+  if (command.startsWith("auth ")) {
+    return groupHelp.auth;
+  }
+
+  if (command.startsWith("identity ")) {
+    return groupHelp.identity;
+  }
+
+  if (command.startsWith("regent-staking ")) {
+    return groupHelp["regent-staking"];
+  }
+
+  if (command.startsWith("platform ")) {
+    return groupHelp.platform;
+  }
+
+  return null;
+};
+
+const isPlaceholderPart = (part: string): boolean => part.startsWith("<") && part.endsWith(">");
+
+const commandMatchesHelpInput = (command: string, input: readonly string[]): boolean => {
+  const commandParts = command.split(" ");
+  if (input.length > commandParts.length) {
+    return false;
+  }
+
+  for (const [index, inputPart] of input.entries()) {
+    const commandPart = commandParts[index];
+    if (!commandPart) {
+      return false;
+    }
+
+    if (isPlaceholderPart(commandPart)) {
+      if (!inputPart) {
+        return false;
+      }
+      continue;
+    }
+
+    if (commandPart !== inputPart) {
+      return false;
+    }
+  }
+
+  return commandParts.slice(input.length).every((part) => isPlaceholderPart(part));
+};
+
 const commandForInput = (positionals: readonly string[]): string | null => {
   for (const command of CLI_COMMANDS) {
-    if (commandMatchesInput(command, positionals)) {
+    if (commandMatchesInput(command, positionals) || commandMatchesHelpInput(command, positionals)) {
       return command;
     }
   }
@@ -127,21 +209,19 @@ const commandForInput = (positionals: readonly string[]): string | null => {
   return null;
 };
 
-const summarizeCommand = (command: string): HelpEntry => ({
-  summary: `Run ${command}.`,
-  usage: `regents ${command}`,
-  flags: ["--config <path>", "--json where supported"],
-  examples: [`regents ${command}`],
-  auth: command.startsWith("autolaunch ")
-    ? groupHelp.autolaunch.auth
-    : command.startsWith("regent-staking ")
-      ? groupHelp["regent-staking"].auth
-      : command.startsWith("platform ")
-        ? groupHelp.platform.auth
-      : "Check the command group help for sign-in needs.",
-  output: "Prints command results. `--json` keeps output script-safe where supported.",
-  nextStep: globalNextStep,
-});
+const summarizeCommand = (command: string): HelpEntry => {
+  const group = helpGroupForCommand(command);
+
+  return {
+    summary: `Run ${command}.`,
+    usage: `regents ${command}`,
+    flags: ["--config <path>", "--json where supported"],
+    examples: [`regents ${command}`],
+    auth: group?.auth ?? "Check the command group help for sign-in needs.",
+    output: "Prints command results. `--json` keeps output script-safe where supported.",
+    nextStep: group?.nextStep ?? globalNextStep,
+  };
+};
 
 const renderEntry = (title: string, entry: HelpEntry): string =>
   [
