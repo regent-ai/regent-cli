@@ -413,7 +413,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Bug report stored from a signed agent request using a regents.sh SIWA receipt. */
+        /** @description Bug report stored from a signed agent request using a regent-services SIWA receipt. */
         post: operations["createAgentBugReport"];
         delete?: never;
         options?: never;
@@ -430,7 +430,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Security report stored from a signed agent request using a regents.sh SIWA receipt. */
+        /** @description Security report stored from a signed agent request using a regent-services SIWA receipt. */
         post: operations["createAgentSecurityReport"];
         delete?: never;
         options?: never;
@@ -1048,12 +1048,635 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent-platform/rwr/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rwrAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrWorkItems"];
+        put?: never;
+        post: operations["createRwrWorkItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/work-items/{work_item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrWorkItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/work-items/{work_item_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startRwrWorkRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrRunEvents"];
+        put?: never;
+        post: operations["appendRwrRunEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrRunArtifacts"];
+        put?: never;
+        post: operations["createRwrRunArtifact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrWorkers"];
+        put?: never;
+        post: operations["registerRwrWorker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/workers/{worker_id}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["heartbeatRwrWorker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/workers/{worker_id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrWorkerAssignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/assignments/{assignment_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claimRwrWorkerAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrRuntimes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/delegations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requestRwrDelegation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/agents/{source_id}/relationships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrAgentRelationships"];
+        put?: never;
+        post: operations["createRwrAgentRelationship"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/agents/{manager_id}/execution-pool": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrExecutionPool"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/agent-relationships/{relationship_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteRwrAgentRelationship"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         StatusMessage: {
             statusMessage: string;
+        };
+        /** @enum {string} */
+        AgentKind: "hermes" | "openclaw" | "codex" | "custom" | "human_operator" | "regent_bridge";
+        /** @enum {string} */
+        WorkerRole: "manager" | "executor" | "hybrid";
+        /** @enum {string} */
+        ExecutionSurface: "hosted_sprite" | "local_bridge" | "external_webhook";
+        /** @enum {string} */
+        RunnerKind: "hermes_local_manager" | "hermes_hosted_manager" | "openclaw_local_manager" | "codex_exec" | "codex_app_server" | "openclaw_local_executor" | "openclaw_code_agent_local" | "fake" | "custom_worker";
+        /** @enum {string} */
+        BillingMode: "platform_hosted" | "user_local" | "external_self_reported";
+        /** @enum {string} */
+        TrustScope: "platform_hosted" | "local_user_controlled" | "external_user_controlled";
+        /** @enum {string} */
+        ReportedUsagePolicy: "platform_metered" | "self_reported" | "external_reported";
+        /** @enum {string} */
+        RelationshipKind: "manager_of" | "preferred_executor" | "can_delegate_to" | "reports_to";
+        /** @enum {string} */
+        RelationshipStatus: "active" | "paused" | "revoked";
+        RwrCompanySummary: {
+            id: number;
+            name: string;
+            slug: string;
+            status: string;
+        };
+        RwrAgentProfile: {
+            id: number;
+            company_id: number;
+            name: string;
+            agent_kind: components["schemas"]["AgentKind"];
+            default_runner_kind: components["schemas"]["RunnerKind"] | null;
+            status: string;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+        };
+        RwrWorkItem: {
+            id: number;
+            company_id: number;
+            title: string;
+            description: string | null;
+            status: string;
+            /** @enum {string} */
+            priority: "normal" | "urgent";
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+            desired_runner_kind: components["schemas"]["RunnerKind"] | null;
+            assigned_worker_id: number | null;
+            assigned_agent_profile_id: number | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RwrRun: {
+            id: number;
+            company_id: number;
+            work_item_id: number;
+            parent_run_id: number | null;
+            root_run_id: number | null;
+            worker_id: number | null;
+            runtime_profile_id: number | null;
+            runner_kind: components["schemas"]["RunnerKind"];
+            status: string;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+            summary: string | null;
+            failure_reason: string | null;
+            cost_usd: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RwrRunEvent: {
+            id: number;
+            company_id: number;
+            run_id: number;
+            sequence: number;
+            kind: string;
+            actor_kind: string | null;
+            actor_id: string | null;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+            /** @enum {string} */
+            sensitivity: "normal" | "sensitive" | "secret";
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            occurred_at: string;
+        };
+        RwrArtifact: {
+            id: number;
+            company_id: number;
+            work_item_id: number;
+            run_id: number;
+            artifact_type: string;
+            title: string | null;
+            url: string | null;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+            attestation_level: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RwrWorker: {
+            id: number;
+            company_id: number;
+            agent_profile_id: number;
+            runtime_profile_id: number | null;
+            name: string;
+            agent_kind: components["schemas"]["AgentKind"];
+            worker_role: components["schemas"]["WorkerRole"];
+            execution_surface: components["schemas"]["ExecutionSurface"];
+            runner_kind: components["schemas"]["RunnerKind"];
+            billing_mode: components["schemas"]["BillingMode"];
+            trust_scope: components["schemas"]["TrustScope"];
+            reported_usage_policy: components["schemas"]["ReportedUsagePolicy"];
+            status: string;
+            /** Format: date-time */
+            last_heartbeat_at: string | null;
+        };
+        RwrRuntime: {
+            id: number;
+            company_id: number;
+            name: string;
+            runner_kind: components["schemas"]["RunnerKind"];
+            execution_surface: components["schemas"]["ExecutionSurface"];
+            billing_mode: components["schemas"]["BillingMode"];
+            status: string;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+        };
+        RwrAgentRelationship: {
+            id: number;
+            company_id: number;
+            source_agent_profile_id: number | null;
+            target_agent_profile_id: number | null;
+            source_worker_id: number | null;
+            target_worker_id: number | null;
+            relationship_kind: components["schemas"]["RelationshipKind"];
+            status: components["schemas"]["RelationshipStatus"];
+            max_parallel_runs: number;
+        };
+        RwrWorkerAssignment: {
+            id: number;
+            company_id: number;
+            worker_id: number;
+            work_run_id: number;
+            status: string;
+            /** Format: date-time */
+            claimed_at: string | null;
+            /** Format: date-time */
+            leased_until: string | null;
+        };
+        RwrAccountResponse: {
+            /** @constant */
+            ok: true;
+            authenticated: boolean;
+            companies: components["schemas"]["RwrCompanySummary"][];
+        };
+        RwrWorkItemListResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            work_items: components["schemas"]["RwrWorkItem"][];
+        };
+        RwrWorkItemResponse: {
+            /** @constant */
+            ok: true;
+            work_item: components["schemas"]["RwrWorkItem"];
+        };
+        RwrRunResponse: {
+            /** @constant */
+            ok: true;
+            run: components["schemas"]["RwrRun"];
+        };
+        RwrRunEventListResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            events: components["schemas"]["RwrRunEvent"][];
+        };
+        RwrRunEventResponse: {
+            /** @constant */
+            ok: true;
+            event: components["schemas"]["RwrRunEvent"];
+        };
+        RwrArtifactListResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            artifacts: components["schemas"]["RwrArtifact"][];
+        };
+        RwrArtifactResponse: {
+            /** @constant */
+            ok: true;
+            artifact: components["schemas"]["RwrArtifact"];
+        };
+        RwrWorkerListResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            workers: components["schemas"]["RwrWorker"][];
+        };
+        RwrWorkerResponse: {
+            /** @constant */
+            ok: true;
+            worker: components["schemas"]["RwrWorker"];
+        };
+        RwrWorkerRegistrationResponse: {
+            /** @constant */
+            ok: true;
+            agent_profile: components["schemas"]["RwrAgentProfile"];
+            worker: components["schemas"]["RwrWorker"];
+        };
+        RwrWorkerAssignmentListResponse: {
+            /** @constant */
+            ok: true;
+            assignments: components["schemas"]["RwrWorkerAssignment"][];
+        };
+        RwrWorkerAssignmentResponse: {
+            /** @constant */
+            ok: true;
+            assignment: components["schemas"]["RwrWorkerAssignment"];
+        };
+        RwrRuntimeListResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            runtimes: components["schemas"]["RwrRuntime"][];
+        };
+        RwrDelegationResponse: {
+            /** @constant */
+            ok: true;
+            target_worker: components["schemas"]["RwrWorker"];
+            child_runs: components["schemas"]["RwrRun"][];
+        };
+        RwrAgentRelationshipListResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            relationships: components["schemas"]["RwrAgentRelationship"][];
+        };
+        RwrAgentRelationshipResponse: {
+            /** @constant */
+            ok: true;
+            relationship: components["schemas"]["RwrAgentRelationship"];
+        };
+        RwrExecutionPoolResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            workers: components["schemas"]["RwrWorker"][];
+        };
+        RwrWorkItemCreateRequest: {
+            company_id: string;
+            title: string;
+            description?: string | null;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
+            /**
+             * @default operator
+             * @enum {string}
+             */
+            visibility: "operator" | "company" | "public";
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRunStartRequest: {
+            company_id: string;
+            work_item_id: string;
+            runner_kind: components["schemas"]["RunnerKind"];
+            worker_id?: string | null;
+            instructions?: string | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrWorkerRegistrationRequest: {
+            company_id: string;
+            agent_kind: components["schemas"]["AgentKind"];
+            worker_role: components["schemas"]["WorkerRole"];
+            execution_surface: components["schemas"]["ExecutionSurface"];
+            runner_kind: components["schemas"]["RunnerKind"];
+            billing_mode: components["schemas"]["BillingMode"];
+            trust_scope: components["schemas"]["TrustScope"];
+            reported_usage_policy: components["schemas"]["ReportedUsagePolicy"];
+            display_name?: string | null;
+            endpoint_url?: string | null;
+        };
+        RwrRunEventAppendRequest: {
+            company_id: string;
+            run_id: string;
+            sequence?: number;
+            kind: string;
+            actor_kind?: string;
+            actor_id?: string | null;
+            /** @enum {string} */
+            visibility?: "operator" | "company" | "public";
+            /** @enum {string} */
+            sensitivity?: "normal" | "sensitive" | "secret";
+            /** Format: date-time */
+            occurred_at?: string;
+            idempotency_key?: string | null;
+            payload?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrArtifactCreateRequest: {
+            company_id: string;
+            run_id: string;
+            artifact_type: string;
+            title?: string | null;
+            body?: string | null;
+            url?: string | null;
+            /** @enum {string} */
+            visibility: "operator" | "company" | "public";
+            publish_action?: "publish_artifact" | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrDelegationRequest: {
+            company_id: string;
+            run_id: string;
+            work_item_id?: string | null;
+            relationship_kind?: components["schemas"]["RelationshipKind"];
+            requested_runner_kind: components["schemas"]["RunnerKind"];
+            preferred_agent_kind?: ("codex" | "openclaw" | "custom") | null;
+            target_agent_profile_id?: string | null;
+            target_worker_id?: string | null;
+            execution_surface?: components["schemas"]["ExecutionSurface"] | "manager_decides" | null;
+            /** @enum {string} */
+            strategy: "parallel" | "serial" | "manager_decides";
+            tasks: {
+                title: string;
+                instructions?: string | null;
+                metadata?: {
+                    [key: string]: unknown;
+                };
+            }[];
+            budget_limit_usd_cents?: number | null;
+            instructions?: string | null;
+        };
+        RwrAgentRelationshipCreateRequest: {
+            company_id: string;
+            source_agent_profile_id?: string | null;
+            target_agent_profile_id?: string | null;
+            source_worker_id?: string | null;
+            target_worker_id?: string | null;
+            relationship_kind: components["schemas"]["RelationshipKind"];
+            status?: components["schemas"]["RelationshipStatus"];
+            /** @default 1 */
+            max_parallel_runs: number;
+            routing_policy?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
         };
         ReadyzChecks: {
             /** @enum {string} */
@@ -1901,6 +2524,7 @@ export interface components {
     };
     parameters: {
         SessionId: string;
+        CompanyId: string;
     };
     requestBodies: never;
     headers: never;
@@ -3663,6 +4287,516 @@ export interface operations {
             429: components["responses"]["StatusMessage429"];
             502: components["responses"]["StatusMessage502"];
             503: components["responses"]["StatusMessage503"];
+        };
+    };
+    rwrAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current Regent Work Runtime account and owned companies */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrAccountResponse"];
+                };
+            };
+        };
+    };
+    listRwrWorkItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime work items for the company */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkItemListResponse"];
+                };
+            };
+        };
+    };
+    createRwrWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrWorkItemCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created Regent Work Runtime work item */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkItemResponse"];
+                };
+            };
+        };
+    };
+    getRwrWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                work_item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkItemResponse"];
+                };
+            };
+        };
+    };
+    startRwrWorkRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                work_item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRunStartRequest"];
+            };
+        };
+        responses: {
+            /** @description Started Regent Work Runtime run */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunResponse"];
+                };
+            };
+        };
+    };
+    getRwrRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunResponse"];
+                };
+            };
+        };
+    };
+    listRwrRunEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunEventListResponse"];
+                };
+            };
+        };
+    };
+    appendRwrRunEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRunEventAppendRequest"];
+            };
+        };
+        responses: {
+            /** @description Appended Regent Work Runtime run event */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunEventResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    listRwrRunArtifacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run artifacts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrArtifactListResponse"];
+                };
+            };
+        };
+    };
+    createRwrRunArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrArtifactCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created Regent Work Runtime run artifact */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrArtifactResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    listRwrWorkers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime workers for the company */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerListResponse"];
+                };
+            };
+        };
+    };
+    registerRwrWorker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrWorkerRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Registered Regent Work Runtime worker */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerRegistrationResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    heartbeatRwrWorker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                worker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated Regent Work Runtime worker heartbeat */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    listRwrWorkerAssignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                worker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime worker assignments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerAssignmentListResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    claimRwrWorkerAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Claimed Regent Work Runtime worker assignment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerAssignmentResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    listRwrRuntimes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime profiles for the company */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeListResponse"];
+                };
+            };
+        };
+    };
+    requestRwrDelegation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrDelegationRequest"];
+            };
+        };
+        responses: {
+            /** @description Created delegated Regent Work Runtime child runs */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrDelegationResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    listRwrAgentRelationships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime agent relationships */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrAgentRelationshipListResponse"];
+                };
+            };
+        };
+    };
+    createRwrAgentRelationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrAgentRelationshipCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created Regent Work Runtime agent relationship */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrAgentRelationshipResponse"];
+                };
+            };
+        };
+    };
+    listRwrExecutionPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                manager_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime execution pool workers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrExecutionPoolResponse"];
+                };
+            };
+        };
+    };
+    deleteRwrAgentRelationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                relationship_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted Regent Work Runtime agent relationship */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrAgentRelationshipResponse"];
+                };
+            };
         };
     };
 }

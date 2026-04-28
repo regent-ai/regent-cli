@@ -1,4 +1,4 @@
-import { CLI_COMMANDS, commandMatchesInput } from "./command-registry.js";
+import { CLI_COMMANDS } from "./command-registry.js";
 import { CLI_PALETTE, printText, renderPanel, tone } from "./printer.js";
 
 interface HelpEntry {
@@ -106,6 +106,88 @@ const commandHelp: Record<string, HelpEntry> = {
     output: "Shows runtime status for the selected hosted company.",
     nextStep: "Use the company slug from the Regent website, then run the command again when you need a fresh status check.",
   },
+  "work create": {
+    summary: "Create work for one Regent company.",
+    usage: "regents work create --company-id <id> --title <title> [--description <text>]",
+    flags: ["--company-id <id>", "--title <title>", "--description <text>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents work create --company-id company_123 --title \"Review launch notes\""],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the new work id, status, title, and command to start it.",
+    nextStep: "Run `regents work run <work-item-id> --company-id <id> --runner <runner>`.",
+  },
+  "work run": {
+    summary: "Start work for one Regent company.",
+    usage: "regents work run <work-item-id> --company-id <id> --runner <runner>",
+    flags: [
+      "--company-id <id>",
+      "--runner <runner>",
+      "--worker-id <id>",
+      "--instructions <text>",
+      "--origin <url>",
+      "--session-file <path>",
+    ],
+    examples: ["regents work run work_123 --company-id company_123 --runner openclaw_local_executor"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the run id, selected worker, current status, and watch command.",
+    nextStep: "Run `regents work watch <run-id> --company-id <id>`.",
+  },
+  "work watch": {
+    summary: "Show updates for one Regent work run.",
+    usage: "regents work watch <run-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents work watch run_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows recent run updates with sequence, update name, actor, and time.",
+    nextStep: "Run the command again when you need the latest updates.",
+  },
+  "agent connect hermes": {
+    summary: "Connect Hermes as a company worker.",
+    usage: "regents agent connect hermes --company-id <id> --role <manager|executor|hybrid>",
+    flags: ["--company-id <id>", "--role <manager|executor|hybrid>", "--name <name>", "--config <path>"],
+    examples: ["regents agent connect hermes --company-id company_123 --role manager"],
+    auth: "Needs `regents auth login --audience platform` and `regents identity ensure`.",
+    output: "Shows the worker id, role, status, and what to do next.",
+    nextStep: "Use `regents agent link` to choose which workers this manager can assign.",
+  },
+  "agent connect openclaw": {
+    summary: "Connect a local OpenClaw worker to one Regent company.",
+    usage: "regents agent connect openclaw --company-id <id> --role <manager|executor|hybrid>",
+    flags: ["--company-id <id>", "--role <manager|executor|hybrid>", "--name <name>", "--write-skill <true|false>", "--config <path>"],
+    examples: ["regents agent connect openclaw --company-id company_123 --role executor"],
+    auth: "Needs `regents auth login --audience platform` and `regents identity ensure`.",
+    output: "Shows the worker id and the local Regents Work skill path.",
+    nextStep: "Use the generated OpenClaw skill, or start work with `regents work run`.",
+  },
+  "agent link": {
+    summary: "Link one manager to one worker for a Regent company.",
+    usage: "regents agent link --company-id <id> --manager-agent-id <id> --executor-agent-id <id> --relationship <kind>",
+    flags: [
+      "--company-id <id>",
+      "--manager-agent-id <id>",
+      "--manager-worker-id <id>",
+      "--executor-agent-id <id>",
+      "--executor-worker-id <id>",
+      "--relationship <kind>",
+      "--origin <url>",
+      "--session-file <path>",
+    ],
+    examples: [
+      "regents agent link --company-id company_123 --manager-agent-id agent_1 --executor-agent-id agent_2 --relationship can_delegate_to",
+      "regents agent link --company-id company_123 --manager-worker-id worker_1 --executor-worker-id worker_2 --relationship can_delegate_to",
+    ],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the manager, worker, link type, and listing command.",
+    nextStep: "Run `regents agent execution-pool --company-id <id> --manager <id>`.",
+  },
+  "agent execution-pool": {
+    summary: "List workers one manager can assign.",
+    usage: "regents agent execution-pool --company-id <id> --manager <id>",
+    flags: ["--company-id <id>", "--manager <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents agent execution-pool --company-id company_123 --manager agent_1"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows assignable worker ids, roles, status, and last check-in.",
+    nextStep: "Use `regents work run` or a connected manager to start company work.",
+  },
 };
 
 const groupHelp: Record<string, HelpGroup> = {
@@ -144,6 +226,20 @@ const groupHelp: Record<string, HelpGroup> = {
     commands: CLI_COMMANDS.filter((command) => command.startsWith("platform ")),
     nextStep: "Start with `regents platform auth login`, then `regents platform formation status`.",
   },
+  work: {
+    summary: "Create and run Regent company work from the terminal.",
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows concise work summaries, run status, and update lists.",
+    commands: CLI_COMMANDS.filter((command) => command.startsWith("work ")),
+    nextStep: "Start with `regents work create --company-id <id> --title <title>`.",
+  },
+  agent: {
+    summary: "Manage local Agent setup and Regent company workers.",
+    auth: "Worker connection needs `regents auth login --audience platform` and `regents identity ensure`.",
+    output: "Shows connected worker ids, work links, and workers a manager can assign.",
+    commands: CLI_COMMANDS.filter((command) => command.startsWith("agent ")),
+    nextStep: "Use `regents agent connect openclaw --company-id <id> --role executor` for local OpenClaw work.",
+  },
 };
 
 const helpGroupForCommand = (command: string): HelpGroup | null => {
@@ -167,46 +263,91 @@ const helpGroupForCommand = (command: string): HelpGroup | null => {
     return groupHelp.platform;
   }
 
+  if (command.startsWith("work ")) {
+    return groupHelp.work;
+  }
+
+  if (command.startsWith("agent ")) {
+    return groupHelp.agent;
+  }
+
   return null;
 };
 
 const isPlaceholderPart = (part: string): boolean => part.startsWith("<") && part.endsWith(">");
 
-const commandMatchesHelpInput = (command: string, input: readonly string[]): boolean => {
+interface HelpMatchScore {
+  readonly literalMatches: number;
+  readonly placeholderMatches: number;
+  readonly totalParts: number;
+}
+
+const scoreHelpMatch = (command: string, input: readonly string[]): HelpMatchScore | null => {
   const commandParts = command.split(" ");
   if (input.length > commandParts.length) {
-    return false;
+    return null;
   }
+
+  let literalMatches = 0;
+  let placeholderMatches = 0;
 
   for (const [index, inputPart] of input.entries()) {
     const commandPart = commandParts[index];
     if (!commandPart) {
-      return false;
+      return null;
     }
 
     if (isPlaceholderPart(commandPart)) {
       if (!inputPart) {
-        return false;
+        return null;
       }
+      placeholderMatches += 1;
       continue;
     }
 
     if (commandPart !== inputPart) {
-      return false;
+      return null;
     }
+
+    literalMatches += 1;
   }
 
-  return commandParts.slice(input.length).every((part) => isPlaceholderPart(part));
+  if (!commandParts.slice(input.length).every((part) => isPlaceholderPart(part))) {
+    return null;
+  }
+
+  return {
+    literalMatches,
+    placeholderMatches,
+    totalParts: commandParts.length,
+  };
 };
 
 const commandForInput = (positionals: readonly string[]): string | null => {
-  for (const command of CLI_COMMANDS) {
-    if (commandMatchesInput(command, positionals) || commandMatchesHelpInput(command, positionals)) {
-      return command;
-    }
+  const helpMatches = CLI_COMMANDS.flatMap((command) => {
+    const score = scoreHelpMatch(command, positionals);
+    return score ? [{ command, score }] : [];
+  });
+
+  if (helpMatches.length === 0) {
+    return null;
   }
 
-  return null;
+  return helpMatches.reduce((best, candidate) => {
+    if (candidate.score.literalMatches !== best.score.literalMatches) {
+      return candidate.score.literalMatches > best.score.literalMatches ? candidate : best;
+    }
+
+    if (candidate.score.placeholderMatches !== best.score.placeholderMatches) {
+      return candidate.score.placeholderMatches < best.score.placeholderMatches ? candidate : best;
+    }
+
+    if (candidate.score.totalParts !== best.score.totalParts) {
+      return candidate.score.totalParts < best.score.totalParts ? candidate : best;
+    }
+
+    return best;
+  }).command;
 };
 
 const summarizeCommand = (command: string): HelpEntry => {

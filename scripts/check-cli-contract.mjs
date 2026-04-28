@@ -91,7 +91,13 @@ const extractOwnershipGroups = (source, exportName) => {
 const normalizeCommandName = (command) => command.replace(/^regents?\s+/u, "");
 const currentAvailabilityValues = new Set(["current", "beta_disabled"]);
 const platformPublicCommand = (command) =>
-  command.startsWith("platform ") || command.startsWith("agentbook ");
+  command.startsWith("platform ") ||
+  command.startsWith("agentbook ") ||
+  command.startsWith("work ") ||
+  command === "agent connect hermes" ||
+  command === "agent connect openclaw" ||
+  command === "agent link" ||
+  command === "agent execution-pool";
 
 const flattenContract = (contract, operationPaths) => {
   if (Array.isArray(contract.commands)) {

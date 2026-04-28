@@ -33,6 +33,16 @@ describe("scoped CLI help", () => {
     expect(output.stdout).toContain("regents autolaunch agent <id>");
   });
 
+  it("prefers the more specific help entry when commands share a prefix", async () => {
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["autolaunch", "agent", "readiness", "--help"]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(output.stdout).toContain("AUTOLAUNCH AGENT READINESS <ID> HELP");
+    expect(output.stdout).toContain("regents autolaunch agent readiness <id>");
+  });
+
   it("shows the required platform sign-in flags", async () => {
     const output = await captureOutput(() =>
       runCliEntrypoint(["platform", "auth", "login", "--help"]),
@@ -43,6 +53,39 @@ describe("scoped CLI help", () => {
     expect(output.stdout).toContain("--identity-token <token>");
     expect(output.stdout).toContain("--session-file <path>");
     expect(output.stdout).toContain("regents platform formation status");
+  });
+
+  it("renders Regent worker help for Hermes and execution pools", async () => {
+    const hermes = await captureOutput(() =>
+      runCliEntrypoint(["agent", "connect", "hermes", "--help"]),
+    );
+
+    expect(hermes.result).toBe(0);
+    expect(hermes.stdout).toContain("AGENT CONNECT HERMES HELP");
+    expect(hermes.stdout).toContain("regents agent connect hermes --company-id <id>");
+
+    const pool = await captureOutput(() =>
+      runCliEntrypoint(["agent", "execution-pool", "--help"]),
+    );
+
+    expect(pool.result).toBe(0);
+    expect(pool.stdout).toContain("AGENT EXECUTION-POOL HELP");
+    expect(pool.stdout).toContain("regents agent execution-pool --company-id <id>");
+  });
+
+  it("renders Regent work help with concise output guidance", async () => {
+    const run = await captureOutput(() => runCliEntrypoint(["work", "run", "--help"]));
+
+    expect(run.result).toBe(0);
+    expect(run.stdout).toContain("WORK RUN HELP");
+    expect(run.stdout).toContain("Shows the run id, selected worker, current status, and watch command.");
+
+    const openclaw = await captureOutput(() =>
+      runCliEntrypoint(["agent", "connect", "openclaw", "--help"]),
+    );
+
+    expect(openclaw.result).toBe(0);
+    expect(openclaw.stdout).toContain("Shows the worker id and the local Regents Work skill path.");
   });
 
   it("keeps command help stable", () => {

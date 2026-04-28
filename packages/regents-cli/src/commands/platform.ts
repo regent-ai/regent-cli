@@ -13,7 +13,7 @@ const DEFAULT_SESSION_FILE = path.join(os.homedir(), ".regent", "platform", "ses
 type HttpMethod = "GET" | "POST" | "DELETE";
 type JsonObject = Record<string, unknown>;
 
-interface PlatformSessionState {
+export interface PlatformSessionState {
   readonly version: 1;
   readonly origin: string;
   readonly cookie: string;
@@ -21,7 +21,7 @@ interface PlatformSessionState {
   readonly savedAt: string;
 }
 
-interface RequestOptions {
+export interface PlatformRequestOptions {
   readonly origin: string;
   readonly path: string;
   readonly method: HttpMethod;
@@ -36,7 +36,7 @@ export async function runPlatformAuthLogin(args: ParsedCliArgs): Promise<void> {
   const identityToken = resolveIdentityToken(args);
   const displayName = getFlag(args, "display-name");
   const bootstrap = await bootstrapCsrf(origin);
-  const { data, session } = await requestJson({
+  const { data, session } = await requestPlatformSessionJson({
     origin,
     path: "/api/auth/privy/session",
     method: "POST",
@@ -57,8 +57,8 @@ export async function runPlatformAuthLogin(args: ParsedCliArgs): Promise<void> {
 }
 
 export async function runPlatformAuthStatus(args: ParsedCliArgs): Promise<void> {
-  const { origin, session, sessionFile } = await loadResolvedSession(args);
-  const { data } = await requestJson({
+  const { origin, session, sessionFile } = await loadResolvedPlatformSession(args);
+  const { data } = await requestPlatformSessionJson({
     origin,
     path: "/api/auth/privy/profile",
     method: "GET",
@@ -75,8 +75,8 @@ export async function runPlatformAuthStatus(args: ParsedCliArgs): Promise<void> 
 }
 
 export async function runPlatformAuthLogout(args: ParsedCliArgs): Promise<void> {
-  const { origin, session, sessionFile } = await loadResolvedSession(args);
-  await requestJson({
+  const { origin, session, sessionFile } = await loadResolvedPlatformSession(args);
+  await requestPlatformSessionJson({
     origin,
     path: "/api/auth/privy/session",
     method: "DELETE",
@@ -93,8 +93,8 @@ export async function runPlatformAuthLogout(args: ParsedCliArgs): Promise<void> 
 }
 
 export async function runPlatformFormationStatus(args: ParsedCliArgs): Promise<void> {
-  const { origin, session } = await loadResolvedSession(args);
-  const { data } = await requestJson({
+  const { origin, session } = await loadResolvedPlatformSession(args);
+  const { data } = await requestPlatformSessionJson({
     origin,
     path: "/api/agent-platform/formation",
     method: "GET",
@@ -110,8 +110,8 @@ export async function runPlatformFormationStatus(args: ParsedCliArgs): Promise<v
 }
 
 export async function runPlatformBillingAccount(args: ParsedCliArgs): Promise<void> {
-  const { origin, session } = await loadResolvedSession(args);
-  const { data } = await requestJson({
+  const { origin, session } = await loadResolvedPlatformSession(args);
+  const { data } = await requestPlatformSessionJson({
     origin,
     path: "/api/agent-platform/billing/account",
     method: "GET",
@@ -127,8 +127,8 @@ export async function runPlatformBillingAccount(args: ParsedCliArgs): Promise<vo
 }
 
 export async function runPlatformBillingUsage(args: ParsedCliArgs): Promise<void> {
-  const { origin, session } = await loadResolvedSession(args);
-  const { data } = await requestJson({
+  const { origin, session } = await loadResolvedPlatformSession(args);
+  const { data } = await requestPlatformSessionJson({
     origin,
     path: "/api/agent-platform/billing/usage",
     method: "GET",
@@ -145,8 +145,8 @@ export async function runPlatformBillingUsage(args: ParsedCliArgs): Promise<void
 
 export async function runPlatformCompanyRuntime(args: ParsedCliArgs): Promise<void> {
   const slug = requireArg(getFlag(args, "slug"), "slug");
-  const { origin, session } = await loadResolvedSession(args);
-  const { data } = await requestJson({
+  const { origin, session } = await loadResolvedPlatformSession(args);
+  const { data } = await requestPlatformSessionJson({
     origin,
     path: `/api/agent-platform/agents/${encodeURIComponent(slug)}/runtime`,
     method: "GET",
@@ -221,7 +221,9 @@ const bootstrapCsrf = async (origin: string): Promise<PlatformSessionState> => {
   };
 };
 
-const requestJson = async (options: RequestOptions): Promise<{ data: JsonObject; session: PlatformSessionState }> => {
+export const requestPlatformSessionJson = async (
+  options: PlatformRequestOptions,
+): Promise<{ data: JsonObject; session: PlatformSessionState }> => {
   const headers = new Headers({
     accept: "application/json",
     cookie: options.session.cookie,
@@ -256,7 +258,7 @@ const requestJson = async (options: RequestOptions): Promise<{ data: JsonObject;
   };
 };
 
-const loadResolvedSession = async (
+export const loadResolvedPlatformSession = async (
   args: ParsedCliArgs,
 ): Promise<{ origin: string; session: PlatformSessionState; sessionFile: string }> => {
   const sessionFile = resolveSessionFile(args);

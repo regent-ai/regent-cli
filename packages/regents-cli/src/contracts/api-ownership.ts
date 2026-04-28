@@ -427,6 +427,30 @@ export const platformApiCommandGroups = [
       "/api/agent-platform/agents/{slug}/runtime",
     ],
   }),
+  definePlatformGroup({
+    commands: [
+      "work create",
+      "work list",
+      "work show",
+      "work run",
+      "work watch",
+      "agent connect hermes",
+      "agent connect openclaw",
+      "agent link",
+      "agent execution-pool",
+    ],
+    owner: "platform",
+    status: "current",
+    pathTemplates: [
+      "/api/agent-platform/companies/{company_id}/rwr/work-items",
+      "/api/agent-platform/companies/{company_id}/rwr/work-items/{work_item_id}",
+      "/api/agent-platform/companies/{company_id}/rwr/work-items/{work_item_id}/runs",
+      "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/events",
+      "/api/agent-platform/companies/{company_id}/rwr/workers",
+      "/api/agent-platform/companies/{company_id}/rwr/agents/{source_id}/relationships",
+      "/api/agent-platform/companies/{company_id}/rwr/agents/{manager_id}/execution-pool",
+    ],
+  }),
 ] as const;
 
 export const sharedServicesApiCommandGroups = [
