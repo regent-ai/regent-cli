@@ -39,6 +39,13 @@ jobs:
           path: autolaunch
           fetch-depth: 0
 
+      - name: Check out Regents Mobile contract source
+        uses: actions/checkout@v4
+        with:
+          repository: regents-ai/ios
+          path: ios
+          fetch-depth: 0
+
       - name: Check out SIWA contract source
         uses: actions/checkout@v4
         with:

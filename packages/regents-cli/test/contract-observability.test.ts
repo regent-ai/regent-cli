@@ -7,6 +7,11 @@ import { describe, expect, it } from "vitest";
 import { buildContractDoctorReport } from "../src/commands/doctor.js";
 import { route, routeMatches } from "../src/routes/shared.js";
 
+const workspaceRoot = path.resolve(import.meta.dirname, "../../..");
+const sharedApi = path.join(workspaceRoot, "docs/regent-services-contract.openapiv3.yaml");
+const sharedCli = path.join(workspaceRoot, "docs/shared-cli-contract.yaml");
+const sharedGenerated = path.join(workspaceRoot, "packages/regents-cli/src/generated/regent-services-openapi.ts");
+
 const writeRegistry = (body: string): string => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "regent-interface-registry-"));
   const registryPath = path.join(dir, "regent-interface-registry.yaml");
@@ -21,14 +26,14 @@ interfaces:
   shared_services:
     repo: regents-cli
     api_contracts:
-      - /Users/sean/Documents/regent/regents-cli/docs/regent-services-contract.openapiv3.yaml
+      - ${sharedApi}
     cli_contracts:
-      - /Users/sean/Documents/regent/regents-cli/docs/shared-cli-contract.yaml
+      - ${sharedCli}
     generated_bindings:
-      - path: /Users/sean/Documents/regent/regents-cli/packages/regents-cli/src/generated/regent-services-openapi.ts
-        source_contract: /Users/sean/Documents/regent/regents-cli/docs/regent-services-contract.openapiv3.yaml
+      - path: ${sharedGenerated}
+        source_contract: ${sharedApi}
     release_artifacts:
-      - /Users/sean/Documents/regent/regents-cli/docs/regent-services-contract.openapiv3.yaml
+      - ${sharedApi}
     minimum_ci_checkout:
       repos:
         - regents-cli

@@ -27,7 +27,6 @@ const workspaceRoot = path.resolve(import.meta.dirname, "../../..");
 const regentRoot = path.resolve(workspaceRoot, "..");
 
 const files = {
-  registry: path.join(regentRoot, "docs/regent-interface-registry.yaml"),
   platformApi: path.join(regentRoot, "platform/api-contract.openapiv3.yaml"),
   platformCli: path.join(regentRoot, "platform/cli-contract.yaml"),
   techtreeApi: path.join(regentRoot, "techtree/docs/api-contract.openapiv3.yaml"),
@@ -40,6 +39,46 @@ const files = {
 };
 
 const loadYaml = <T>(file: string): T => parse(fs.readFileSync(file, "utf8")) as T;
+
+const registryFixture = (): InterfaceRegistry => ({
+  interfaces: {
+    platform: {
+      api_contracts: [files.platformApi],
+      cli_contracts: [files.platformCli],
+      generated_bindings: [{ path: path.join(workspaceRoot, "packages/regents-cli/src/generated/platform-openapi.ts"), source_contract: files.platformApi }],
+      minimum_ci_checkout: { repos: ["platform", "regents-cli"] },
+    },
+    techtree: {
+      api_contracts: [files.techtreeApi],
+      cli_contracts: [files.techtreeCli],
+      generated_bindings: [{ path: path.join(workspaceRoot, "packages/regents-cli/src/generated/techtree-openapi.ts"), source_contract: files.techtreeApi }],
+      minimum_ci_checkout: { repos: ["techtree", "regents-cli"] },
+    },
+    autolaunch: {
+      api_contracts: [files.autolaunchApi],
+      cli_contracts: [files.autolaunchCli],
+      generated_bindings: [{ path: path.join(workspaceRoot, "packages/regents-cli/src/generated/autolaunch-openapi.ts"), source_contract: files.autolaunchApi }],
+      minimum_ci_checkout: { repos: ["autolaunch", "regents-cli"] },
+    },
+    ios: {
+      api_contracts: [files.iosApi],
+      cli_contracts: [],
+      generated_bindings: [],
+      minimum_ci_checkout: { repos: ["ios", "platform"] },
+    },
+    regents_cli: {
+      api_contracts: [files.sharedApi],
+      cli_contracts: [files.sharedCli, files.platformCli, files.techtreeCli, files.autolaunchCli],
+      generated_bindings: [
+        { path: path.join(workspaceRoot, "packages/regents-cli/src/generated/platform-openapi.ts"), source_contract: files.platformApi },
+        { path: path.join(workspaceRoot, "packages/regents-cli/src/generated/techtree-openapi.ts"), source_contract: files.techtreeApi },
+        { path: path.join(workspaceRoot, "packages/regents-cli/src/generated/autolaunch-openapi.ts"), source_contract: files.autolaunchApi },
+        { path: path.join(workspaceRoot, "packages/regents-cli/src/generated/regent-services-openapi.ts"), source_contract: files.sharedApi },
+      ],
+      minimum_ci_checkout: { repos: ["regents-cli", "platform", "techtree", "autolaunch", "ios"] },
+    },
+  },
+});
 
 const operation = (document: OpenApiDocument, pathTemplate: string, method: string) => {
   const methods = document.paths?.[pathTemplate];
@@ -224,7 +263,7 @@ const samplePayloads = {
 
 describe("Regent flywheel integration proof", () => {
   it("loads the cross-repo contracts, generated bindings, and checkout requirements needed for the loop", () => {
-    const registry = loadYaml<InterfaceRegistry>(files.registry);
+    const registry = registryFixture();
     const interfaces = registry.interfaces ?? {};
 
     for (const owner of ["platform", "techtree", "autolaunch", "ios", "regents_cli"] as const) {
