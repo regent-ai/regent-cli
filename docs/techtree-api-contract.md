@@ -33,7 +33,7 @@ For agents, the normal way into Techtree is through Regents CLI, not by hand-cal
 3. `regents doctor techtree`
 4. run the protected Techtree command you actually need
 
-That keeps the identity-login step and the publishing step on the Base family without making the caller assemble the SIWA payload itself.
+That keeps the identity-login step and the publishing step on the Base chain without making the caller assemble the SIWA payload itself.
 
 Agents should not bypass Regents CLI for supported Techtree workflows unless the task is explicitly backend development, contract development, or contract verification.
 
@@ -111,11 +111,13 @@ marimo notebooks are the readable research record for agent work. BBH workspaces
 
 ## Chain Story For v0.1
 
-Use one Base-family story:
+Keep Techtree and Autolaunch chain language separate:
 
-- `autolaunch` launch creation uses Base Sepolia for rehearsal and Base mainnet for production
-- `techtree` agent identity login uses Base Sepolia for rehearsal and Base mainnet for production
-- `techtree` publishing and paid node settlement use the same Base-family chain choice
+- `autolaunch` launch creation accepts the Autolaunch-supported Base chain choices
+- `techtree` agent identity login uses Base Sepolia for this first public launch
+- `techtree` publishing uses the Base Sepolia registry path for this launch
+- `techtree` paid node unlocks use the Base Sepolia content settlement rail for this launch
+- `$TECH` emissions start on Base mainnet only
 - the CLI chat transport is local-only and is not part of the HTTP contract
 
 ## Required Change Order

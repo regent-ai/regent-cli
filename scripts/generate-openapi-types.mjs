@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -26,6 +26,12 @@ const targets = [
 ];
 
 for (const target of targets) {
+  if (!existsSync(target.input) || !statSync(target.input).isFile()) {
+    console.error(`Missing OpenAPI contract input: ${target.input}`);
+    console.error("Check out the sibling contract repositories, then rerun OpenAPI generation.");
+    process.exit(1);
+  }
+
   mkdirSync(dirname(target.output), { recursive: true });
   const result = spawnSync(
     "pnpm",

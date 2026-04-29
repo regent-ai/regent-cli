@@ -1895,7 +1895,13 @@ export interface components {
             ok: false;
             error: {
                 code: string;
+                /** @enum {string} */
+                product: "autolaunch";
+                status: number;
+                path: string;
+                request_id: string | null;
                 message: string;
+                next_steps?: string | null;
             } & {
                 [key: string]: unknown;
             };
@@ -1999,20 +2005,34 @@ export interface components {
             [key: string]: unknown;
         };
         PreparedAction: {
-            resource?: string;
-            action?: string;
-            chain_id?: components["schemas"]["AutolaunchChainId"];
+            action_id: string;
+            resource: string;
+            action: string;
+            chain_id: components["schemas"]["AutolaunchChainId"];
             target?: components["schemas"]["Address"];
             calldata?: components["schemas"]["HexData"];
-            tx_request?: components["schemas"]["TxRequest"];
+            expected_signer: components["schemas"]["Address"] | null;
+            expires_at: components["schemas"]["DateTime"];
+            idempotency_key: string;
+            risk_copy: string;
+            tx_request: components["schemas"]["TxRequest"];
         } & {
             [key: string]: unknown;
         };
         PreparedActionEnvelope: {
-            ok?: boolean;
-            data?: components["schemas"]["PreparedAction"];
-        } & {
-            [key: string]: unknown;
+            /** @enum {boolean} */
+            ok: true;
+            job_id?: string;
+            subject_id?: string;
+            prepared: components["schemas"]["PreparedAction"];
+        };
+        RegentStakingPreparedActionEnvelope: {
+            /** @enum {boolean} */
+            ok: true;
+            staking?: {
+                [key: string]: unknown;
+            } | null;
+            prepared: components["schemas"]["PreparedAction"];
         };
         TxRequest: {
             chain_id: components["schemas"]["AutolaunchChainId"];
@@ -2379,13 +2399,11 @@ export interface components {
             inactive_above_price: components["schemas"]["DecimalString"];
             time_remaining_seconds: number;
             warnings: string[];
-            tx_request?: components["schemas"]["TxRequest"] | null;
+            prepared?: components["schemas"]["PreparedAction"] | null;
         };
-        AuctionBidQuoteEnvelope: {
+        AuctionBidQuoteEnvelope: components["schemas"]["AuctionBidQuote"] & {
             /** @enum {boolean} */
             ok: true;
-        } & {
-            [key: string]: unknown;
         };
         CreateAuctionBidRequest: {
             amount: components["schemas"]["DecimalString"];
@@ -2402,7 +2420,7 @@ export interface components {
             tx_hash?: string | null;
         };
         PositionAction: {
-            tx_request?: components["schemas"]["TxRequest"] | null;
+            prepared?: components["schemas"]["PreparedAction"] | null;
         } & {
             [key: string]: unknown;
         };
@@ -2485,6 +2503,18 @@ export interface components {
             protocol_reserve_usdc?: components["schemas"]["DecimalString"] | null;
             undistributed_dust_usdc_raw?: number | null;
             undistributed_dust_usdc?: components["schemas"]["DecimalString"] | null;
+            recognized_revenue_proof?: {
+                source: string;
+                chain_id: components["schemas"]["AutolaunchChainId"];
+                ingress: components["schemas"]["Address"] | null;
+                revsplit: components["schemas"]["Address"];
+                block_number: number | null;
+                amount_raw: number | null;
+                amount: components["schemas"]["DecimalString"] | null;
+                recipient_lane: string;
+                /** @enum {string} */
+                status: "fresh" | "stale";
+            };
             wallet_address?: components["schemas"]["Address"] | null;
             wallet_stake_balance_raw?: number | null;
             wallet_stake_balance?: components["schemas"]["DecimalString"] | null;
@@ -2515,17 +2545,12 @@ export interface components {
             /** @enum {boolean} */
             ok: true;
             subject?: components["schemas"]["Subject"] | null;
-            tx_request?: components["schemas"]["TxRequest"] | null;
             prepared?: components["schemas"]["PreparedAction"] | null;
         } & {
             [key: string]: unknown;
         };
-        HoldingAction: {
-            type?: string;
-            tx_request?: components["schemas"]["TxRequest"] | null;
-        } & {
-            [key: string]: unknown;
-        };
+        /** @enum {string} */
+        HoldingAction: "unstake" | "stake" | "claim_usdc" | "claim_emissions" | "claim_and_stake_emissions" | "sweep_ingress";
         HoldingRow: {
             auction_id: string;
             subject_id: string | null;
@@ -2623,9 +2648,9 @@ export interface components {
         BidId: string;
         SubjectId: string;
         SessionId: string;
-        /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+        /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
         Resource: string;
-        /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+        /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
         Action: string;
     };
     requestBodies: never;
@@ -2702,7 +2727,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description Missing or invalid Privy bearer token */
@@ -2711,7 +2736,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -2764,7 +2789,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description XMTP setup request invalid */
@@ -2773,7 +2798,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -2842,7 +2867,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -2928,7 +2953,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -2961,7 +2986,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -2994,7 +3019,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -3027,7 +3052,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -3060,7 +3085,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -3093,7 +3118,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -3135,7 +3160,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["RegentStakingPreparedActionEnvelope"];
                 };
             };
             /** @description Missing signed-in browser session */
@@ -4455,9 +4480,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["JobId"];
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4485,9 +4510,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["SubjectId"];
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -4514,9 +4539,9 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -5221,9 +5246,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["JobId"];
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -5251,9 +5276,9 @@ export interface operations {
             header?: never;
             path: {
                 id: components["parameters"]["SubjectId"];
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;
@@ -5280,9 +5305,9 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. */
+                /** @description Canonical contract scope. Job-scoped settlement actions use `strategy`, `auction`, `revenue_splitter`, `fee_registry`, `fee_vault`, `hook`, and `vesting`. Launch treasury fee pulls use `revenue_splitter`, not `fee_vault`. */
                 resource: components["parameters"]["Resource"];
-                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, and `release`. */
+                /** @description Canonical contract action. Settlement actions include `migrate`, `recover_failed_auction`, `sweep_currency`, `sweep_unsold_tokens`, `accept_ownership`, `sweep_token`, `release`, and `pull_treasury_share`. */
                 action: components["parameters"]["Action"];
             };
             cookie?: never;

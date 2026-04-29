@@ -1,4 +1,5 @@
 import { CLI_COMMANDS } from "./command-registry.js";
+import { CLI_COMMANDS_BY_TOP_LEVEL_GROUP } from "./generated/cli-command-metadata.js";
 import { CLI_PALETTE, printText, renderPanel, tone } from "./printer.js";
 
 interface HelpEntry {
@@ -77,6 +78,15 @@ const commandHelp: Record<string, HelpEntry> = {
     output: "Shows staking balances and claimable amounts.",
     nextStep: "Use the stake, unstake, or claim command that matches the account state.",
   },
+  "doctor contracts": {
+    summary: "Show the contract files and generated artifacts the CLI can see.",
+    usage: "regents doctor contracts [--json]",
+    flags: ["--json", "--config <path>"],
+    examples: ["regents doctor contracts", "regents doctor contracts --json"],
+    auth: "No saved sign-in is needed.",
+    output: "Shows contract files, hashes, generated files, command coverage, and service URLs.",
+    nextStep: "Run this before release checks or when an operator needs to confirm which contracts are loaded.",
+  },
   "platform auth login": {
     summary: "Save a Regent website sign-in for platform account commands.",
     usage:
@@ -105,6 +115,24 @@ const commandHelp: Record<string, HelpEntry> = {
     auth: "Use `regents platform auth login` with a Platform identity token.",
     output: "Shows runtime status for the selected hosted company.",
     nextStep: "Use the company slug from the Regent website, then run the command again when you need a fresh status check.",
+  },
+  "platform formation doctor": {
+    summary: "Explain what is ready or blocked for company opening.",
+    usage: "regents platform formation doctor",
+    flags: ["--origin <url>", "--session-file <path>", "--config <path>"],
+    examples: ["regents platform formation doctor"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the current setup diagnosis from Regent Platform.",
+    nextStep: "Follow the next action shown by the diagnosis, then run it again.",
+  },
+  "platform projection": {
+    summary: "Show the Regent Platform account projection.",
+    usage: "regents platform projection",
+    flags: ["--origin <url>", "--session-file <path>", "--config <path>"],
+    examples: ["regents platform projection"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the Platform account projection used by Regent clients.",
+    nextStep: "Use this when you need to compare local state with the Regent website account.",
   },
   "work create": {
     summary: "Create work for one Regent company.",
@@ -140,14 +168,117 @@ const commandHelp: Record<string, HelpEntry> = {
     output: "Shows recent run updates with sequence, update name, actor, and time.",
     nextStep: "Run the command again when you need the latest updates.",
   },
+  "work local-loop": {
+    summary: "Let one local worker check for assigned Regent work.",
+    usage: "regents work local-loop --company-id <id> --worker-id <id>",
+    flags: [
+      "--company-id <id>",
+      "--worker-id <id>",
+      "--once",
+      "--sleep-ms <ms>",
+      "--artifact-title <title>",
+      "--artifact-body <text>",
+      "--delegate-runner <runner>",
+      "--delegate-title <title>",
+      "--config <path>",
+    ],
+    examples: ["regents work local-loop --company-id company_123 --worker-id worker_123 --once"],
+    auth: "Needs `regents auth login --audience platform` and `regents identity ensure`.",
+    output: "Checks for assigned work and records the worker update.",
+    nextStep: "Run it without `--once` when the worker should keep checking.",
+  },
+  "runtime create": {
+    summary: "Create a runtime for one Regent company.",
+    usage:
+      "regents runtime create --company-id <id> --name <name> --runner <runner> --execution-surface <surface> --billing-mode <mode>",
+    flags: [
+      "--company-id <id>",
+      "--name <name>",
+      "--platform-agent-id <id>",
+      "--runner <runner>",
+      "--execution-surface <surface>",
+      "--billing-mode <mode>",
+      "--origin <url>",
+      "--session-file <path>",
+    ],
+    examples: [
+      "regents runtime create --company-id company_123 --platform-agent-id agent_123 --name \"Hosted Codex\" --runner codex_exec --execution-surface hosted_sprite --billing-mode platform_hosted",
+    ],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the runtime id, status, runner, surface, and billing mode.",
+    nextStep: "Run `regents runtime health <runtime-id> --company-id <id>`.",
+  },
+  "runtime show": {
+    summary: "Show one runtime for a Regent company.",
+    usage: "regents runtime show <runtime-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime show runtime_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the runtime id, status, runner, surface, and billing mode.",
+    nextStep: "Run `regents runtime health <runtime-id> --company-id <id>`.",
+  },
+  "runtime checkpoint": {
+    summary: "Save a checkpoint for one runtime.",
+    usage: "regents runtime checkpoint <runtime-id> --company-id <id> --checkpoint-ref <name>",
+    flags: ["--company-id <id>", "--checkpoint-ref <name>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime checkpoint runtime_123 --company-id company_123 --checkpoint-ref before-release"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the checkpoint id, reference, status, and restore command.",
+    nextStep: "Use the checkpoint id with `regents runtime restore` when you need to roll back.",
+  },
+  "runtime restore": {
+    summary: "Restore one runtime from a checkpoint.",
+    usage: "regents runtime restore <runtime-id> --company-id <id> --checkpoint-id <id>",
+    flags: ["--company-id <id>", "--checkpoint-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime restore runtime_123 --company-id company_123 --checkpoint-id checkpoint_456"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the accepted restore request and the next health check.",
+    nextStep: "Run `regents runtime health <runtime-id> --company-id <id>`.",
+  },
+  "runtime pause": {
+    summary: "Pause one runtime for a Regent company.",
+    usage: "regents runtime pause <runtime-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime pause runtime_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the paused runtime status.",
+    nextStep: "Run `regents runtime resume <runtime-id> --company-id <id>` when it should run again.",
+  },
+  "runtime resume": {
+    summary: "Resume one runtime for a Regent company.",
+    usage: "regents runtime resume <runtime-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime resume runtime_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows the resumed runtime status.",
+    nextStep: "Run `regents runtime health <runtime-id> --company-id <id>`.",
+  },
+  "runtime services": {
+    summary: "List services for one runtime.",
+    usage: "regents runtime services <runtime-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime services runtime_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows service names, status, kind, and endpoint.",
+    nextStep: "Run `regents runtime health <runtime-id> --company-id <id>`.",
+  },
+  "runtime health": {
+    summary: "Show health for one runtime.",
+    usage: "regents runtime health <runtime-id> --company-id <id>",
+    flags: ["--company-id <id>", "--origin <url>", "--session-file <path>"],
+    examples: ["regents runtime health runtime_123 --company-id company_123"],
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows availability, status, and metering status.",
+    nextStep: "Run `regents runtime services <runtime-id> --company-id <id>` to inspect published services.",
+  },
   "agent connect hermes": {
     summary: "Connect Hermes as a company worker.",
     usage: "regents agent connect hermes --company-id <id> --role <manager|executor|hybrid>",
-    flags: ["--company-id <id>", "--role <manager|executor|hybrid>", "--name <name>", "--config <path>"],
+    flags: ["--company-id <id>", "--role <manager|executor|hybrid>", "--name <name>", "--write-connector <true|false>", "--config <path>"],
     examples: ["regents agent connect hermes --company-id company_123 --role manager"],
     auth: "Needs `regents auth login --audience platform` and `regents identity ensure`.",
-    output: "Shows the worker id, role, status, and what to do next.",
-    nextStep: "Use `regents agent link` to choose which workers this manager can assign.",
+    output: "Shows the worker id, role, status, and local connector files.",
+    nextStep: "Use the generated Hermes connector, or run `regents work local-loop`.",
   },
   "agent connect openclaw": {
     summary: "Connect a local OpenClaw worker to one Regent company.",
@@ -195,49 +326,56 @@ const groupHelp: Record<string, HelpGroup> = {
     summary: "Launch and manage Agent account projects from the terminal.",
     auth: "Most commands need `regents auth login --audience autolaunch` and `regents identity ensure`.",
     output: "Human output uses panels and status lines. `--json` prints raw JSON.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("autolaunch ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.autolaunch,
     nextStep: "Start with `regents autolaunch agents list --launchable` or `regents autolaunch prelaunch wizard`.",
   },
   auth: {
     summary: "Manage saved Agent account sign-ins.",
     auth: "No saved sign-in is needed.",
     output: "Shows the saved session, account, and expiry.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("auth ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.auth,
     nextStep: "For Autolaunch, run `regents auth login --audience autolaunch`.",
   },
   identity: {
     summary: "Create or refresh the local Agent account.",
     auth: "Uses the local wallet configured for Regent.",
     output: "Shows wallet, chain, registry, token, and saved status.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("identity ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.identity,
     nextStep: "Run `regents identity ensure` after signing in.",
   },
   "regent-staking": {
     summary: "Manage Regent staking for the saved Agent account.",
     auth: "Needs `regents auth login --audience regent-services` and `regents identity ensure`.",
     output: "Shows balances, prepared actions, and claim results.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("regent-staking ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP["regent-staking"],
     nextStep: "Start with `regents regent-staking show`.",
   },
   platform: {
     summary: "Use the Regent website account from the terminal.",
     auth: "Use `regents platform auth login` with a Platform identity token.",
     output: "Shows account, readiness, billing, and runtime status. Some beta actions return an unavailable status.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("platform ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.platform,
     nextStep: "Start with `regents platform auth login`, then `regents platform formation status`.",
   },
   work: {
     summary: "Create and run Regent company work from the terminal.",
     auth: "Use `regents platform auth login` with a Platform identity token.",
     output: "Shows concise work summaries, run status, and update lists.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("work ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.work,
     nextStep: "Start with `regents work create --company-id <id> --title <title>`.",
+  },
+  runtime: {
+    summary: "Manage Regent company runtimes from the terminal.",
+    auth: "Use `regents platform auth login` with a Platform identity token.",
+    output: "Shows runtime status, services, health, checkpoints, and restore results. `--json` prints raw JSON.",
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.runtime,
+    nextStep: "Start with `regents runtime show <runtime-id> --company-id <id>` or create a runtime from the company setup.",
   },
   agent: {
     summary: "Manage local Agent setup and Regent company workers.",
     auth: "Worker connection needs `regents auth login --audience platform` and `regents identity ensure`.",
     output: "Shows connected worker ids, work links, and workers a manager can assign.",
-    commands: CLI_COMMANDS.filter((command) => command.startsWith("agent ")),
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.agent,
     nextStep: "Use `regents agent connect openclaw --company-id <id> --role executor` for local OpenClaw work.",
   },
 };
@@ -265,6 +403,10 @@ const helpGroupForCommand = (command: string): HelpGroup | null => {
 
   if (command.startsWith("work ")) {
     return groupHelp.work;
+  }
+
+  if (command.startsWith("runtime ")) {
+    return groupHelp.runtime;
   }
 
   if (command.startsWith("agent ")) {

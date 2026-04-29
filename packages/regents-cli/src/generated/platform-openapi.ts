@@ -356,22 +356,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/agentlaunch/auctions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["agentLaunchAuctions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/bug-report": {
         parameters: {
             query?: never;
@@ -760,6 +744,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent-platform/formation/doctor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agentPlatformFormationDoctor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agentPlatformProjection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agent-platform/billing/setup/checkout": {
         parameters: {
             query?: never;
@@ -1128,6 +1144,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRunTree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelRwrRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retryRwrRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/events": {
         parameters: {
             query?: never;
@@ -1144,6 +1208,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["streamRwrRunEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/events/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["appendRwrRunEventBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/artifacts": {
         parameters: {
             query?: never;
@@ -1154,6 +1250,102 @@ export interface paths {
         get: operations["listRwrRunArtifacts"];
         put?: never;
         post: operations["createRwrRunArtifact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/artifacts/{artifact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRunArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/artifacts/{artifact_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishRwrRunArtifact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/artifacts/{artifact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrCompanyArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrRunApprovals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/approvals/{approval_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRunApproval"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runs/{run_id}/approvals/{approval_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveRwrRunApproval"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1224,6 +1416,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent-platform/companies/{company_id}/rwr/assignments/{assignment_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["releaseRwrWorkerAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/assignments/{assignment_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeRwrWorkerAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agent-platform/companies/{company_id}/rwr/runtimes": {
         parameters: {
             query?: never;
@@ -1232,6 +1456,118 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listRwrRuntimes"];
+        put?: never;
+        post: operations["createRwrRuntime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRuntime"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/checkpoint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["checkpointRwrRuntime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restoreRwrRuntime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pauseRwrRuntime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resumeRwrRuntime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRwrRuntimeServices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-platform/companies/{company_id}/rwr/runtimes/{runtime_id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRwrRuntimeHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1309,7 +1645,16 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         StatusMessage: {
-            statusMessage: string;
+            error: {
+                code: string;
+                /** @enum {string} */
+                product: "platform";
+                status: number;
+                path: string;
+                request_id: string | null;
+                message: string;
+                next_steps?: string | null;
+            };
         };
         /** @enum {string} */
         AgentKind: "hermes" | "openclaw" | "codex" | "custom" | "human_operator" | "regent_bridge";
@@ -1383,6 +1728,10 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        RwrRunTree: {
+            run: components["schemas"]["RwrRun"];
+            children: components["schemas"]["RwrRunTree"][];
+        };
         RwrRunEvent: {
             id: number;
             company_id: number;
@@ -1417,6 +1766,29 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        RwrApproval: {
+            id: number;
+            company_id: number;
+            run_id: number;
+            approval_type: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "denied" | "expired" | "canceled";
+            requested_by_actor_kind: string;
+            requested_by_actor_id: string | null;
+            risk_summary: string | null;
+            payload: {
+                [key: string]: unknown;
+            };
+            resolved_by_human_id: number | null;
+            /** Format: date-time */
+            resolved_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         RwrWorker: {
             id: number;
             company_id: number;
@@ -1437,6 +1809,7 @@ export interface components {
         RwrRuntime: {
             id: number;
             company_id: number;
+            platform_agent_id: number | null;
             name: string;
             runner_kind: components["schemas"]["RunnerKind"];
             execution_surface: components["schemas"]["ExecutionSurface"];
@@ -1444,6 +1817,43 @@ export interface components {
             status: string;
             /** @enum {string} */
             visibility: "operator" | "company" | "public";
+            config: {
+                [key: string]: unknown;
+            };
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRuntimeService: {
+            id: number;
+            company_id: number;
+            runtime_profile_id: number;
+            name: string;
+            service_kind: string;
+            status: string;
+            endpoint_url: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRuntimeCheckpoint: {
+            id: number;
+            company_id: number;
+            runtime_profile_id: number;
+            work_run_id: number | null;
+            checkpoint_ref: string;
+            /** @enum {string} */
+            status: "pending" | "ready" | "failed";
+            protected: boolean;
+            /** Format: date-time */
+            captured_at: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         RwrAgentRelationship: {
             id: number;
@@ -1466,6 +1876,8 @@ export interface components {
             claimed_at: string | null;
             /** Format: date-time */
             leased_until: string | null;
+            /** Format: date-time */
+            released_at: string | null;
         };
         RwrAccountResponse: {
             /** @constant */
@@ -1489,6 +1901,12 @@ export interface components {
             ok: true;
             run: components["schemas"]["RwrRun"];
         };
+        RwrRunTreeResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            tree: components["schemas"]["RwrRunTree"];
+        };
         RwrRunEventListResponse: {
             /** @constant */
             ok: true;
@@ -1500,6 +1918,22 @@ export interface components {
             ok: true;
             event: components["schemas"]["RwrRunEvent"];
         };
+        RwrRunEventStreamResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            stream: {
+                /** @enum {string} */
+                mode: "replay";
+            };
+            events: components["schemas"]["RwrRunEvent"][];
+        };
+        RwrRunEventBatchResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            events: components["schemas"]["RwrRunEvent"][];
+        };
         RwrArtifactListResponse: {
             /** @constant */
             ok: true;
@@ -1510,6 +1944,17 @@ export interface components {
             /** @constant */
             ok: true;
             artifact: components["schemas"]["RwrArtifact"];
+        };
+        RwrApprovalListResponse: {
+            /** @constant */
+            ok: true;
+            run_id: number;
+            approvals: components["schemas"]["RwrApproval"][];
+        };
+        RwrApprovalResponse: {
+            /** @constant */
+            ok: true;
+            approval: components["schemas"]["RwrApproval"];
         };
         RwrWorkerListResponse: {
             /** @constant */
@@ -1543,6 +1988,44 @@ export interface components {
             ok: true;
             company_id: number;
             runtimes: components["schemas"]["RwrRuntime"][];
+        };
+        RwrRuntimeResponse: {
+            /** @constant */
+            ok: true;
+            runtime: components["schemas"]["RwrRuntime"];
+        };
+        RwrRuntimeCheckpointResponse: {
+            /** @constant */
+            ok: true;
+            checkpoint: components["schemas"]["RwrRuntimeCheckpoint"];
+        };
+        RwrRuntimeRestoreResponse: {
+            /** @constant */
+            ok: true;
+            runtime: components["schemas"]["RwrRuntime"];
+            checkpoint: components["schemas"]["RwrRuntimeCheckpoint"];
+            restore: {
+                /** @enum {string} */
+                status: "accepted";
+            };
+        };
+        RwrRuntimeServiceListResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            runtime_id: number;
+            services: components["schemas"]["RwrRuntimeService"][];
+        };
+        RwrRuntimeHealthResponse: {
+            /** @constant */
+            ok: true;
+            company_id: number;
+            runtime_id: number;
+            health: {
+                status: string;
+                available: boolean;
+                metering_status: string;
+            };
         };
         RwrDelegationResponse: {
             /** @constant */
@@ -1607,9 +2090,68 @@ export interface components {
             display_name?: string | null;
             endpoint_url?: string | null;
         };
+        RwrRuntimeCreateRequest: {
+            company_id: string;
+            platform_agent_id?: string | null;
+            name: string;
+            runner_kind: components["schemas"]["RunnerKind"];
+            execution_surface: components["schemas"]["ExecutionSurface"];
+            billing_mode: components["schemas"]["BillingMode"];
+            /** @enum {string} */
+            status?: "active" | "paused" | "retired";
+            /** @enum {string} */
+            visibility?: "operator" | "company" | "public";
+            config?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRuntimeCheckpointRequest: {
+            company_id: string;
+            runtime_id: string;
+            checkpoint_ref: string;
+            /** @enum {string} */
+            status?: "pending" | "ready" | "failed";
+            /** Format: date-time */
+            captured_at?: string | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRuntimeRestoreRequest: {
+            company_id: string;
+            runtime_id: string;
+            checkpoint_id: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
         RwrRunEventAppendRequest: {
             company_id: string;
             run_id: string;
+            sequence?: number;
+            kind: string;
+            actor_kind?: string;
+            actor_id?: string | null;
+            /** @enum {string} */
+            visibility?: "operator" | "company" | "public";
+            /** @enum {string} */
+            sensitivity?: "normal" | "sensitive" | "secret";
+            /** Format: date-time */
+            occurred_at?: string;
+            idempotency_key?: string | null;
+            payload?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrRunEventBatchAppendRequest: {
+            company_id: string;
+            run_id: string;
+            events: components["schemas"]["RwrRunEventBatchAppendItem"][];
+        };
+        RwrRunEventBatchAppendItem: {
             sequence?: number;
             kind: string;
             actor_kind?: string;
@@ -1636,6 +2178,15 @@ export interface components {
             visibility: "operator" | "company" | "public";
             publish_action?: "publish_artifact" | null;
             metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RwrApprovalResolveRequest: {
+            company_id: string;
+            run_id: string;
+            /** @enum {string} */
+            decision: "approved" | "denied";
+            resolution?: {
                 [key: string]: unknown;
             };
         };
@@ -1844,28 +2395,6 @@ export interface components {
             isInUse: boolean;
             existed: boolean;
         };
-        AgentLaunchAuction: {
-            id: string;
-            agentId: string;
-            agentName: string;
-            ownerAddress: string;
-            auctionAddress: string;
-            tokenAddress?: string | null;
-            network: string;
-            status: string;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            endsAt?: string | null;
-            /** Format: date-time */
-            claimAt?: string | null;
-            bidders: number;
-            raisedCurrency: string;
-            targetCurrency: string;
-            progressPercent: number;
-            notes?: string | null;
-            uniswapUrl?: string | null;
-        };
         PrivySessionRequest: {
             display_name?: string | null;
         };
@@ -1924,9 +2453,6 @@ export interface components {
             expires_at: string;
             error_text?: string | null;
             frontend_request?: components["schemas"]["AgentbookFrontendRequest"] | null;
-            tx_request?: {
-                [key: string]: unknown;
-            } | null;
             trust: components["schemas"]["AgentbookTrustSummary"];
         };
         AgentbookSessionResponse: {
@@ -1990,14 +2516,14 @@ export interface components {
             target?: string | null;
             description?: string | null;
             caller_wallet_address?: string | null;
-            tx_request: components["schemas"]["PreparedTxRequest"];
+            wallet_action: components["schemas"]["WalletAction"];
         };
         PreparedEnsUpgrade: {
             resource: string;
             action: string;
             chain_id: number;
             expected_name: string;
-            tx_request: components["schemas"]["PreparedTxRequest"];
+            wallet_action: components["schemas"]["WalletAction"];
         };
         ConfirmEnsUpgradeRequest: {
             tx_hash: string;
@@ -2064,7 +2590,7 @@ export interface components {
             chain_id: number;
             ens_name: string;
             caller_wallet_address: string;
-            tx_request: components["schemas"]["PreparedTxRequest"];
+            wallet_action: components["schemas"]["WalletAction"];
         };
         BillingAccount: {
             status: string;
@@ -2075,6 +2601,14 @@ export interface components {
             model_default: string;
             margin_bps: number;
             runtime_credit_balance_usd_cents: number;
+            /** Format: date-time */
+            free_day_ends_at: string | null;
+            /** @enum {string} */
+            prepaid_drawdown_state: "free_day" | "drawing_down" | "paused_at_zero" | "unavailable";
+            /** Format: date-time */
+            last_usage_sync_at: string | null;
+            next_pause_threshold_usd_cents: number;
+            pause_targets: components["schemas"]["RuntimePauseTarget"][];
             paid_companies: number;
             paused_companies: number;
             trialing_companies: number;
@@ -2085,6 +2619,14 @@ export interface components {
         };
         BillingUsageSummary: {
             runtime_credit_balance_usd_cents: number;
+            /** Format: date-time */
+            free_day_ends_at: string | null;
+            /** @enum {string} */
+            prepaid_drawdown_state: "free_day" | "drawing_down" | "paused_at_zero" | "unavailable";
+            /** Format: date-time */
+            last_usage_sync_at: string | null;
+            next_pause_threshold_usd_cents: number;
+            pause_targets: components["schemas"]["RuntimePauseTarget"][];
             runtime_spend_usd_cents: number;
             llm_spend_usd_cents: number;
             trialing_companies: number;
@@ -2100,9 +2642,21 @@ export interface components {
                 sprite_metering_status: string;
                 /** Format: date-time */
                 sprite_free_until: string | null;
+                /** Format: date-time */
+                last_usage_sync_at: string | null;
+                will_pause_at_zero: boolean;
                 runtime_spend_usd_cents: number;
                 llm_spend_usd_cents: number;
             }[];
+        };
+        RuntimePauseTarget: {
+            slug: string;
+            name: string;
+            runtime_status: string;
+            desired_runtime_state: string;
+            observed_runtime_state: string;
+            /** Format: date-time */
+            free_day_ends_at: string | null;
         };
         AvatarSelectionInput: components["schemas"]["CustomShaderAvatarInput"] | components["schemas"]["CollectionAvatarInput"];
         AvatarSelection: components["schemas"]["CustomShaderAvatar"] | components["schemas"]["CollectionAvatar"];
@@ -2133,11 +2687,19 @@ export interface components {
         RegentStakingAmountRequest: {
             amount: string;
         };
-        RegentStakingTxRequest: {
+        WalletAction: {
+            action_id: string;
+            resource: string;
+            action: string;
             chain_id: number;
             to: string;
             value: string;
             data: string;
+            expected_signer: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            idempotency_key: string;
+            risk_copy: string;
         };
         RegentStakingState: {
             chain_id: number;
@@ -2187,7 +2749,7 @@ export interface components {
                 contract_address: string;
                 wallet_address: string;
             };
-            tx_request: components["schemas"]["RegentStakingTxRequest"];
+            wallet_action: components["schemas"]["WalletAction"];
         };
         WelcomeCredit: {
             status: string;
@@ -2239,6 +2801,59 @@ export interface components {
             /** Format: date-time */
             completed_at?: string | null;
         };
+        AgentAccessEligibility: {
+            eligible: boolean;
+            /** @enum {string} */
+            rule: "hold_approved_collection_nft_and_claim_name";
+            wallet_connected: boolean;
+            approved_collection_nft: boolean;
+            claimed_name_ready: boolean;
+            qualifying_nft_count: number;
+            available_claim_count: number;
+            approved_collections: ("animata1" | "animata2" | "animataPass")[];
+        };
+        PlatformBlocker: {
+            key: string;
+            message: string;
+            action_label: string | null;
+            action_path: string | null;
+        };
+        PlatformFormationState: {
+            /** @enum {string} */
+            state: "pending" | "blocked" | "provisioning" | "ready";
+            ready: boolean;
+            blocked: boolean;
+            active_formation_id: number | null;
+            current_step: string | null;
+            blockers: components["schemas"]["PlatformBlocker"][];
+        };
+        PlatformBillingState: {
+            /** @enum {string} */
+            state: "trial" | "free_day" | "prepaid" | "paused" | "zero" | "failed";
+            account_status: string;
+            connected: boolean;
+            prepaid_balance_usd_cents: number;
+            /** Format: date-time */
+            free_day_ends_at: string | null;
+            runtime_allowed: boolean;
+        };
+        PlatformRuntimeCostState: {
+            /** @enum {string} */
+            phase: "free_day" | "prepaid" | "paused_at_zero" | "unavailable";
+            hourly_cost_usd_cents: number;
+            /** Format: date-time */
+            free_day_ends_at: string | null;
+            prepaid_balance_usd_cents: number;
+            /** @enum {string} */
+            prepaid_drawdown_state: "free_day" | "drawing_down" | "paused_at_zero" | "unavailable";
+            /** Format: date-time */
+            last_usage_sync_at: string | null;
+            next_pause_threshold_usd_cents: number;
+            pause_targets: components["schemas"]["RuntimePauseTarget"][];
+            runtime_allowed: boolean;
+            paused_at_zero: boolean;
+            next_pause_reason: string | null;
+        };
         AgentFormationReadinessStep: {
             /** @enum {string} */
             key: "identity" | "wallet" | "access" | "name" | "billing" | "template" | "company" | "launch_queue";
@@ -2259,6 +2874,11 @@ export interface components {
             authenticated: boolean;
             wallet_address: string | null;
             eligible: boolean;
+            access_eligibility: components["schemas"]["AgentAccessEligibility"];
+            formation_state: components["schemas"]["PlatformFormationState"];
+            billing_state: components["schemas"]["PlatformBillingState"];
+            runtime_cost_state: components["schemas"]["PlatformRuntimeCostState"];
+            blockers: components["schemas"]["PlatformBlocker"][];
             collections: {
                 animata1: number[];
                 animata2: number[];
@@ -2270,6 +2890,44 @@ export interface components {
             owned_companies: components["schemas"]["AgentRecord"][];
             active_formations: components["schemas"]["AgentFormation"][];
             readiness: components["schemas"]["AgentFormationReadiness"];
+        };
+        AgentFormationDoctorCheck: {
+            /** @enum {string} */
+            key: "identity" | "wallet" | "access" | "name" | "billing" | "template" | "company" | "launch_queue" | "failed_provisioning" | "missing_subdomain" | "missing_runtime_status" | "failed_runtime" | "missing_hosted_service" | "zero_balance";
+            label: string;
+            /** @enum {string} */
+            status: "complete" | "ready" | "needs_action" | "waiting";
+            message: string;
+            action_label: string | null;
+            action_path: string | null;
+        };
+        AgentFormationDoctor: {
+            /** @enum {string} */
+            status: "ready" | "blocked" | "provisioning";
+            summary: string;
+            checks: components["schemas"]["AgentFormationDoctorCheck"][];
+            blockers: components["schemas"]["PlatformBlocker"][];
+        };
+        AgentFormationDoctorResponse: {
+            ok: boolean;
+            doctor: components["schemas"]["AgentFormationDoctor"];
+        };
+        PlatformCompanyProjection: {
+            company: components["schemas"]["AgentRecord"];
+            runtime: components["schemas"]["AgentRuntime"];
+            formation: components["schemas"]["AgentFormation"] | null;
+            public_profile: components["schemas"]["PublicAgentRecord"];
+        };
+        AgentPlatformProjection: {
+            formation: components["schemas"]["AgentFormationResponse"];
+            billing_account: components["schemas"]["BillingAccount"];
+            billing_usage: components["schemas"]["BillingUsageSummary"];
+            companies: components["schemas"]["PlatformCompanyProjection"][];
+            public_profiles: components["schemas"]["PublicAgentRecord"][];
+        };
+        AgentPlatformProjectionResponse: {
+            ok: boolean;
+            projection: components["schemas"]["AgentPlatformProjection"];
         };
         AgentTemplateService: {
             slug: string;
@@ -2399,6 +3057,13 @@ export interface components {
                 metering_status: string;
                 desired_runtime_state: string;
                 observed_runtime_state: string;
+                prepaid_balance_usd_cents: number;
+                /** @enum {string} */
+                prepaid_drawdown_state: "free_day" | "drawing_down" | "paused_at_zero" | "unavailable";
+                /** Format: date-time */
+                last_usage_sync_at: string | null;
+                next_pause_threshold_usd_cents: number;
+                will_pause_at_zero: boolean;
             };
             workspace: {
                 url: string | null;
@@ -3047,6 +3712,8 @@ export interface operations {
                 "application/json": {
                     address: string;
                     label: string;
+                    timestamp: number;
+                    signature: string;
                     isRandom?: boolean | string;
                 };
             };
@@ -3068,30 +3735,6 @@ export interface operations {
             429: components["responses"]["StatusMessage429"];
             502: components["responses"]["StatusMessage502"];
             503: components["responses"]["StatusMessage503"];
-        };
-    };
-    agentLaunchAuctions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current auction payload */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        auctions: components["schemas"]["AgentLaunchAuction"][];
-                        /** Format: date-time */
-                        generatedAt: string;
-                    };
-                };
-            };
         };
     };
     createBugReport: {
@@ -3748,6 +4391,52 @@ export interface operations {
             503: components["responses"]["StatusMessage503"];
         };
     };
+    agentPlatformFormationDoctor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator-readable formation diagnosis for the current signed-in human */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentFormationDoctorResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+            502: components["responses"]["StatusMessage502"];
+            503: components["responses"]["StatusMessage503"];
+        };
+    };
+    agentPlatformProjection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical Platform projection for product, mobile, and CLI clients */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentPlatformProjectionResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+            502: components["responses"]["StatusMessage502"];
+            503: components["responses"]["StatusMessage503"];
+        };
+    };
     agentPlatformBillingSetupCheckout: {
         parameters: {
             query?: never;
@@ -3774,6 +4463,7 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["StatusMessage400"];
             401: components["responses"]["StatusMessage401"];
             403: components["responses"]["StatusMessage403"];
             503: components["responses"]["StatusMessage503"];
@@ -4430,6 +5120,75 @@ export interface operations {
             };
         };
     };
+    getRwrRunTree: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run tree */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunTreeResponse"];
+                };
+            };
+        };
+    };
+    cancelRwrRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canceled Regent Work Runtime run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunResponse"];
+                };
+            };
+        };
+    };
+    retryRwrRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started a new Regent Work Runtime run attempt */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunResponse"];
+                };
+            };
+        };
+    };
     listRwrRunEvents: {
         parameters: {
             query?: never;
@@ -4476,6 +5235,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RwrRunEventResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    streamRwrRunEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run event replay stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunEventStreamResponse"];
+                };
+            };
+        };
+    };
+    appendRwrRunEventBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRunEventBatchAppendRequest"];
+            };
+        };
+        responses: {
+            /** @description Appended Regent Work Runtime run events */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRunEventBatchResponse"];
                 };
             };
             401: components["responses"]["StatusMessage401"];
@@ -4530,6 +5340,152 @@ export interface operations {
                 };
             };
             401: components["responses"]["StatusMessage401"];
+        };
+    };
+    getRwrRunArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+                artifact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run artifact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrArtifactResponse"];
+                };
+            };
+        };
+    };
+    publishRwrRunArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+                artifact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published Regent Work Runtime run artifact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrArtifactResponse"];
+                };
+            };
+        };
+    };
+    getRwrCompanyArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                artifact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime company artifact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrArtifactResponse"];
+                };
+            };
+        };
+    };
+    listRwrRunApprovals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run approvals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrApprovalListResponse"];
+                };
+            };
+        };
+    };
+    getRwrRunApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+                approval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime run approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrApprovalResponse"];
+                };
+            };
+        };
+    };
+    resolveRwrRunApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                run_id: string;
+                approval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrApprovalResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description Resolved Regent Work Runtime run approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrApprovalResponse"];
+                };
+            };
         };
     };
     listRwrWorkers: {
@@ -4653,6 +5609,54 @@ export interface operations {
             401: components["responses"]["StatusMessage401"];
         };
     };
+    releaseRwrWorkerAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Released Regent Work Runtime worker assignment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerAssignmentResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
+    completeRwrWorkerAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Completed Regent Work Runtime worker assignment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrWorkerAssignmentResponse"];
+                };
+            };
+            401: components["responses"]["StatusMessage401"];
+        };
+    };
     listRwrRuntimes: {
         parameters: {
             query?: never;
@@ -4671,6 +5675,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RwrRuntimeListResponse"];
+                };
+            };
+        };
+    };
+    createRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRuntimeCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created Regent Work Runtime profile for the company */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeResponse"];
+                };
+            };
+        };
+    };
+    getRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime profile for the company */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeResponse"];
+                };
+            };
+        };
+    };
+    checkpointRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRuntimeCheckpointRequest"];
+            };
+        };
+        responses: {
+            /** @description Created Regent Work Runtime checkpoint record */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeCheckpointResponse"];
+                };
+            };
+        };
+    };
+    restoreRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RwrRuntimeRestoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted Regent Work Runtime restore request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeRestoreResponse"];
+                };
+            };
+        };
+    };
+    pauseRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paused Regent Work Runtime profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeResponse"];
+                };
+            };
+        };
+    };
+    resumeRwrRuntime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumed Regent Work Runtime profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeResponse"];
+                };
+            };
+        };
+    };
+    listRwrRuntimeServices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime services for the runtime */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeServiceListResponse"];
+                };
+            };
+        };
+    };
+    getRwrRuntimeHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                runtime_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Regent Work Runtime health for the runtime */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RwrRuntimeHealthResponse"];
                 };
             };
         };

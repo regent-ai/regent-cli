@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/readyz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["siwaServerReadyz"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/metrics": {
         parameters: {
             query?: never;
@@ -46,86 +62,6 @@ export interface paths {
         get: operations["regentServicesContractSource"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/identity/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["getIdentityStatus"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/identity/registration-intents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createIdentityRegistrationIntent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/identity/registration-completions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["completeIdentityRegistration"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/identity/siwa/nonce": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createIdentitySiwaNonce"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/identity/siwa/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["verifyIdentitySiwaSession"];
         delete?: never;
         options?: never;
         head?: never;
@@ -308,150 +244,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/agent/regent/staking": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAgentRegentStakingOverview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/account/{address}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAgentRegentStakingAccount"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/stake": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["stakeAgentRegent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/unstake": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["unstakeAgentRegent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/claim-usdc": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["claimAgentRegentStakingUsdc"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/claim-regent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["claimAgentRegentStakingRegent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/regent/staking/claim-and-restake-regent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["claimAndRestakeAgentRegentStakingRegent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/bug-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createAgentBugReport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/agent/security-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createAgentSecurityReport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -460,133 +252,9 @@ export interface components {
         /** @enum {integer} */
         BaseChainId: 84532 | 8453;
         HexData: string;
-        DecimalString: string;
-        /** @enum {string} */
-        IdentityNetwork: "base" | "base-sepolia";
-        /** @enum {string} */
-        IdentityProvider: "coinbase-cdp";
-        /** @enum {string} */
-        IdentityVerificationStatus: "unregistered" | "onchain";
-        IdentityStatusRequest: {
-            network: components["schemas"]["IdentityNetwork"];
-            address: components["schemas"]["Address"];
-            provider: components["schemas"]["IdentityProvider"];
-            wallet_hint?: string;
-        };
-        IdentityStatusResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            /** @enum {string} */
-            code: "identity_status_resolved";
-            data: {
-                network: components["schemas"]["IdentityNetwork"];
-                address: components["schemas"]["Address"];
-                provider: components["schemas"]["IdentityProvider"];
-                registered: boolean;
-                verified: components["schemas"]["IdentityVerificationStatus"];
-                agent_id?: number;
-                agent_registry?: string;
-                /** Format: date-time */
-                receipt_expires_at?: string;
-            };
-            meta?: components["schemas"]["LooseObject"];
-        };
-        IdentityRegistrationIntentRequest: {
-            network: components["schemas"]["IdentityNetwork"];
-            address: components["schemas"]["Address"];
-            provider: components["schemas"]["IdentityProvider"];
-            wallet_hint?: string;
-        };
-        IdentityRegistrationIntentResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            /** @enum {string} */
-            code: "identity_registration_intent_created";
-            data: {
-                intent_id: string;
-                intent_kind: string;
-                signing_payload: {
-                    message: string;
-                } & {
-                    [key: string]: unknown;
-                };
-            };
-            meta?: components["schemas"]["LooseObject"];
-        };
-        IdentityRegistrationCompletionRequest: {
-            intent_id: string;
-            /** @description Canonical SIWA message containing wallet address, chain id, registry address, token id, nonce, and issue time. */
-            message?: string;
-            signature: components["schemas"]["HexData"];
-            address: components["schemas"]["Address"];
-        };
-        IdentityRegistrationCompletionResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            /** @enum {string} */
-            code: "identity_registration_completed";
-            data: {
-                /** @enum {boolean} */
-                registered: true;
-                agent_id: number;
-                agent_registry: string;
-            };
-            meta?: components["schemas"]["LooseObject"];
-        };
-        IdentitySiwaNonceRequest: {
-            network: components["schemas"]["IdentityNetwork"];
-            address: components["schemas"]["Address"];
-            agent_id: number;
-            agent_registry: string;
-        };
-        IdentitySiwaNonceResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            /** @enum {string} */
-            code: "identity_siwa_nonce_issued";
-            data: {
-                nonce_token: string;
-                message: string;
-                address: components["schemas"]["Address"];
-                agent_id: number;
-                agent_registry: string;
-                /** Format: date-time */
-                expires_at: string;
-            };
-            meta?: components["schemas"]["LooseObject"];
-        };
-        IdentitySiwaVerifyRequest: {
-            network: components["schemas"]["IdentityNetwork"];
-            address?: components["schemas"]["Address"];
-            agent_id?: number;
-            agent_registry?: string;
-            message: string;
-            signature: components["schemas"]["HexData"];
-            nonce_token: string;
-        };
-        IdentitySiwaVerifyResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            /** @enum {string} */
-            code: "identity_siwa_verified";
-            data: {
-                verified: components["schemas"]["IdentityVerificationStatus"];
-                network: components["schemas"]["IdentityNetwork"];
-                address: components["schemas"]["Address"];
-                agent_id: number;
-                agent_registry: string;
-                signer_type: string;
-                receipt: string;
-                /** Format: date-time */
-                receipt_issued_at: string;
-                /** Format: date-time */
-                receipt_expires_at: string;
-            };
-            meta?: components["schemas"]["LooseObject"];
-        };
         SiwaNonceRequest: {
             wallet_address: components["schemas"]["Address"];
-            chain_id: number;
+            chain_id: components["schemas"]["BaseChainId"];
             registry_address: components["schemas"]["Address"];
             token_id: string;
             audience: string;
@@ -599,7 +267,7 @@ export interface components {
             data: {
                 nonce: string;
                 walletAddress: components["schemas"]["Address"];
-                chainId: number;
+                chainId: components["schemas"]["BaseChainId"];
                 registryAddress: components["schemas"]["Address"];
                 tokenId: string;
                 audience: string;
@@ -610,13 +278,13 @@ export interface components {
         };
         SiwaVerifyRequest: {
             wallet_address: components["schemas"]["Address"];
-            chain_id: number;
-            nonce: string;
-            message: string;
-            signature: components["schemas"]["HexData"];
+            chain_id: components["schemas"]["BaseChainId"];
             registry_address: components["schemas"]["Address"];
             token_id: string;
             audience: string;
+            nonce: string;
+            message: string;
+            signature: components["schemas"]["HexData"];
         };
         SiwaVerifyResponse: {
             /** @enum {boolean} */
@@ -627,7 +295,7 @@ export interface components {
                 /** @enum {boolean} */
                 verified: true;
                 walletAddress: components["schemas"]["Address"];
-                chainId: number;
+                chainId: components["schemas"]["BaseChainId"];
                 registryAddress: components["schemas"]["Address"];
                 tokenId: string;
                 audience: string;
@@ -644,9 +312,7 @@ export interface components {
         };
         SiwaHttpVerifyRequest: {
             method: string;
-            /** @description Absolute signed path, including the query string when present. */
             path: string;
-            /** @description Signed Agent account headers. The current shape requires x-siwa-receipt, signature, signature-input, x-key-id, x-timestamp, x-agent-wallet-address, x-agent-chain-id, x-agent-registry-address, and x-agent-token-id. Requests with a body also require content-digest. */
             headers: {
                 [key: string]: string;
             };
@@ -661,9 +327,9 @@ export interface components {
                 /** @enum {boolean} */
                 verified: true;
                 walletAddress: components["schemas"]["Address"];
-                chainId: number;
+                chainId: components["schemas"]["BaseChainId"];
                 keyId: string;
-                agent_claims: components["schemas"]["ReportingAgent"];
+                agent_claims: components["schemas"]["AgentClaims"];
                 /** Format: date-time */
                 receiptExpiresAt: string;
                 requiredHeaders: string[];
@@ -672,56 +338,81 @@ export interface components {
             };
             meta?: components["schemas"]["LooseObject"];
         };
-        /** @enum {string} */
-        ReportStatus: "pending" | "fixed" | "won't fix" | "duplicate";
-        ReportingAgent: {
+        AgentClaims: {
             wallet_address: components["schemas"]["Address"];
             chain_id: components["schemas"]["BaseChainId"];
             registry_address: components["schemas"]["Address"];
             token_id: string;
-            label?: string;
+            audience?: string;
+        } & {
+            [key: string]: unknown;
         };
-        BugReportRequest: {
-            summary: string;
-            details: string;
-            reporting_agent: components["schemas"]["ReportingAgent"];
+        EmptyObject: Record<string, never>;
+        KeyringHealthResponse: {
+            /** @enum {string} */
+            status: "ok";
         };
-        SecurityReportRequest: {
-            summary: string;
-            details: string;
-            contact: string;
-            reporting_agent: components["schemas"]["ReportingAgent"];
+        KeyringWalletResponse: {
+            public_key: components["schemas"]["HexData"];
+            address: components["schemas"]["Address"];
+            /** @enum {string} */
+            signer_type: "eoa";
         };
-        BugReportRecord: {
-            report_id: string;
-            summary: string;
-            details: string;
-            status: components["schemas"]["ReportStatus"];
-            reporting_agent: components["schemas"]["ReportingAgent"];
-            /** Format: date-time */
-            created_at: string;
+        KeyringHasWalletResponse: {
+            has_wallet: boolean;
         };
-        SecurityReportRecord: {
-            report_id: string;
-            summary: string;
-            details: string;
-            contact: string;
-            reporting_agent: components["schemas"]["ReportingAgent"];
-            /** Format: date-time */
-            created_at: string;
+        KeyringAddressResponse: {
+            address: components["schemas"]["Address"];
         };
-        BugReportResponse: {
-            /** @enum {boolean} */
-            ok: true;
+        KeyringSignMessageRequest: {
             message: string;
-            public_url: string;
-            report: components["schemas"]["BugReportRecord"];
         };
-        SecurityReportResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            message: string;
-            report: components["schemas"]["SecurityReportRecord"];
+        KeyringSignRawMessageRequest: {
+            payload: string;
+        };
+        KeyringEnvelopeObject: {
+            [key: string]: unknown;
+        };
+        KeyringSignTransactionRequest: {
+            transaction: components["schemas"]["KeyringEnvelopeObject"];
+        };
+        KeyringSignAuthorizationRequest: {
+            authorization: components["schemas"]["KeyringEnvelopeObject"];
+        };
+        KeyringSignatureResponse: {
+            signature: components["schemas"]["HexData"];
+        };
+        KeyringRawSignature: {
+            /** @enum {string} */
+            purpose: "raw";
+            /** @enum {string} */
+            signer_type: "eoa";
+            digest: components["schemas"]["HexData"];
+            signature: components["schemas"]["HexData"];
+            public_key: components["schemas"]["HexData"];
+            address: components["schemas"]["Address"];
+        };
+        KeyringSignedTransactionResponse: {
+            transaction: components["schemas"]["KeyringEnvelopeObject"];
+            signature: components["schemas"]["KeyringRawSignature"];
+        };
+        KeyringSignedAuthorizationResponse: {
+            authorization: components["schemas"]["KeyringEnvelopeObject"];
+            signature: components["schemas"]["KeyringRawSignature"];
+        };
+        ReadinessResponse: {
+            ready: boolean;
+            checks: {
+                database: boolean;
+                endpoint_secret: boolean;
+                receipt_secret: boolean;
+                keyring_backend: boolean;
+                keyring_password: boolean;
+                keyring_secret: boolean;
+                keystore_path: boolean;
+                base_rpc_url: boolean;
+                base_rpc_reachable: boolean;
+            };
         };
         LooseObject: {
             [key: string]: unknown;
@@ -739,78 +430,8 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        AmountRequest: {
-            amount: components["schemas"]["DecimalString"];
-        };
-        TxRequest: {
-            chain_id?: components["schemas"]["BaseChainId"];
-            to?: components["schemas"]["Address"];
-            value?: string;
-            data?: components["schemas"]["HexData"];
-        } & {
-            [key: string]: unknown;
-        };
-        PreparedAction: {
-            resource?: string;
-            action?: string;
-            chain_id?: components["schemas"]["BaseChainId"];
-            target?: components["schemas"]["Address"];
-            calldata?: components["schemas"]["HexData"];
-            tx_request?: components["schemas"]["TxRequest"];
-        } & {
-            [key: string]: unknown;
-        };
-        PreparedActionResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            data?: components["schemas"]["PreparedAction"];
-        } & {
-            [key: string]: unknown;
-        };
-        CompactStakingState: {
-            chain_id?: components["schemas"]["BaseChainId"];
-            chain_label?: string;
-            contract_address?: components["schemas"]["Address"];
-            owner_address?: components["schemas"]["Address"];
-            stake_token_address?: components["schemas"]["Address"];
-            usdc_address?: components["schemas"]["Address"];
-            treasury_recipient?: components["schemas"]["Address"];
-            staker_share_bps?: number;
-            paused?: boolean;
-            total_staked_raw?: string;
-            total_staked?: components["schemas"]["DecimalString"];
-            total_usdc_received_raw?: string;
-            total_usdc_received?: components["schemas"]["DecimalString"];
-            direct_deposit_usdc_raw?: string;
-            direct_deposit_usdc?: components["schemas"]["DecimalString"];
-            treasury_residual_usdc_raw?: string;
-            treasury_residual_usdc?: components["schemas"]["DecimalString"];
-            wallet_address?: components["schemas"]["Address"];
-            wallet_stake_balance_raw?: string;
-            wallet_stake_balance?: components["schemas"]["DecimalString"];
-            wallet_token_balance_raw?: string;
-            wallet_token_balance?: components["schemas"]["DecimalString"];
-            wallet_claimable_usdc_raw?: string;
-            wallet_claimable_usdc?: components["schemas"]["DecimalString"];
-            wallet_funded_claimable_regent_raw?: string;
-            wallet_funded_claimable_regent?: components["schemas"]["DecimalString"];
-        } & {
-            [key: string]: unknown;
-        };
-        RegentStakingOverviewResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            staking?: components["schemas"]["CompactStakingState"];
-            connected_wallet_address?: components["schemas"]["Address"];
-        } & {
-            [key: string]: unknown;
-        };
-        RegentStakingAccountResponse: {
-            /** @enum {boolean} */
-            ok: true;
-            staking?: components["schemas"]["CompactStakingState"];
-        } & {
-            [key: string]: unknown;
+        SimpleError: {
+            error: string;
         };
     };
     responses: never;
@@ -837,6 +458,35 @@ export interface operations {
                 };
                 content: {
                     "text/plain": string;
+                };
+            };
+        };
+    };
+    siwaServerReadyz: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Readiness checks passed for the shared SIWA server */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+            /** @description One or more readiness checks failed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
                 };
             };
         };
@@ -870,196 +520,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Source-of-truth shared services contract served by the SIWA server */
+            /** @description Source-of-truth contract served by the shared SIWA server */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/yaml": string;
-                };
-            };
-        };
-    };
-    getIdentityStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IdentityStatusRequest"];
-            };
-        };
-        responses: {
-            /** @description Identity status resolved */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IdentityStatusResponse"];
-                };
-            };
-            /** @description Invalid identity status request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    createIdentityRegistrationIntent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IdentityRegistrationIntentRequest"];
-            };
-        };
-        responses: {
-            /** @description Registration intent created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IdentityRegistrationIntentResponse"];
-                };
-            };
-            /** @description Invalid registration intent request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    completeIdentityRegistration: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IdentityRegistrationCompletionRequest"];
-            };
-        };
-        responses: {
-            /** @description Registration completed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IdentityRegistrationCompletionResponse"];
-                };
-            };
-            /** @description Invalid registration completion request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Registration authorization failed */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    createIdentitySiwaNonce: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IdentitySiwaNonceRequest"];
-            };
-        };
-        responses: {
-            /** @description SIWA nonce issued */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IdentitySiwaNonceResponse"];
-                };
-            };
-            /** @description Invalid SIWA nonce request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    verifyIdentitySiwaSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IdentitySiwaVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Identity verified */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IdentitySiwaVerifyResponse"];
-                };
-            };
-            /** @description Invalid SIWA verification request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Signature or nonce validation failed */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -1088,6 +555,15 @@ export interface operations {
             };
             /** @description Invalid SIWA nonce request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA nonce request body is too large */
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1130,6 +606,42 @@ export interface operations {
             };
             /** @description Signature or nonce validation failed */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA nonce was not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA verification request body is too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA verification is not configured */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Agent identity lookup failed */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1182,6 +694,33 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description Request replay detected */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA protected request envelope is too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description SIWA HTTP verification is not configured */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     siwaKeyringHealth: {
@@ -1199,7 +738,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["KeyringHealthResponse"];
                 };
             };
         };
@@ -1213,26 +752,17 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["EmptyObject"];
             };
         };
         responses: {
-            /** @description Wallet created or returned */
+            /** @description Wallet created */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-            /** @description Invalid keyring request body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["KeyringWalletResponse"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1241,25 +771,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Wallet could not be created */
@@ -1268,7 +789,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1282,7 +803,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["EmptyObject"];
             };
         };
         responses: {
@@ -1292,16 +813,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-            /** @description Invalid keyring request body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["KeyringHasWalletResponse"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1310,25 +822,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Wallet presence could not be checked */
@@ -1337,7 +840,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1351,7 +854,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["EmptyObject"];
             };
         };
         responses: {
@@ -1361,16 +864,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-            /** @description Invalid keyring request body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["KeyringAddressResponse"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1379,7 +873,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Wallet not found */
@@ -1388,25 +882,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Wallet address could not be read */
@@ -1415,7 +900,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1429,7 +914,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["KeyringSignMessageRequest"];
             };
         };
         responses: {
@@ -1439,7 +924,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["KeyringSignatureResponse"];
                 };
             };
             /** @description Invalid message signing request */
@@ -1448,7 +933,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1457,25 +942,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Message could not be signed */
@@ -1484,7 +960,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1498,7 +974,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["KeyringSignRawMessageRequest"];
             };
         };
         responses: {
@@ -1508,7 +984,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["KeyringSignatureResponse"];
                 };
             };
             /** @description Invalid raw-message signing request */
@@ -1517,7 +993,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1526,25 +1002,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Raw message could not be signed */
@@ -1553,7 +1020,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1567,7 +1034,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["KeyringSignTransactionRequest"];
             };
         };
         responses: {
@@ -1577,7 +1044,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["KeyringSignedTransactionResponse"];
                 };
             };
             /** @description Invalid transaction signing request */
@@ -1586,7 +1053,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1595,25 +1062,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Transaction could not be signed */
@@ -1622,7 +1080,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };
@@ -1636,7 +1094,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LooseObject"];
+                "application/json": components["schemas"]["KeyringSignAuthorizationRequest"];
             };
         };
         responses: {
@@ -1646,7 +1104,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["KeyringSignedAuthorizationResponse"];
                 };
             };
             /** @description Invalid authorization signing request */
@@ -1655,7 +1113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Internal signer authentication failed */
@@ -1664,25 +1122,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
-            /** @description Keyring request body too large */
+            /** @description Internal signer request body is too large */
             413: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            /** @description Unsupported keyring request content type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
             /** @description Authorization payload could not be signed */
@@ -1691,235 +1140,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    getAgentRegentStakingOverview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Staking overview */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RegentStakingOverviewResponse"];
-                };
-            };
-        };
-    };
-    getAgentRegentStakingAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                address: components["schemas"]["Address"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Account staking state */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RegentStakingAccountResponse"];
-                };
-            };
-        };
-    };
-    stakeAgentRegent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AmountRequest"];
-            };
-        };
-        responses: {
-            /** @description Stake prepared */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreparedActionResponse"];
-                };
-            };
-        };
-    };
-    unstakeAgentRegent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AmountRequest"];
-            };
-        };
-        responses: {
-            /** @description Unstake prepared */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreparedActionResponse"];
-                };
-            };
-        };
-    };
-    claimAgentRegentStakingUsdc: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Claim prepared */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreparedActionResponse"];
-                };
-            };
-        };
-    };
-    claimAgentRegentStakingRegent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Regent claim prepared */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreparedActionResponse"];
-                };
-            };
-        };
-    };
-    claimAndRestakeAgentRegentStakingRegent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Regent claim and restake prepared */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreparedActionResponse"];
-                };
-            };
-        };
-    };
-    createAgentBugReport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BugReportRequest"];
-            };
-        };
-        responses: {
-            /** @description Bug report stored */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BugReportResponse"];
-                };
-            };
-            /** @description Invalid report payload */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-        };
-    };
-    createAgentSecurityReport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SecurityReportRequest"];
-            };
-        };
-        responses: {
-            /** @description Security report stored */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SecurityReportResponse"];
-                };
-            };
-            /** @description Invalid report payload */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorEnvelope"];
+                    "application/json": components["schemas"]["SimpleError"];
                 };
             };
         };

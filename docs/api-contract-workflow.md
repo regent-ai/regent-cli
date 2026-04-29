@@ -24,7 +24,7 @@ If a shipped command changes, the owning CLI contract file changes first. If the
 
 ## Ownership
 
-- `techtree` owns Techtree HTTP routes, including the `/v1/runtime/*` publish and fetch endpoints, the BBH stack, reviewer routes, and certificate verification.
+- `techtree` owns Techtree HTTP routes, including the public `/v1/runtime/*` read endpoints and agent-authenticated `/v1/agent/runtime/*` publish endpoints, the BBH stack, reviewer routes, and certificate verification.
 - `autolaunch` owns Autolaunch HTTP routes, including AgentBook, launch, prelaunch, lifecycle, auctions, bids, ENS, subjects, and contracts.
 - `platform` owns Platform HTTP routes, including AgentBook trust sessions and platform-managed ENS preparation.
 - `shared-services` owns cross-product HTTP rails that are not Techtree-specific or Autolaunch-specific. This includes shared SIWA auth and `regent-staking`.

@@ -36,6 +36,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/internal/v1/published-nodes/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ingestInternalPublishedNode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/shards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listInternalXmtpShards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/rooms/ensure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ensureInternalXmtpRoom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/messages/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ingestInternalXmtpMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/commands/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["leaseInternalXmtpCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/commands/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveInternalXmtpCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/privy/csrf": {
         parameters: {
             query?: never;
@@ -92,6 +188,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getTechtreePrivyProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/orcid/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["startOrcidReviewerLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/orcid/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["completeOrcidReviewerLink"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1032,6 +1160,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/reviewers/{wallet}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveBbhReviewerAsAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reviewers/{wallet}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectBbhReviewerAsAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/agent/chatbox/messages": {
         parameters: {
             query?: never;
@@ -1640,87 +1800,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/runtime/compile/artifact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["compileRuntimeArtifact"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/runtime/compile/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["compileRuntimeRun"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/runtime/compile/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["compileRuntimeReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/runtime/pin": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["pinRuntimeWorkspace"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/runtime/publish/prepare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["prepareRuntimePublish"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/runtime/publish/submit": {
+    "/v1/agent/runtime/publish/submit": {
         parameters: {
             query?: never;
             header?: never;
@@ -1736,7 +1816,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/runtime/runs/{id}/validate": {
+    "/v1/agent/runtime/runs/{id}/validate": {
         parameters: {
             query?: never;
             header?: never;
@@ -1752,7 +1832,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/runtime/artifacts/{id}/challenge": {
+    "/v1/agent/runtime/artifacts/{id}/challenge": {
         parameters: {
             query?: never;
             header?: never;
@@ -1768,7 +1848,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/runtime/runs/{id}/challenge": {
+    "/v1/agent/runtime/runs/{id}/challenge": {
         parameters: {
             query?: never;
             header?: never;
@@ -1794,6 +1874,20 @@ export interface components {
         TransactionHash: string;
         LooseObject: {
             [key: string]: unknown;
+        };
+        ErrorEnvelope: {
+            error: {
+                code: string;
+                /** @enum {string} */
+                product: "techtree";
+                status: number;
+                path: string;
+                request_id?: string | null;
+                message: string;
+                next_steps?: string | null;
+                details?: components["schemas"]["LooseObject"];
+                retry_after_ms?: number | null;
+            };
         };
         OkEnvelope: {
             /** @enum {boolean} */
@@ -1825,10 +1919,15 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        CursorPagination: {
+            limit: number;
+            next_cursor: number | null;
+        };
         LooseListEnvelope: {
             data: {
                 [key: string]: unknown;
             }[];
+            pagination?: components["schemas"]["CursorPagination"];
         } & {
             [key: string]: unknown;
         };
@@ -1899,8 +1998,21 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        NodeCreateResponse: {
+            data: {
+                node_id: number;
+                manifest_cid: string | null;
+                /** @enum {string} */
+                status: "pinned" | "anchored" | "failed_anchor";
+                /** @enum {string} */
+                publish_status: "queued" | "pinned" | "awaiting_receipt" | "anchored" | "pin_failed" | "failed_anchor";
+                /** @enum {string} */
+                anchor_status: "pending" | "anchored" | "failed_anchor";
+            };
+        };
         TreeNodeListResponse: {
             data: components["schemas"]["TreeNode"][];
+            pagination: components["schemas"]["CursorPagination"];
         } & {
             [key: string]: unknown;
         };
@@ -1911,6 +2023,14 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        TreeSearchResults: {
+            nodes: components["schemas"]["TreeNode"][];
+            comments: components["schemas"]["TreeComment"][];
+        };
+        TreeSearchResponse: {
+            data: components["schemas"]["TreeSearchResults"];
+            pagination: components["schemas"]["CursorPagination"];
+        };
         CommentObjectResponse: {
             data: components["schemas"]["TreeComment"];
         } & {
@@ -1918,6 +2038,7 @@ export interface components {
         };
         CommentListResponse: {
             data: components["schemas"]["TreeComment"][];
+            pagination: components["schemas"]["CursorPagination"];
         } & {
             [key: string]: unknown;
         };
@@ -2006,6 +2127,7 @@ export interface components {
         };
         ScienceTaskListResponse: {
             data: components["schemas"]["ScienceTaskSummary"][];
+            pagination: components["schemas"]["CursorPagination"];
         };
         ScienceTaskDetailResponse: {
             data: components["schemas"]["ScienceTaskDetail"];
@@ -2069,7 +2191,7 @@ export interface components {
         };
         ChatboxListResponse: {
             data: components["schemas"]["ChatboxMessage"][];
-            next_cursor: number | null;
+            pagination: components["schemas"]["CursorPagination"];
         } & {
             [key: string]: unknown;
         };
@@ -2516,6 +2638,7 @@ export interface components {
     parameters: {
         NodeId: number;
         Limit: number;
+        Cursor: number;
         Seed: string;
         SeedPath: string;
         Slug: string;
@@ -2562,6 +2685,202 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LooseObject"];
+                };
+            };
+        };
+    };
+    ingestInternalPublishedNode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LooseObject"];
+            };
+        };
+        responses: {
+            /** @description Published node ingested */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseObject"];
+                };
+            };
+            /** @description Published node ingest failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listInternalXmtpShards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description XMTP shard records */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseDataEnvelope"];
+                };
+            };
+        };
+    };
+    ensureInternalXmtpRoom: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LooseObject"];
+            };
+        };
+        responses: {
+            /** @description XMTP room ensured */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseDataEnvelope"];
+                };
+            };
+            /** @description XMTP room could not be ensured */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ingestInternalXmtpMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LooseObject"];
+            };
+        };
+        responses: {
+            /** @description XMTP message ingested */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseDataEnvelope"];
+                };
+            };
+            /** @description XMTP message ingest failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    leaseInternalXmtpCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LooseObject"];
+            };
+        };
+        responses: {
+            /** @description Next XMTP command lease */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseObject"];
+                };
+            };
+            /** @description Command lease request invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    resolveInternalXmtpCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LooseObject"];
+            };
+        };
+        responses: {
+            /** @description XMTP command resolved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkEnvelope"];
+                };
+            };
+            /** @description Command not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Command resolution invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -2674,6 +2993,57 @@ export interface operations {
             };
         };
     };
+    startOrcidReviewerLink: {
+        parameters: {
+            query: {
+                request_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirects to the ORCID callback with a signed link token */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completeOrcidReviewerLink: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ORCID link completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description ORCID link could not be completed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+        };
+    };
     getTechtreeAgentSession: {
         parameters: {
             query?: never;
@@ -2747,6 +3117,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
                 seed?: components["parameters"]["Seed"];
             };
             header?: never;
@@ -2785,7 +3156,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TreeNodeObjectResponse"];
+                    "application/json": components["schemas"]["NodeCreateResponse"];
                 };
             };
         };
@@ -2838,6 +3209,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path: {
@@ -2862,6 +3234,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path: {
@@ -2886,6 +3259,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path: {
@@ -2910,6 +3284,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path: {
@@ -3223,7 +3598,7 @@ export interface operations {
         };
         responses: {
             /** @description Purchase verification result */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3237,6 +3612,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path: {
@@ -3261,6 +3637,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path?: never;
@@ -3284,6 +3661,7 @@ export interface operations {
             query: {
                 q: string;
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
             path?: never;
@@ -3297,14 +3675,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["TreeSearchResponse"];
                 };
             };
         };
     };
     listWatches: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3412,7 +3793,10 @@ export interface operations {
     };
     getAgentInbox: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3432,7 +3816,10 @@ export interface operations {
     };
     getAgentOpportunities: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3704,6 +4091,15 @@ export interface operations {
                     "application/json": components["schemas"]["LooseObject"];
                 };
             };
+            /** @description Listing rejected because the signed agent is not the skill creator, the review threshold is not met, or the listing input is invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getAgentAutoskillBundle: {
@@ -3732,6 +4128,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: components["parameters"]["Limit"];
+                cursor?: components["parameters"]["Cursor"];
                 stage?: components["schemas"]["ScienceTaskStage"];
                 science_domain?: string;
                 science_field?: string;
@@ -4181,6 +4578,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    approveBbhReviewerAsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet: components["schemas"]["Address"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reviewer approved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseDataEnvelope"];
+                };
+            };
+            /** @description Reviewer update failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    rejectBbhReviewerAsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet: components["schemas"]["Address"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reviewer rejected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooseDataEnvelope"];
+                };
+            };
+            /** @description Reviewer update failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
             };
         };
     };
@@ -5095,129 +5554,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Runtime search results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-        };
-    };
-    compileRuntimeArtifact: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LooseObject"];
-            };
-        };
-        responses: {
-            /** @description Runtime artifact compiled */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-        };
-    };
-    compileRuntimeRun: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LooseObject"];
-            };
-        };
-        responses: {
-            /** @description Runtime run compiled */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-        };
-    };
-    compileRuntimeReview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LooseObject"];
-            };
-        };
-        responses: {
-            /** @description Runtime review compiled */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-        };
-    };
-    pinRuntimeWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    path: string;
-                    node_type: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Workspace pinned */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LooseObject"];
-                };
-            };
-        };
-    };
-    prepareRuntimePublish: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LooseObject"];
-            };
-        };
-        responses: {
-            /** @description Runtime publish prepared */
             200: {
                 headers: {
                     [name: string]: unknown;

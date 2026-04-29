@@ -13,6 +13,14 @@ help:
     - Honor NO_COLOR.
     - Avoid rich formatting for non-TTY output and TERM=dumb.
     - Keep command-level help scoped to the requested command group.
+x-regent-chat-room-contract:
+  owner: regents-cli
+  local_xmtp_authority: CLI owns local XMTP identity, local policy files, and raw XMTP group operations.
+  product_room_authority: Product room keys and membership rules stay in Platform, Autolaunch, and Techtree contracts.
+  thread_identifier_boundary:
+    xmtp_group_commands: conversation_id
+    techtree_chatbox_commands: Techtree route selectors webapp and agent
+  transport_boundary: CLI xmtp commands manage local XMTP transport. CLI chatbox commands use Techtree product routes or local runtime transport.
 command_groups:
   - name: operator
     interface: runtime
@@ -34,6 +42,12 @@ command_groups:
       - agent profile show
       - agent harness list
       - gossipsub status
+    flags:
+      whoami:
+        - name: --full
+          type: boolean
+          required: false
+          description: Include the saved Platform account projection when a Platform session is present.
   - name: wallet
     interface: runtime
     auth_mode: none
@@ -42,18 +56,19 @@ command_groups:
       - wallet status
       - wallet setup
   - name: identity
-    interface: http
+    interface: runtime
     auth_mode: none
     output_envelope: loose-object
     commands:
       - identity status
       - identity ensure
-    path_templates:
-      - /v1/identity/status
-      - /v1/identity/registration-intents
-      - /v1/identity/registration-completions
-      - /v1/identity/siwa/nonce
-      - /v1/identity/siwa/verify
+      - identity graph
+    flags:
+      graph:
+        - name: --json
+          type: boolean
+          required: false
+          description: Print the current identity graph as JSON for automation.
   - name: auth
     interface: http
     auth_mode: none
@@ -65,9 +80,6 @@ command_groups:
     path_templates:
       - /v1/agent/siwa/nonce
       - /v1/agent/siwa/verify
-      - /v1/identity/status
-      - /v1/identity/siwa/nonce
-      - /v1/identity/siwa/verify
   - name: mcp
     interface: runtime
     auth_mode: none
@@ -80,42 +92,12 @@ command_groups:
     output_envelope: loose-object
     commands:
       - doctor
-  - name: regent-staking
-    interface: http
-    auth_mode: agent-siwa
-    auth_audience: regent-services
-    output_envelope: regent-staking-envelopes
-    help:
-      summary: Manage Regent staking for the saved Agent account.
-      usage: regents regent-staking <command>
-      next_step: Start with `regents regent-staking show`.
-    commands:
-      - regent-staking show
-      - regent-staking account
-      - regent-staking stake
-      - regent-staking unstake
-      - regent-staking claim-usdc
-      - regent-staking claim-regent
-      - regent-staking claim-and-restake-regent
-    path_templates:
-      - /v1/agent/regent/staking
-      - /v1/agent/regent/staking/account/{address}
-      - /v1/agent/regent/staking/stake
-      - /v1/agent/regent/staking/unstake
-      - /v1/agent/regent/staking/claim-usdc
-      - /v1/agent/regent/staking/claim-regent
-      - /v1/agent/regent/staking/claim-and-restake-regent
-  - name: reports
-    interface: http
-    auth_mode: agent-siwa
-    auth_audience: regent-services
-    output_envelope: report-envelopes
-    commands:
-      - bug
-      - security-report
-    path_templates:
-      - /v1/agent/bug-report
-      - /v1/agent/security-report
+      - doctor runtime
+      - doctor auth
+      - doctor techtree
+      - doctor transports
+      - doctor xmtp
+      - doctor contracts
   - name: ens
     interface: http
     auth_mode: agent-siwa

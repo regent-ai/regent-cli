@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
 import YAML from "yaml";
+import { checkCliCommandMetadata } from "./generate-cli-command-metadata.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 
@@ -21,7 +22,7 @@ const cliContractFiles = {
 
 const ownershipPath = resolve(root, "packages/regents-cli/src/contracts/api-ownership.ts");
 const cliRoutesDir = resolve(root, "packages/regents-cli/src/routes");
-const commandRegistryPath = resolve(root, "packages/regents-cli/src/command-registry.ts");
+const commandMetadataPath = resolve(root, "packages/regents-cli/src/generated/cli-command-metadata.ts");
 
 const parseYaml = (file) => YAML.parse(fs.readFileSync(file, "utf8"));
 
@@ -92,12 +93,16 @@ const normalizeCommandName = (command) => command.replace(/^regents?\s+/u, "");
 const currentAvailabilityValues = new Set(["current", "beta_disabled"]);
 const platformPublicCommand = (command) =>
   command.startsWith("platform ") ||
+  command.startsWith("runtime ") ||
   command.startsWith("agentbook ") ||
   command.startsWith("work ") ||
   command === "agent connect hermes" ||
   command === "agent connect openclaw" ||
   command === "agent link" ||
-  command === "agent execution-pool";
+  command === "agent execution-pool" ||
+  command === "bug" ||
+  command === "security-report" ||
+  command.startsWith("regent-staking ");
 
 const flattenContract = (contract, operationPaths) => {
   if (Array.isArray(contract.commands)) {
@@ -207,7 +212,12 @@ const shippedContractCommands = new Set([
   ...flattenedContracts.autolaunch.commands,
   ...shippedPlatformCommands,
 ]);
-const registryCommands = readCommandRegistry(fs.readFileSync(commandRegistryPath, "utf8"));
+const commandMetadataCheck = checkCliCommandMetadata();
+if (!commandMetadataCheck.ok) {
+  fail(`Generated CLI command metadata is out of date: ${commandMetadataCheck.outputPath}`);
+}
+
+const registryCommands = readCommandRegistry(fs.readFileSync(commandMetadataPath, "utf8"));
 
 const allowedPathsByOwner = {
   platform: new Set(readPaths(openApiFiles.platform)),
@@ -267,6 +277,22 @@ const readRouteSources = (dir) =>
     .join("\n");
 
 const cliRoutesSource = readRouteSources(cliRoutesDir);
+const routeCommands = new Set(
+  Array.from(cliRoutesSource.matchAll(/route\(\s*"([^"]+)"/g), (match) => match[1]),
+);
+
+for (const command of registryCommands) {
+  if (!routeCommands.has(command)) {
+    fail(`CLI dispatcher is missing exact route for command: ${command}`);
+  }
+}
+
+for (const command of routeCommands) {
+  if (!registryCommands.has(command)) {
+    fail(`CLI dispatcher contains route missing from shipped contracts: ${command}`);
+  }
+}
+
 const requiredChatboxCommands = ["chatbox history", "chatbox tail", "chatbox post"];
 for (const command of requiredChatboxCommands) {
   if (!flattenedContracts.techtree.commands.has(command)) {
