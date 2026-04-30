@@ -58,18 +58,13 @@ describe("regent-staking CLI command group", () => {
     resource: "regent_staking",
     action: "claim",
     chain_id: 84532,
-    target: "0x3333333333333333333333333333333333333333",
-    calldata: data,
+    to: "0x3333333333333333333333333333333333333333",
+    value: "0",
+    data,
     expected_signer: submitWallet,
     expires_at: "2999-01-01T00:00:00.000Z",
     idempotency_key: `idem_${data.slice(2)}`,
     risk_copy: "Claims available staking rewards.",
-    tx_request: {
-      chain_id: 84532,
-      to: "0x3333333333333333333333333333333333333333",
-      value: "0",
-      data,
-    },
   });
 
   const writeAgentAuthState = (baseUrl = expectedBaseUrl) => {
@@ -220,7 +215,7 @@ describe("regent-staking CLI command group", () => {
   it("builds the direct stake request when shared sign-in is present", async () => {
     writeAgentAuthState();
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ ok: true, staking: {}, prepared: walletAction("0x7acb7757") }), {
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: walletAction("0x7acb7757") }), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
@@ -233,15 +228,15 @@ describe("regent-staking CLI command group", () => {
     expect(output.result).toBe(0);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(`${expectedBaseUrl}/v1/agent/regent/staking/stake`);
     expect((fetchMock.mock.calls[0]?.[1]?.headers as Headers).get("x-siwa-receipt")).toBe("staking-receipt");
-    expect(parsePrintedJson<{ prepared: { tx_request: { data: string } } }>(output.stdout)).toMatchObject({
-      prepared: { tx_request: { data: "0x7acb7757" } },
+    expect(parsePrintedJson<{ wallet_action: { data: string } }>(output.stdout)).toMatchObject({
+      wallet_action: { data: "0x7acb7757" },
     });
   });
 
   it("claims USDC through the shared sign-in flow", async () => {
     writeAgentAuthState();
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ ok: true, staking: {}, prepared: walletAction("0x42852610") }), {
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: walletAction("0x42852610") }), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
@@ -254,15 +249,15 @@ describe("regent-staking CLI command group", () => {
     expect(output.result).toBe(0);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(`${expectedBaseUrl}/v1/agent/regent/staking/claim-usdc`);
     expect((fetchMock.mock.calls[0]?.[1]?.headers as Headers).get("x-siwa-receipt")).toBe("staking-receipt");
-    expect(parsePrintedJson<{ prepared: { tx_request: { data: string } } }>(output.stdout)).toMatchObject({
-      prepared: { tx_request: { data: "0x42852610" } },
+    expect(parsePrintedJson<{ wallet_action: { data: string } }>(output.stdout)).toMatchObject({
+      wallet_action: { data: "0x42852610" },
     });
   });
 
   it("simulates and estimates staking transactions before submit", async () => {
     writeAgentAuthState();
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ ok: true, staking: {}, prepared: walletAction("0x42852610") }), {
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: walletAction("0x42852610") }), {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
@@ -308,7 +303,7 @@ describe("regent-staking CLI command group", () => {
         JSON.stringify({
           ok: true,
           staking: {},
-          prepared: {
+          wallet_action: {
             ...walletAction("0x42852610"),
             expected_signer: testWallet,
           },

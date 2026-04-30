@@ -73,7 +73,7 @@ const requestStakingJson = async <TResponse>(
   });
 
 type StakingPreparedPayload = Record<string, unknown> & {
-  readonly prepared?: { readonly tx_request?: unknown; readonly expected_signer?: unknown };
+  readonly wallet_action?: { readonly expected_signer?: unknown };
 };
 
 const printPreparedOrSubmitted = async (
@@ -81,15 +81,15 @@ const printPreparedOrSubmitted = async (
   args: ParsedCliArgs,
   configPath?: string,
 ): Promise<void> => {
-  const txRequest = extractPreparedTxRequest(
-    payload.prepared?.tx_request,
-    payload.prepared?.expected_signer,
-  );
-
   if (!getBooleanFlag(args, "submit")) {
     printJson(payload);
     return;
   }
+
+  const txRequest = extractPreparedTxRequest(
+    payload.wallet_action,
+    payload.wallet_action?.expected_signer,
+  );
 
   if (!txRequest) {
     throw new Error("This staking action did not include a transaction to submit.");

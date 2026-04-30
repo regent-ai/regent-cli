@@ -370,14 +370,22 @@ export interface components {
         KeyringSignRawMessageRequest: {
             payload: string;
         };
-        KeyringEnvelopeObject: {
-            [key: string]: unknown;
+        KeyringWalletActionEnvelope: {
+            chain_id: components["schemas"]["BaseChainId"];
+            to: components["schemas"]["Address"];
+            value: components["schemas"]["HexData"];
+            data: components["schemas"]["HexData"];
+            expected_signer: components["schemas"]["Address"];
+            /** Format: date-time */
+            expires_at: string;
+            risk_copy: string;
+            idempotency_key: string;
         };
         KeyringSignTransactionRequest: {
-            transaction: components["schemas"]["KeyringEnvelopeObject"];
+            transaction: components["schemas"]["KeyringWalletActionEnvelope"];
         };
         KeyringSignAuthorizationRequest: {
-            authorization: components["schemas"]["KeyringEnvelopeObject"];
+            authorization: components["schemas"]["KeyringWalletActionEnvelope"];
         };
         KeyringSignatureResponse: {
             signature: components["schemas"]["HexData"];
@@ -393,11 +401,11 @@ export interface components {
             address: components["schemas"]["Address"];
         };
         KeyringSignedTransactionResponse: {
-            transaction: components["schemas"]["KeyringEnvelopeObject"];
+            transaction: components["schemas"]["KeyringWalletActionEnvelope"];
             signature: components["schemas"]["KeyringRawSignature"];
         };
         KeyringSignedAuthorizationResponse: {
-            authorization: components["schemas"]["KeyringEnvelopeObject"];
+            authorization: components["schemas"]["KeyringWalletActionEnvelope"];
             signature: components["schemas"]["KeyringRawSignature"];
         };
         ReadinessResponse: {

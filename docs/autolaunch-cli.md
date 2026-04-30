@@ -6,7 +6,7 @@ If you already have an agent, use `regents autolaunch ...`. If you do not have a
 
 The source of truth for Autolaunch HTTP routes is the OpenAPI file at [`../../autolaunch/docs/api-contract.openapiv3.yaml`](/Users/sean/Documents/regent/autolaunch/docs/api-contract.openapiv3.yaml).
 
-The shared `regent-staking` rail uses [`regent-services-contract.openapiv3.yaml`](/Users/sean/Documents/regent/regents-cli/docs/regent-services-contract.openapiv3.yaml) as its source of truth.
+The Platform-owned `regent-staking` rail uses [`../../platform/api-contract.openapiv3.yaml`](/Users/sean/Documents/regent/platform/api-contract.openapiv3.yaml) as its source of truth.
 
 Chain language for this command group:
 
