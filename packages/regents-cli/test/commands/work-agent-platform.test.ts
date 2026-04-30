@@ -33,6 +33,7 @@ const useHumanTerminal = (): void => {
 };
 
 const stripAnsi = (value: string): string => value.replace(/\x1b\[[0-9;]*m/g, "");
+const collapsePanelText = (value: string): string => value.replace(/[│╭╮╰╯─]/gu, " ").replace(/\s+/g, " ").trim();
 
 const workItem = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
   id: 123,
@@ -461,7 +462,7 @@ describe("work and agent platform commands", () => {
     expect(visible).toContain("worker id");
     expect(visible).toContain("789");
     expect(visible).toContain(path.join(homeDir, ".openclaw", "skills", "regents-work", "SKILL.md"));
-    expect(visible).toContain(
+    expect(collapsePanelText(visible)).toContain(
       "regents work run <work-id> --company-id 123 --runner openclaw_local_executor --worker-id 789",
     );
   });
@@ -900,6 +901,8 @@ describe("work and agent platform commands", () => {
     expect(visible).toContain("WORKER LIST");
     expect(visible).toContain("OpenClaw desk");
     expect(visible).toContain("Hermes desk");
-    expect(visible).toContain("regents work run <work-id> --company-id 123 --runner <runner> --worker-id <worker-id>");
+    expect(collapsePanelText(visible)).toContain(
+      "regents work run <work-id> --company-id 123 --runner <runner> --worker-id <worker-id>",
+    );
   });
 });

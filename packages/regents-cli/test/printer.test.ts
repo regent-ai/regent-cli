@@ -2,14 +2,23 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { captureOutput } from "../../../test-support/test-helpers.js";
 
+import { renderScopedHelp } from "../src/help.js";
 import { printError, printJson, renderUsageScreen, setRawJsonOutput } from "../src/printer.js";
 
 const originalNoColor = process.env.NO_COLOR;
 const originalTerm = process.env.TERM;
 const originalIsTTY = process.stdout.isTTY;
+const originalColumns = process.stdout.columns;
 
 const setStdoutTty = (value: boolean): void => {
   Object.defineProperty(process.stdout, "isTTY", {
+    configurable: true,
+    value,
+  });
+};
+
+const setStdoutColumns = (value: number | undefined): void => {
+  Object.defineProperty(process.stdout, "columns", {
     configurable: true,
     value,
   });
@@ -30,6 +39,7 @@ afterEach(() => {
 
   setRawJsonOutput(false);
   setStdoutTty(Boolean(originalIsTTY));
+  setStdoutColumns(originalColumns);
 });
 
 describe("printer surface", () => {
@@ -84,6 +94,20 @@ describe("printer surface", () => {
     expect(output).toContain("Hypotest scores the run and checks replay during validation");
     expect(output).toContain("regents techtree bbh genome init [path] [--lane climb|benchmark|challenge] [--sample-size 3] [--budget 6]");
     expect(output).toContain("regents techtree bbh genome improve [path]");
+  });
+
+  it("wraps help panels inside narrow terminal widths", () => {
+    setStdoutTty(true);
+    setStdoutColumns(40);
+    delete process.env.NO_COLOR;
+    process.env.TERM = "xterm-256color";
+
+    const output = renderScopedHelp([], "/Users/sean/.regent/config.json");
+    const visibleLines = stripAnsi(output).split("\n");
+
+    expect(visibleLines.every((line) => line.length <= 40)).toBe(true);
+    expect(output).toContain("REGENT CLI HELP");
+    expect(output).toContain("Default config:");
   });
 
   it("renders a receipt-style summary for setup records", async () => {
