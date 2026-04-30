@@ -40,7 +40,6 @@ describe("contract command route matching", () => {
       "agentbook sessions watch",
       "autolaunch jobs watch",
       "autolaunch launch monitor",
-      "autolaunch subjects show",
       "doctor",
       "regent-staking account",
       "runtime checkpoint",

@@ -201,59 +201,59 @@ export const autolaunchRoutes: readonly CliRoute[] = [
   route("autolaunch subjects show", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectShow(parsedArgs, configPath);
     return 0;
-  }, { variadicTail: true }),
+  }, { pattern: "autolaunch subjects show <subject-id>" }),
   route("autolaunch subjects ingress", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectIngress(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects ingress <subject-id>" }),
   route("autolaunch subjects stake", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectStake(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects stake <subject-id>" }),
   route("autolaunch subjects unstake", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectUnstake(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects unstake <subject-id>" }),
   route("autolaunch subjects claim-usdc", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectClaimUsdc(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects claim-usdc <subject-id>" }),
   route("autolaunch subjects claim-emissions", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectClaimEmissions(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects claim-emissions <subject-id>" }),
   route("autolaunch subjects claim-and-stake-emissions", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectClaimAndStakeEmissions(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects claim-and-stake-emissions <subject-id>" }),
   route("autolaunch subjects sweep-ingress", async ({ parsedArgs, configPath }) => {
     await runAutolaunchSubjectSweepIngress(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch subjects sweep-ingress <subject-id>" }),
   route("autolaunch holdings stake", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsStake(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings stake <subject-id>" }),
   route("autolaunch holdings unstake", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsUnstake(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings unstake <subject-id>" }),
   route("autolaunch holdings claim-usdc", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsClaimUsdc(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings claim-usdc <subject-id>" }),
   route("autolaunch holdings claim-emissions", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsClaimEmissions(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings claim-emissions <subject-id>" }),
   route("autolaunch holdings claim-and-stake-emissions", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsClaimAndStakeEmissions(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings claim-and-stake-emissions <subject-id>" }),
   route("autolaunch holdings sweep-ingress", async ({ parsedArgs, configPath }) => {
     await runAutolaunchHoldingsSweepIngress(parsedArgs, configPath);
     return 0;
-  }),
+  }, { pattern: "autolaunch holdings sweep-ingress <subject-id>" }),
   route("autolaunch contracts admin", async ({ configPath }) => {
     await runAutolaunchContractsAdminShow(configPath);
     return 0;

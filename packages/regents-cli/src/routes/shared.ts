@@ -18,12 +18,12 @@ export type CliRoute = {
 };
 
 export const route = (
-  pattern: string,
+  command: string,
   handler: CliRouteHandler,
-  options?: { readonly variadicTail?: boolean },
+  options?: { readonly variadicTail?: boolean; readonly pattern?: string },
 ): CliRoute => ({
-  command: pattern,
-  pattern: pattern.split(" "),
+  command,
+  pattern: (options?.pattern ?? command).split(" "),
   variadicTail: options?.variadicTail ?? false,
   handler,
 });

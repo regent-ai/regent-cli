@@ -7,10 +7,20 @@ import {
 import { printJson } from "../../printer.js";
 import {
   extractPreparedTxRequest,
+  type JsonObject,
   requestJson,
   requirePositional,
   submitPreparedTxRequest,
 } from "./shared.js";
+
+const preparedActionFromEnvelope = (envelope: JsonObject): JsonObject => {
+  const preparedAction = envelope.prepared;
+  if (!preparedAction || typeof preparedAction !== "object" || Array.isArray(preparedAction)) {
+    throw new Error("This Autolaunch action did not include a transaction to submit.");
+  }
+
+  return preparedAction;
+};
 
 const prepareOrSubmitWrite = async (
   method: "POST",
@@ -30,11 +40,11 @@ const prepareOrSubmitWrite = async (
     return;
   }
 
-  const txRequest = extractPreparedTxRequest(prepared.tx_request, prepared.expected_signer);
+  const preparedAction = preparedActionFromEnvelope(prepared);
+  const txRequest = extractPreparedTxRequest(preparedAction.tx_request, preparedAction.expected_signer);
 
   if (!txRequest) {
-    printJson(prepared);
-    return;
+    throw new Error("This Autolaunch action did not include a transaction to submit.");
   }
 
   const txHash = await submitPreparedTxRequest(txRequest, configPath);

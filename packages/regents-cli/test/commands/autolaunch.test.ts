@@ -88,6 +88,22 @@ describe("autolaunch CLI command group", () => {
   const fetchMock = vi.fn<typeof fetch>();
   const tempDirs: string[] = [];
   const expectedAgentWallet = "0x00000000000000000000000000000000000000aa";
+  const preparedSubjectAction = (data: `0x${string}`) => ({
+    action_id: `subject_${data.slice(2)}`,
+    resource: "subject",
+    action: "claim_usdc",
+    chain_id: 84532,
+    expected_signer: expectedAgentWallet,
+    expires_at: "2999-01-01T00:00:00.000Z",
+    idempotency_key: `idem_${data.slice(2)}`,
+    risk_copy: "Claims available subject rewards.",
+    tx_request: {
+      chain_id: 84532,
+      to: "0x5555555555555555555555555555555555555555",
+      value: "0x0",
+      data,
+    },
+  });
 
   const createConfigPath = () => {
     const tempDir = fs.mkdtempSync(
@@ -588,6 +604,7 @@ describe("autolaunch CLI command group", () => {
   });
 
   it("shows subject revenue state through the shared autolaunch API", async () => {
+    const configPath = createConfigPath();
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -614,10 +631,17 @@ describe("autolaunch CLI command group", () => {
       ),
     );
     const output = await captureOutput(() =>
-      runCliEntrypoint(["autolaunch", "subjects", "show", "0xabc"]),
+      runCliEntrypoint([
+        "autolaunch",
+        "subjects",
+        "show",
+        "0xabc",
+        "--config",
+        configPath,
+      ]),
     );
 
-    expect(output.result).toBe(0);
+    expect(output.result, output.stderr).toBe(0);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       `${expectedBaseUrl}/v1/agent/subjects/0xabc`,
     );
@@ -651,6 +675,138 @@ describe("autolaunch CLI command group", () => {
           status: "fresh",
         },
       },
+    });
+  });
+
+  it("submits a subject claim from the nested prepared action", async () => {
+    const configPath = createConfigPath();
+    process.env.REGENT_WALLET_PRIVATE_KEY =
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    process.env.BASE_SEPOLIA_RPC_URL = "https://base-sepolia.example";
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            subject_id: "subject_123",
+            prepared: preparedSubjectAction("0x42852610"),
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            subject_id: "subject_123",
+            submitted: true,
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint([
+        "autolaunch",
+        "subjects",
+        "claim-usdc",
+        "subject_123",
+        "--submit",
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result, output.stderr).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `${expectedBaseUrl}/v1/agent/subjects/subject_123/claim-usdc`,
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      tx_hash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    });
+    expect(sendTransactionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "0x5555555555555555555555555555555555555555",
+        data: "0x42852610",
+        value: 0n,
+      }),
+    );
+    expect(parsePrintedJson(output.stdout)).toMatchObject({
+      ok: true,
+      submitted: true,
+    });
+  });
+
+  it("submits a holdings claim from the nested prepared action", async () => {
+    const configPath = createConfigPath();
+    process.env.REGENT_WALLET_PRIVATE_KEY =
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    process.env.BASE_SEPOLIA_RPC_URL = "https://base-sepolia.example";
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            subject_id: "subject_456",
+            prepared: preparedSubjectAction("0xe1434f4e"),
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            subject_id: "subject_456",
+            submitted: true,
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint([
+        "autolaunch",
+        "holdings",
+        "claim-usdc",
+        "subject_456",
+        "--submit",
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result, output.stderr).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `${expectedBaseUrl}/v1/agent/subjects/subject_456/claim-usdc`,
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      tx_hash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    });
+    expect(sendTransactionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "0x5555555555555555555555555555555555555555",
+        data: "0xe1434f4e",
+        value: 0n,
+      }),
+    );
+    expect(parsePrintedJson(output.stdout)).toMatchObject({
+      ok: true,
+      submitted: true,
     });
   });
 

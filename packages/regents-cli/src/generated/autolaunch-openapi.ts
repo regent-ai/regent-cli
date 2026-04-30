@@ -20,6 +20,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/internal/xmtp/shards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["autolaunchInternalXmtpListShards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/rooms/ensure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["autolaunchInternalXmtpEnsureRoom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/messages/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["autolaunchInternalXmtpIngestMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/commands/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["autolaunchInternalXmtpLeaseCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/xmtp/commands/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["autolaunchInternalXmtpResolveCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/privy/csrf": {
         parameters: {
             query?: never;
@@ -1252,6 +1332,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/agent/subjects/{id}/accounting-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["agentGetSubjectAccountingTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/agent/subjects/{id}/stake": {
         parameters: {
             query?: never;
@@ -1920,6 +2016,51 @@ export interface components {
             /** @enum {string} */
             service: "autolaunch";
         };
+        InternalXmtpRoom: {
+            id: number;
+            room_key: string;
+            xmtp_group_id: string | null;
+            name: string;
+            status: string;
+            presence_ttl_seconds: number;
+            /** @enum {integer} */
+            capacity: 200;
+        };
+        InternalXmtpRoomShard: components["schemas"]["InternalXmtpRoom"] & {
+            active_members: number;
+            joinable: boolean;
+        };
+        InternalXmtpEnsureRoomRequest: {
+            room_key: string;
+            xmtp_group_id?: string;
+            name: string;
+            status?: string;
+            presence_ttl_seconds?: number;
+            /** @enum {integer} */
+            capacity?: 200;
+        };
+        InternalXmtpMessageIngestRequest: {
+            room_key: string;
+            xmtp_message_id: string;
+            sender_inbox_id: string;
+            sender_wallet_address?: string;
+            sender_label?: string;
+            /** @enum {string} */
+            sender_type: "human" | "agent" | "system";
+            body: string;
+            /** Format: date-time */
+            sent_at: string;
+            raw_payload?: Record<string, never>;
+            moderation_state?: string;
+            reply_to_message_id?: number;
+            reactions?: Record<string, never>;
+        };
+        InternalXmtpMembershipCommand: {
+            id: number;
+            /** @enum {string} */
+            op: "add_member" | "remove_member";
+            xmtp_inbox_id: string;
+        };
         PrivySessionCsrf: {
             /** @enum {boolean} */
             ok: true;
@@ -2541,6 +2682,33 @@ export interface components {
             ok: true;
             subject: components["schemas"]["Subject"];
         };
+        SubjectAccountingTag: {
+            /** @enum {string} */
+            source: "ingress_deposit" | "direct_deposit";
+            ingress_address: components["schemas"]["Address"] | null;
+            splitter_address?: components["schemas"]["Address"] | null;
+            tag_index: number | null;
+            block_number: number;
+            log_block_number?: number | null;
+            depositor: components["schemas"]["Address"];
+            amount_raw: number;
+            amount: components["schemas"]["DecimalString"];
+            label: components["schemas"]["HexData"];
+            transaction_hash?: components["schemas"]["HexData"] | null;
+            log_index?: number | null;
+        };
+        SubjectAccountingTagsEnvelope: {
+            /** @enum {boolean} */
+            ok: true;
+            subject_id: string;
+            chain_id: components["schemas"]["AutolaunchChainId"];
+            from_block: number;
+            cursor: number;
+            limit: number;
+            next_cursor: number;
+            has_more: boolean;
+            accounting_tags: components["schemas"]["SubjectAccountingTag"][];
+        };
         PreparedSubjectActionEnvelope: {
             /** @enum {boolean} */
             ok: true;
@@ -2675,6 +2843,230 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    autolaunchInternalXmtpListShards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active mirrored XMTP rooms available to the internal worker */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InternalXmtpRoomShard"][];
+                    };
+                };
+            };
+            /** @description Missing or invalid internal shared secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    autolaunchInternalXmtpEnsureRoom: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalXmtpEnsureRoomRequest"];
+            };
+        };
+        responses: {
+            /** @description Mirrored XMTP room record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InternalXmtpRoom"];
+                    };
+                };
+            };
+            /** @description Missing or invalid internal shared secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Room request invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    autolaunchInternalXmtpIngestMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalXmtpMessageIngestRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved mirrored message id */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: number;
+                        };
+                    };
+                };
+            };
+            /** @description Missing or invalid internal shared secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Message request invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    autolaunchInternalXmtpLeaseCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    room_key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Next membership command for the room, or null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InternalXmtpMembershipCommand"] | null;
+                    };
+                };
+            };
+            /** @description Missing or invalid internal shared secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Command lease request invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    autolaunchInternalXmtpResolveCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "done" | "failed";
+                    error?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Membership command resolution accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkEnvelope"];
+                };
+            };
+            /** @description Missing or invalid internal shared secret */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Membership command not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Command resolution request invalid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -4689,6 +5081,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubjectIngressEnvelope"];
+                };
+            };
+        };
+    };
+    agentGetSubjectAccountingTags: {
+        parameters: {
+            query: {
+                from_block: number;
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["SubjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accounting labels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectAccountingTagsEnvelope"];
                 };
             };
         };
