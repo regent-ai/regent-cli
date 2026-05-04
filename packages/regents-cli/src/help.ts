@@ -24,6 +24,19 @@ const globalNextStep =
   "For Autolaunch, run `regents auth login --audience autolaunch`, then `regents identity ensure`.";
 
 const commandHelp: Record<string, HelpEntry> = {
+  feynman: {
+    summary: "Open the Feynman research shell from Regents CLI.",
+    usage: "regents feynman [feynman command or prompt]",
+    flags: ["Feynman flags are passed through after `regents feynman`."],
+    examples: [
+      "regents feynman setup",
+      "regents feynman doctor",
+      'regents feynman chat "explain this paper"',
+    ],
+    auth: "Feynman manages its own setup.",
+    output: "Shows Feynman's terminal output directly.",
+    nextStep: "Install Feynman, then run `regents feynman setup`.",
+  },
   "auth login": {
     summary: "Save an Agent account sign-in for the selected app.",
     usage: "regents auth login --audience <platform|autolaunch|techtree|regent-services>",
@@ -77,6 +90,18 @@ const commandHelp: Record<string, HelpEntry> = {
     auth: "Needs `regents auth login --audience regent-services` and `regents identity ensure`.",
     output: "Shows staking balances and claimable amounts.",
     nextStep: "Use the stake, unstake, or claim command that matches the account state.",
+  },
+  "regent-staking stake": {
+    summary: "Prepare a $REGENT staking transaction.",
+    usage: "regents regent-staking stake --amount <amount> [--receiver <0xaddress>]",
+    flags: ["--amount <amount>", "--receiver <0xaddress>", "--submit", "--config <path>"],
+    examples: [
+      "regents regent-staking stake --amount 100",
+      "regents regent-staking stake --amount 100 --receiver 0x1111111111111111111111111111111111111111",
+    ],
+    auth: "Needs `regents auth login --audience regent-services` and `regents identity ensure`.",
+    output: "Shows the wallet action to review and sign.",
+    nextStep: "Sign the prepared transaction with the wallet that owns the $REGENT.",
   },
   "doctor contracts": {
     summary: "Show the contract files and generated artifacts the CLI can see.",
@@ -387,6 +412,13 @@ const groupHelp: Record<string, HelpGroup> = {
     commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.agent,
     nextStep: "Use `regents agent connect openclaw --company-id <id> --role executor` for local OpenClaw work.",
   },
+  feynman: {
+    summary: "Open the Feynman research shell from Regents CLI.",
+    auth: "Feynman manages its own setup.",
+    output: "Shows Feynman's terminal output directly.",
+    commands: CLI_COMMANDS_BY_TOP_LEVEL_GROUP.feynman,
+    nextStep: "Install Feynman, then run `regents feynman setup`.",
+  },
 };
 
 const helpGroupForCommand = (command: string): HelpGroup | null => {
@@ -420,6 +452,10 @@ const helpGroupForCommand = (command: string): HelpGroup | null => {
 
   if (command.startsWith("agent ")) {
     return groupHelp.agent;
+  }
+
+  if (command === "feynman") {
+    return groupHelp.feynman;
   }
 
   return null;
@@ -566,6 +602,7 @@ export function renderScopedHelp(positionals: readonly string[], configPath: str
         "regents auth login --audience autolaunch",
         "regents identity ensure",
         "regents autolaunch agents list --launchable",
+        "regents feynman doctor",
       ],
       auth: "Protected commands use a saved Agent account.",
       output: "Human output uses panels and status lines. `--json` prints raw JSON.",

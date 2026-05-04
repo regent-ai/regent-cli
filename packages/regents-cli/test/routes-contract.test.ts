@@ -41,6 +41,7 @@ describe("contract command route matching", () => {
       "autolaunch jobs watch",
       "autolaunch launch monitor",
       "doctor",
+      "feynman",
       "regent-staking account",
       "runtime checkpoint",
       "runtime health",

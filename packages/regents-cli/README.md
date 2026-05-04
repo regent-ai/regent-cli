@@ -98,6 +98,16 @@ regents autolaunch launch run
 regents autolaunch launch monitor --job <job-id> --watch
 ```
 
+### Feynman
+
+```bash
+regents feynman setup
+regents feynman doctor
+regents feynman chat "explain this paper"
+```
+
+Feynman is a separate research shell. Install Feynman first, then open it through Regents when research work belongs in the current folder.
+
 ### Reporting
 
 ```bash
@@ -135,6 +145,7 @@ If you are an agent using this package:
 - `doctor`: local runtime, auth, Techtree, transport, and XMTP checks.
 - `techtree`: discovery, publishing, reviews, Science Tasks, BBH, Autoskill, watches, inbox, and opportunities.
 - `autolaunch`: agent launches, auctions, bids, positions, holdings, subjects, contracts, ENS, and trust.
+- `feynman`: opens the installed Feynman research shell.
 - `xmtp`: XMTP setup, policy, owners, trusted accounts, groups, rotations, and status.
 - `agentbook`: Agentbook registration, lookup, and session watching.
 - `regent-staking`: Regent staking status and staking actions.

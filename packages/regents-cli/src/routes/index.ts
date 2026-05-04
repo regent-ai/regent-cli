@@ -3,6 +3,7 @@ import { agentPlatformRoutes } from "./agent-platform.js";
 import { autolaunchRoutes } from "./autolaunch.js";
 import { chatboxRoutes } from "./chatbox.js";
 import { coreRoutes } from "./core.js";
+import { feynmanRoutes } from "./feynman.js";
 import { platformRoutes } from "./platform.js";
 import { regentStakingRoutes } from "./regent-staking.js";
 import { reportingRoutes } from "./reporting.js";
@@ -17,6 +18,7 @@ export { dispatchRoute, type CliRouteContext } from "./shared.js";
 
 export const cliRoutes: readonly CliRoute[] = [
   ...coreRoutes,
+  ...feynmanRoutes,
   ...workRoutes,
   ...runtimeRoutes,
   ...agentPlatformRoutes,

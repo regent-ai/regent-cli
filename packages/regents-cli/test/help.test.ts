@@ -5,6 +5,14 @@ import { runCliEntrypoint } from "../src/index.js";
 import { captureOutput } from "../../../test-support/test-helpers.js";
 
 describe("scoped CLI help", () => {
+  it("renders global help with Feynman as a top-level path", async () => {
+    const output = await captureOutput(() => runCliEntrypoint(["--help"]));
+
+    expect(output.result).toBe(0);
+    expect(output.stdout).toContain("REGENT CLI HELP");
+    expect(output.stdout).toContain("regents feynman doctor");
+  });
+
   it("renders Autolaunch group help without running a command", async () => {
     const output = await captureOutput(() => runCliEntrypoint(["autolaunch", "--help"]));
 

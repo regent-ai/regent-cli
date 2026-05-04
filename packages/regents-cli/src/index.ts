@@ -25,17 +25,24 @@ export async function runCliEntrypoint(rawArgs: string[]): Promise<number> {
     setRawJsonOutput(getBooleanFlag(parsedArgs, "json"));
     const [namespace] = parsedArgs.positionals;
 
-    if (!namespace || rawArgs.includes("--help") || rawArgs.includes("-h")) {
-      printScopedHelp(helpPositionals(parsedArgs.positionals), configPath ?? defaultConfigPath());
-      return 0;
-    }
-
     const routeContext: CliRouteContext = {
       rawArgs,
       parsedArgs,
       configPath,
       positionals: parsedArgs.positionals,
     };
+
+    if (namespace === "feynman") {
+      const routedResult = await dispatchRoute(cliRoutes, routeContext);
+      if (routedResult !== undefined) {
+        return routedResult;
+      }
+    }
+
+    if (!namespace || rawArgs.includes("--help") || rawArgs.includes("-h")) {
+      printScopedHelp(helpPositionals(parsedArgs.positionals), configPath ?? defaultConfigPath());
+      return 0;
+    }
 
     const routedResult = await dispatchRoute(cliRoutes, routeContext);
     if (routedResult !== undefined) {

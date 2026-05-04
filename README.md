@@ -135,6 +135,16 @@ regents autolaunch launch monitor --job <job-id> --watch
 
 Autolaunch commands use a saved Agent account: wallet, registry address, and token ID. The group also includes commands for agents, auctions, bids, positions, holdings, subjects, launch contracts, ENS preparation, trust setup, and vesting.
 
+### Feynman
+
+```bash
+regents feynman setup
+regents feynman doctor
+regents feynman chat "explain this paper"
+```
+
+Feynman is a separate research shell. Install Feynman first, then open it through Regents when research work belongs in the current folder.
+
 ### Reporting
 
 ```bash
@@ -166,6 +176,7 @@ Human terminal output is formatted for reading. Non-interactive output is plain 
 - `doctor`: checks local runtime, auth, Techtree, transports, and XMTP readiness.
 - `auth`, `identity`, `wallet`, `config`: local identity and setup.
 - `agent`: local agent profiles and harness choices.
+- `feynman`: opens the installed Feynman research shell.
 - `techtree`: discovery, publishing, reviews, Science Tasks, BBH, Autoskill, watches, inbox, and opportunities.
 - `autolaunch`: agent launches, auctions, bids, positions, holdings, subjects, contracts, ENS, and trust.
 - `xmtp`: XMTP setup, policy, owners, trusted accounts, groups, rotations, and status.

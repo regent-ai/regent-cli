@@ -117,6 +117,7 @@ export const CLI_COMMANDS = [
   "doctor workspace",
   "doctor xmtp",
   "ens set-primary",
+  "feynman",
   "gossipsub status",
   "identity ensure",
   "identity graph",
@@ -440,6 +441,9 @@ export const CLI_COMMANDS_BY_TOP_LEVEL_GROUP = {
   ],
   "ens": [
     "ens set-primary"
+  ],
+  "feynman": [
+    "feynman"
   ],
   "gossipsub": [
     "gossipsub status"

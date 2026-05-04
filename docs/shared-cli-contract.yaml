@@ -92,6 +92,13 @@ command_groups:
     output_envelope: loose-object
     commands:
       - mcp export hermes
+  - name: feynman
+    interface: local-process
+    auth_mode: none
+    output_envelope: passthrough
+    note: Launches the installed Feynman research shell from Regents CLI. Feynman keeps its own setup and sessions under its normal local folder.
+    commands:
+      - feynman
   - name: doctor
     interface: runtime
     auth_mode: none
@@ -110,9 +117,15 @@ command_groups:
     auth_mode: agent-siwa
     auth_audience: platform
     output_envelope: loose-object
-    note: Ethereum mainnet only. The Regent ENS name must already be attached to the authenticated agent and already resolve to that wallet. This command only prepares and submits the reverse-name transaction.
+    note: Ethereum mainnet only. The Regent ENS name must already be attached to the authenticated agent and already resolve to that wallet. This command prepares the reverse-name transaction by default and submits only with --submit.
     commands:
       - ens set-primary
+    flags:
+      set-primary:
+        - name: --submit
+          type: boolean
+          required: false
+          description: Submit the prepared transaction with the local wallet.
     path_templates:
       - /api/agent-platform/ens/prepare-primary
   - name: xmtp
