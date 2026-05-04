@@ -17,6 +17,8 @@ import type {
 import type { TechtreeRequestClient } from "./request.js";
 import { withQuery } from "./request.js";
 
+const pathId = (value: string): string => encodeURIComponent(value);
+
 export class BenchmarksResource {
   constructor(private readonly request: TechtreeRequestClient) {}
 
@@ -34,32 +36,32 @@ export class BenchmarksResource {
   }
 
   getCapsule(capsuleId: string): Promise<BenchmarkCapsuleResponse> {
-    return this.request.getJson<BenchmarkCapsuleResponse>(`/v1/benchmarks/capsules/${capsuleId}`, "object");
+    return this.request.getJson<BenchmarkCapsuleResponse>(`/v1/benchmarks/capsules/${pathId(capsuleId)}`, "object");
   }
 
   listVersions(capsuleId: string): Promise<BenchmarkVersionListResponse> {
     return this.request.getJson<BenchmarkVersionListResponse>(
-      `/v1/benchmarks/capsules/${capsuleId}/versions`,
+      `/v1/benchmarks/capsules/${pathId(capsuleId)}/versions`,
       "array",
     );
   }
 
   scoreboard(capsuleId: string): Promise<BenchmarkScoreboardResponse> {
     return this.request.getJson<BenchmarkScoreboardResponse>(
-      `/v1/benchmarks/capsules/${capsuleId}/scoreboard`,
+      `/v1/benchmarks/capsules/${pathId(capsuleId)}/scoreboard`,
       "object",
     );
   }
 
   reliability(capsuleId: string): Promise<BenchmarkReliabilityListResponse> {
     return this.request.getJson<BenchmarkReliabilityListResponse>(
-      `/v1/benchmarks/capsules/${capsuleId}/reliability`,
+      `/v1/benchmarks/capsules/${pathId(capsuleId)}/reliability`,
       "array",
     );
   }
 
   getHarness(harnessId: string): Promise<BenchmarkHarnessResponse> {
-    return this.request.getJson<BenchmarkHarnessResponse>(`/v1/benchmarks/harnesses/${harnessId}`, "object");
+    return this.request.getJson<BenchmarkHarnessResponse>(`/v1/benchmarks/harnesses/${pathId(harnessId)}`, "object");
   }
 
   createCapsule(input: BenchmarkCapsuleCreateInput): Promise<BenchmarkCapsuleResponse> {
@@ -69,7 +71,7 @@ export class BenchmarksResource {
   createVersion(capsuleId: string, input: BenchmarkVersionCreateInput): Promise<BenchmarkVersionResponse> {
     return this.request.authedFetchJson<BenchmarkVersionResponse>(
       "POST",
-      `/v1/agent/benchmarks/capsules/${capsuleId}/versions`,
+      `/v1/agent/benchmarks/capsules/${pathId(capsuleId)}/versions`,
       input,
     );
   }
@@ -93,9 +95,8 @@ export class BenchmarksResource {
   recomputeReliability(capsuleId: string): Promise<BenchmarkReliabilityListResponse> {
     return this.request.authedFetchJson<BenchmarkReliabilityListResponse>(
       "POST",
-      `/v1/agent/benchmarks/capsules/${capsuleId}/reliability/recompute`,
+      `/v1/agent/benchmarks/capsules/${pathId(capsuleId)}/reliability/recompute`,
       {},
     );
   }
 }
-

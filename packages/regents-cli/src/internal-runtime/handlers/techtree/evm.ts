@@ -9,6 +9,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
 
 import type { PaidPayloadSummary } from "../../../internal-types/index.js";
+import { assertSuccessfulReceipt } from "../../base-contract-client.js";
 import type { RuntimeContext } from "../../runtime.js";
 
 const ERC20_APPROVE_ABI = [
@@ -149,7 +150,9 @@ export async function settleTechtreeNodePaidPayloadPurchase(
     functionName: "approve",
     args: [settlementContract, amountUnits],
   });
-  await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+  assertSuccessfulReceipt(
+    await publicClient.waitForTransactionReceipt({ hash: approveTxHash }),
+  );
 
   const purchaseTxHash = await walletClient.writeContract({
     account,
@@ -158,7 +161,9 @@ export async function settleTechtreeNodePaidPayloadPurchase(
     functionName: "settlePurchase",
     args: [listingRef, sellerPayout, bundleRef, amountUnits],
   });
-  await publicClient.waitForTransactionReceipt({ hash: purchaseTxHash });
+  assertSuccessfulReceipt(
+    await publicClient.waitForTransactionReceipt({ hash: purchaseTxHash }),
+  );
 
   const verified = await ctx.techtree.verifyNodePurchase(nodeId, purchaseTxHash);
 

@@ -206,4 +206,3 @@ async function ensureHarness(
     throw error;
   }
 }
-

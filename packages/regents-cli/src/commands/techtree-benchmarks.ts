@@ -124,4 +124,3 @@ export async function runTechtreeBenchmarksValidate(args: ParsedCliArgs, configP
     ),
   );
 }
-
