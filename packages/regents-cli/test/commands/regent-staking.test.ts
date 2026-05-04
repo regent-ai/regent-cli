@@ -16,6 +16,20 @@ const { sendTransactionMock, waitForReceiptMock, callMock, estimateGasMock } = v
   estimateGasMock: vi.fn(),
 }));
 
+const { questionMock, closePromptMock } = vi.hoisted(() => ({
+  questionMock: vi.fn(),
+  closePromptMock: vi.fn(),
+}));
+
+vi.mock("node:readline/promises", () => ({
+  default: {
+    createInterface: () => ({
+      question: questionMock,
+      close: closePromptMock,
+    }),
+  },
+}));
+
 vi.mock("viem/accounts", () => ({
   privateKeyToAccount: () => ({
     address: "0x00000000000000000000000000000000000000aa",
@@ -55,7 +69,9 @@ describe("regent-staking CLI command group", () => {
 
   const walletAction = (data: string) => ({
     action_id: `staking_${data.slice(2)}`,
+    owner_product: "platform",
     resource: "regent_staking",
+    resource_id: "0x3333333333333333333333333333333333333333",
     action: "claim",
     chain_id: 84532,
     to: "0x3333333333333333333333333333333333333333",
@@ -64,6 +80,7 @@ describe("regent-staking CLI command group", () => {
     expected_signer: submitWallet,
     expires_at: "2999-01-01T00:00:00.000Z",
     idempotency_key: `idem_${data.slice(2)}`,
+    simulation: { required: false, status: "not_required", block_number: null },
     risk_copy: "Claims available staking rewards.",
   });
 
@@ -151,8 +168,11 @@ describe("regent-staking CLI command group", () => {
     waitForReceiptMock.mockReset();
     callMock.mockReset();
     estimateGasMock.mockReset();
+    questionMock.mockReset();
+    closePromptMock.mockReset();
+    questionMock.mockResolvedValue("y");
     sendTransactionMock.mockResolvedValue("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    waitForReceiptMock.mockResolvedValue({ logs: [] });
+    waitForReceiptMock.mockResolvedValue({ status: "success", logs: [] });
     callMock.mockResolvedValue({ data: "0x" });
     estimateGasMock.mockResolvedValue(21_000n);
   });
@@ -233,6 +253,61 @@ describe("regent-staking CLI command group", () => {
     });
   });
 
+  it("builds the direct stake request with a confirmed receiver", async () => {
+    writeAgentAuthState();
+    const receiver = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: walletAction("0x7acb7757") }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint([
+        "regent-staking",
+        "stake",
+        "--amount",
+        "1.5",
+        "--receiver",
+        receiver,
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result, output.stderr).toBe(0);
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      amount: "1.5",
+      receiver,
+    });
+    expect(questionMock).toHaveBeenCalledWith(
+      `If you confirm this command it will stake 1.5 of $REGENT for the address ${receiver}. Only that address will be able to withdraw the stake, do you confirm? y / n `,
+    );
+  });
+
+  it("rejects malformed receiver addresses before preparing stake", async () => {
+    writeAgentAuthState();
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint([
+        "regent-staking",
+        "stake",
+        "--amount",
+        "1.5",
+        "--receiver",
+        "0xabc",
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("--receiver must be a 0x address with 40 hex characters.");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(questionMock).not.toHaveBeenCalled();
+  });
+
   it("claims USDC through the shared sign-in flow", async () => {
     writeAgentAuthState();
     fetchMock.mockResolvedValue(
@@ -296,6 +371,55 @@ describe("regent-staking CLI command group", () => {
     });
   });
 
+  it("does not submit expired staking wallet actions", async () => {
+    writeAgentAuthState();
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          staking: {},
+          wallet_action: {
+            ...walletAction("0x42852610"),
+            expires_at: "2020-01-01T00:00:00.000Z",
+          },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["regent-staking", "claim-usdc", "--submit", "--config", configPath]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("This prepared wallet action has expired.");
+    expect(callMock).not.toHaveBeenCalled();
+    expect(estimateGasMock).not.toHaveBeenCalled();
+    expect(sendTransactionMock).not.toHaveBeenCalled();
+  });
+
+  it("does not report staking submit success when the chain receipt failed", async () => {
+    writeAgentAuthState();
+    waitForReceiptMock.mockResolvedValue({ status: "reverted", logs: [] });
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: walletAction("0x42852610") }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["regent-staking", "claim-usdc", "--submit", "--config", configPath]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("The transaction was not confirmed successfully.");
+    expect(sendTransactionMock).toHaveBeenCalledTimes(1);
+  });
+
   it("does not submit staking transactions prepared for another wallet", async () => {
     writeAgentAuthState();
     fetchMock.mockResolvedValue(
@@ -342,6 +466,26 @@ describe("regent-staking CLI command group", () => {
     expect(output.result).toBe(1);
     expect(output.stderr).toContain("This staking action did not include a transaction to submit.");
     expect(output.stdout.trim()).toBe("");
+    expect(sendTransactionMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects incomplete staking wallet actions before submit", async () => {
+    writeAgentAuthState();
+    const incompleteAction: Record<string, unknown> = { ...walletAction("0x42852610") };
+    delete incompleteAction.owner_product;
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, staking: {}, wallet_action: incompleteAction }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["regent-staking", "claim-usdc", "--submit", "--config", configPath]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("prepared wallet_action.owner_product is missing or invalid");
     expect(sendTransactionMock).not.toHaveBeenCalled();
   });
 });

@@ -31,6 +31,20 @@ const { buildAgentAuthHeadersMock, requireAgentAuthStateMock } = vi.hoisted(() =
   requireAgentAuthStateMock: vi.fn(),
 }));
 
+const { questionMock, closePromptMock } = vi.hoisted(() => ({
+  questionMock: vi.fn(),
+  closePromptMock: vi.fn(),
+}));
+
+vi.mock("node:readline/promises", () => ({
+  default: {
+    createInterface: () => ({
+      question: questionMock,
+      close: closePromptMock,
+    }),
+  },
+}));
+
 vi.mock("../../src/commands/agent-auth.js", () => ({
   buildAgentAuthHeaders: buildAgentAuthHeadersMock,
   requireAgentAuthState: requireAgentAuthStateMock,
@@ -88,22 +102,31 @@ describe("autolaunch CLI command group", () => {
   const fetchMock = vi.fn<typeof fetch>();
   const tempDirs: string[] = [];
   const expectedAgentWallet = "0x00000000000000000000000000000000000000aa";
-  const preparedSubjectAction = (data: `0x${string}`) => ({
-    action_id: `subject_${data.slice(2)}`,
-    resource: "subject",
-    action: "claim_usdc",
-    chain_id: 84532,
-    expected_signer: expectedAgentWallet,
-    expires_at: "2999-01-01T00:00:00.000Z",
-    idempotency_key: `idem_${data.slice(2)}`,
-    risk_copy: "Claims available subject rewards.",
-    tx_request: {
+  const preparedSubjectAction = (data: `0x${string}`, subjectId = "subject_123") => {
+    const base = {
+      action_id: `subject_${data.slice(2)}`,
+      resource: "subject",
+      resource_id: subjectId,
+      action: "claim_usdc",
       chain_id: 84532,
-      to: "0x5555555555555555555555555555555555555555",
-      value: "0x0",
-      data,
-    },
-  });
+      expected_signer: expectedAgentWallet,
+      expires_at: "2999-01-01T00:00:00.000Z",
+      idempotency_key: `idem_${data.slice(2)}`,
+      risk_copy: "Claims available subject rewards.",
+    } as const;
+
+    return {
+      ...base,
+      wallet_action: {
+        ...base,
+        owner_product: "autolaunch",
+        to: "0x5555555555555555555555555555555555555555",
+        value: "0",
+        data,
+        simulation: { required: false, status: "not_required", block_number: null },
+      },
+    };
+  };
 
   const createConfigPath = () => {
     const tempDir = fs.mkdtempSync(
@@ -163,12 +186,17 @@ describe("autolaunch CLI command group", () => {
     delete process.env.AUTOLAUNCH_DISPLAY_NAME;
     delete process.env.AUTOLAUNCH_WALLET_ADDRESS;
     delete process.env.AUTOLAUNCH_AGENT_PRIVATE_KEY;
+    delete process.env.REGENT_PRIVATE_KEY;
+    delete process.env.REGENT_WALLET_PRIVATE_KEY;
     delete process.env.BASE_SEPOLIA_RPC_URL;
     delete process.env.AUTOLAUNCH_ERC8004_SUBGRAPH_URL;
     delete process.env.AUTOLAUNCH_IDENTITY_REGISTRY_ADDRESS;
     fetchMock.mockReset();
     buildAgentAuthHeadersMock.mockReset();
     requireAgentAuthStateMock.mockReset();
+    questionMock.mockReset();
+    closePromptMock.mockReset();
+    questionMock.mockResolvedValue("y");
     writeContractMock.mockReset();
     waitForReceiptMock.mockReset();
     sendTransactionMock.mockReset();
@@ -180,7 +208,7 @@ describe("autolaunch CLI command group", () => {
     sendTransactionMock.mockResolvedValue(
       "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     );
-    waitForReceiptMock.mockResolvedValue({ logs: [] });
+    waitForReceiptMock.mockResolvedValue({ status: "success", logs: [] });
     callMock.mockResolvedValue({ data: "0x" });
     estimateGasMock.mockResolvedValue(21_000n);
     getSafeAddressFromDeploymentTxMock.mockReturnValue(
@@ -744,6 +772,52 @@ describe("autolaunch CLI command group", () => {
     });
   });
 
+  it("prepares a subject stake with a confirmed receiver", async () => {
+    const configPath = createConfigPath();
+    const receiver = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          subject_id: "subject_123",
+          prepared: preparedSubjectAction("0x7acb7757"),
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint([
+        "autolaunch",
+        "subjects",
+        "stake",
+        "subject_123",
+        "--amount",
+        "2",
+        "--receiver",
+        receiver,
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result, output.stderr).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      `${expectedBaseUrl}/v1/agent/subjects/subject_123/stake`,
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      amount: "2",
+      receiver,
+    });
+    expect(questionMock).toHaveBeenCalledWith(
+      `If you confirm this command it will stake 2 of this subject token for the address ${receiver}. Only that address will be able to withdraw the stake, do you confirm? y / n `,
+    );
+  });
+
   it("submits a holdings claim from the nested prepared action", async () => {
     const configPath = createConfigPath();
     process.env.REGENT_WALLET_PRIVATE_KEY =
@@ -755,7 +829,7 @@ describe("autolaunch CLI command group", () => {
           JSON.stringify({
             ok: true,
             subject_id: "subject_456",
-            prepared: preparedSubjectAction("0xe1434f4e"),
+            prepared: preparedSubjectAction("0xe1434f4e", "subject_456"),
           }),
           {
             status: 200,
@@ -1072,6 +1146,7 @@ describe("autolaunch CLI command group", () => {
     process.env.BASE_SEPOLIA_RPC_URL = "https://rpc.sepolia.example";
     writeContractMock.mockResolvedValue("0xfeed");
     waitForReceiptMock.mockResolvedValue({
+      status: "success",
       blockNumber: 123n,
       logs: [],
     });
@@ -1102,12 +1177,49 @@ describe("autolaunch CLI command group", () => {
     });
   });
 
+  it("does not report identity mint success when the receipt failed", async () => {
+    process.env.AUTOLAUNCH_AGENT_PRIVATE_KEY =
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    process.env.BASE_SEPOLIA_RPC_URL = "https://rpc.sepolia.example";
+    writeContractMock.mockResolvedValue("0xfeed");
+    waitForReceiptMock.mockResolvedValue({
+      status: "reverted",
+      blockNumber: 123n,
+      logs: [],
+    });
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["autolaunch", "identities", "mint", "--chain", "base-sepolia"]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("The transaction was not confirmed successfully.");
+  });
+
+  it("does not read REGENT_PRIVATE_KEY for Autolaunch identity minting", async () => {
+    delete process.env.REGENT_WALLET_PRIVATE_KEY;
+    process.env.REGENT_PRIVATE_KEY =
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    process.env.BASE_SEPOLIA_RPC_URL = "https://rpc.sepolia.example";
+
+    const output = await captureOutput(() =>
+      runCliEntrypoint(["autolaunch", "identities", "mint", "--chain", "base-sepolia"]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain(
+      "missing private key (--private-key, AUTOLAUNCH_AGENT_PRIVATE_KEY, or REGENT_WALLET_PRIVATE_KEY)",
+    );
+    expect(writeContractMock).not.toHaveBeenCalled();
+  });
+
   it("mints an ERC-8004 identity through the techtree namespace", async () => {
     process.env.AUTOLAUNCH_AGENT_PRIVATE_KEY =
       "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     process.env.BASE_SEPOLIA_RPC_URL = "https://rpc.sepolia.example";
     writeContractMock.mockResolvedValue("0xbeef");
     waitForReceiptMock.mockResolvedValue({
+      status: "success",
       blockNumber: 456n,
       logs: [],
     });

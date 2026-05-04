@@ -29,10 +29,10 @@ import {
 } from "../../printer.js";
 import { requireAgentAuthState } from "../agent-auth.js";
 import {
-  extractPreparedTxRequest,
   parsePollingIntervalSeconds,
   requestJson,
   submitPreparedTxRequest,
+  txRequestFromWalletAction,
 } from "./shared.js";
 
 interface LocalPlanRecord {
@@ -635,10 +635,7 @@ export async function runAutolaunchLaunchFinalize(
   }
 
   const preparedAction = prepared.prepared as Record<string, unknown> | undefined;
-  const txRequest = extractPreparedTxRequest(
-    preparedAction?.tx_request,
-    preparedAction?.expected_signer,
-  );
+  const txRequest = txRequestFromWalletAction(preparedAction?.wallet_action);
   if (!txRequest) {
     printJson(prepared);
     return;
@@ -695,10 +692,7 @@ export async function runAutolaunchVestingRelease(
     { body: {}, requireAgentAuth: true, configPath },
   );
   const preparedAction = prepared.prepared as Record<string, unknown> | undefined;
-  const txRequest = extractPreparedTxRequest(
-    preparedAction?.tx_request,
-    preparedAction?.expected_signer,
-  );
+  const txRequest = txRequestFromWalletAction(preparedAction?.wallet_action);
 
   if (!txRequest) {
     printJson(prepared);

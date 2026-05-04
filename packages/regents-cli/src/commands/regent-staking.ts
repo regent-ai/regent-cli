@@ -6,8 +6,9 @@ import type {
   JsonRequestBodyFor,
   JsonSuccessResponseFor,
 } from "../contracts/openapi-helpers.js";
-import { extractPreparedTxRequest, submitPreparedTxRequest } from "./autolaunch/shared.js";
+import { submitPreparedTxRequest, txRequestFromWalletAction } from "./autolaunch/shared.js";
 import { requestProductJson } from "./product-http.js";
+import { confirmStakeReceiver, stakeBody, stakeReceiverFlag } from "./stake-receiver.js";
 
 type RegentStakingOverviewResponse = JsonSuccessResponseFor<
   PlatformPaths,
@@ -73,7 +74,7 @@ const requestStakingJson = async <TResponse>(
   });
 
 type StakingPreparedPayload = Record<string, unknown> & {
-  readonly wallet_action?: { readonly expected_signer?: unknown };
+  readonly wallet_action?: unknown;
 };
 
 const printPreparedOrSubmitted = async (
@@ -86,10 +87,7 @@ const printPreparedOrSubmitted = async (
     return;
   }
 
-  const txRequest = extractPreparedTxRequest(
-    payload.wallet_action,
-    payload.wallet_action?.expected_signer,
-  );
+  const txRequest = txRequestFromWalletAction(payload.wallet_action);
 
   if (!txRequest) {
     throw new Error("This staking action did not include a transaction to submit.");
@@ -127,9 +125,13 @@ export async function runRegentStakingStake(
   args: ParsedCliArgs,
   configPath?: string,
 ): Promise<void> {
-  const body: RegentStakingStakeBody = {
-    amount: requireArg(getFlag(args, "amount"), "amount"),
-  };
+  const amount = requireArg(getFlag(args, "amount"), "amount");
+  const receiver = stakeReceiverFlag(args);
+  if (receiver) {
+    await confirmStakeReceiver(amount, "$REGENT", receiver);
+  }
+
+  const body: RegentStakingStakeBody = stakeBody(amount, receiver);
   await printPreparedOrSubmitted(
     await requestStakingJson<RegentStakingStakeResponse>("POST", "/v1/agent/regent/staking/stake", {
       body,

@@ -1,4 +1,4 @@
-import { getFlag, requireArg, type ParsedCliArgs } from "../parse.js";
+import { getBooleanFlag, getFlag, requireArg, type ParsedCliArgs } from "../parse.js";
 import { printJson } from "../printer.js";
 import {
   txRequestFromWalletAction,
@@ -44,7 +44,7 @@ export async function runEnsSetPrimary(
       : null;
   const txRequest = txRequestFromWalletAction(prepared?.wallet_action);
 
-  if (!txRequest) {
+  if (!txRequest || !getBooleanFlag(args, "submit")) {
     printJson(payload);
     return;
   }

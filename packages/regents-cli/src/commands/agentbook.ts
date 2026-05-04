@@ -51,7 +51,7 @@ interface AgentbookSessionPayload {
   expires_at: string;
   error_text: string | null;
   frontend_request: AgentbookFrontendRequest | null;
-  tx_request: Record<string, unknown> | null;
+  wallet_action: Record<string, unknown> | null;
   trust: AgentbookTrustSummary;
 }
 

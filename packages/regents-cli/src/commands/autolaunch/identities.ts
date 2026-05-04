@@ -11,6 +11,7 @@ import { base, baseSepolia } from "viem/chains";
 
 import { getFlag, type ParsedCliArgs } from "../../parse.js";
 import { printJson } from "../../printer.js";
+import { assertSuccessfulReceipt } from "../../internal-runtime/base-contract-client.js";
 import {
   AGENT_PRIVATE_KEY_ENV,
   autolaunchChainId,
@@ -146,12 +147,11 @@ const privateKeyForCommand = (args: ParsedCliArgs): Hex => {
   const explicit =
     getFlag(args, "private-key") ??
     process.env[AGENT_PRIVATE_KEY_ENV] ??
-    process.env.REGENT_WALLET_PRIVATE_KEY ??
-    process.env.REGENT_PRIVATE_KEY;
+    process.env.REGENT_WALLET_PRIVATE_KEY;
 
   if (!explicit) {
     throw new Error(
-      "missing private key (--private-key, AUTOLAUNCH_AGENT_PRIVATE_KEY, REGENT_WALLET_PRIVATE_KEY, or REGENT_PRIVATE_KEY)",
+      "missing private key (--private-key, AUTOLAUNCH_AGENT_PRIVATE_KEY, or REGENT_WALLET_PRIVATE_KEY)",
     );
   }
 
@@ -345,6 +345,7 @@ export async function mintAutolaunchIdentity(args: ParsedCliArgs): Promise<Ident
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  assertSuccessfulReceipt(receipt);
   const events = parseEventLogs({
     abi: IDENTITY_REGISTRY_ABI,
     logs: receipt.logs,

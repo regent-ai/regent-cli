@@ -250,7 +250,7 @@ export interface components {
     schemas: {
         Address: string;
         /** @enum {integer} */
-        BaseChainId: 84532 | 8453;
+        BaseChainId: 8453;
         HexData: string;
         SiwaNonceRequest: {
             wallet_address: components["schemas"]["Address"];
@@ -419,7 +419,7 @@ export interface components {
                 keyring_secret: boolean;
                 keystore_path: boolean;
                 base_rpc_url: boolean;
-                base_rpc_reachable: boolean;
+                base_rpc_chain_id: boolean;
             };
         };
         LooseObject: {

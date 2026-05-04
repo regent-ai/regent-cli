@@ -5,12 +5,13 @@ import {
   type ParsedCliArgs,
 } from "../../parse.js";
 import { printJson } from "../../printer.js";
+import { confirmStakeReceiver, stakeBody, stakeReceiverFlag } from "../stake-receiver.js";
 import {
-  extractPreparedTxRequest,
   type JsonObject,
   requestJson,
   requirePositional,
   submitPreparedTxRequest,
+  txRequestFromWalletAction,
 } from "./shared.js";
 
 const preparedActionFromEnvelope = (envelope: JsonObject): JsonObject => {
@@ -41,7 +42,7 @@ const prepareOrSubmitWrite = async (
   }
 
   const preparedAction = preparedActionFromEnvelope(prepared);
-  const txRequest = extractPreparedTxRequest(preparedAction.tx_request, preparedAction.expected_signer);
+  const txRequest = txRequestFromWalletAction(preparedAction.wallet_action);
 
   if (!txRequest) {
     throw new Error("This Autolaunch action did not include a transaction to submit.");
@@ -92,10 +93,16 @@ export async function runAutolaunchSubjectStake(
   configPath?: string,
 ): Promise<void> {
   const subjectId = requirePositional(args, 3, "subject-id");
+  const amount = requireArg(getFlag(args, "amount"), "amount");
+  const receiver = stakeReceiverFlag(args);
+  if (receiver) {
+    await confirmStakeReceiver(amount, "this subject token", receiver);
+  }
+
   await prepareOrSubmitWrite(
     "POST",
     `/v1/agent/subjects/${encodeURIComponent(subjectId)}/stake`,
-    { amount: requireArg(getFlag(args, "amount"), "amount") },
+    stakeBody(amount, receiver),
     args,
     configPath,
   );
@@ -178,10 +185,16 @@ export async function runAutolaunchHoldingsStake(
   configPath?: string,
 ): Promise<void> {
   const subjectId = requireHoldingSubjectId(args);
+  const amount = requireArg(getFlag(args, "amount"), "amount");
+  const receiver = stakeReceiverFlag(args);
+  if (receiver) {
+    await confirmStakeReceiver(amount, "this subject token", receiver);
+  }
+
   await prepareOrSubmitWrite(
     "POST",
     `/v1/agent/subjects/${encodeURIComponent(subjectId)}/stake`,
-    { amount: requireArg(getFlag(args, "amount"), "amount") },
+    stakeBody(amount, receiver),
     args,
     configPath,
   );

@@ -126,38 +126,42 @@ describe("ENS CLI command group", () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("requests the prepared mainnet reverse-name transaction and submits it", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          ok: true,
-          prepared: {
-            resource: "tempo.regent.eth",
+  const preparedEnsResponse = (expiresAt = "2999-01-01T00:00:00.000Z") =>
+    new Response(
+      JSON.stringify({
+        ok: true,
+        prepared: {
+          resource: "tempo.regent.eth",
+          action: "set_primary_name",
+          chain_id: 1,
+          ens_name: "tempo.regent.eth",
+          caller_wallet_address: "0x00000000000000000000000000000000000000aa",
+          wallet_action: {
+            action_id: "ens_primary_1",
+            owner_product: "platform",
+            resource: "ens",
+            resource_id: "tempo.regent.eth",
             action: "set_primary_name",
             chain_id: 1,
-            ens_name: "tempo.regent.eth",
-            caller_wallet_address: "0x00000000000000000000000000000000000000aa",
-            wallet_action: {
-              action_id: "ens_primary_1",
-              resource: "ens",
-              action: "set_primary_name",
-              chain_id: 1,
-              to: "0xa58e81fe9b61b5c3fe2afd33cf304c454abfc7cb",
-              value: "0",
-              data: "0x1234",
-              expected_signer: "0x00000000000000000000000000000000000000aa",
-              expires_at: "2999-01-01T00:00:00.000Z",
-              idempotency_key: "idem_ens_primary_1",
-              risk_copy: "Sets this wallet's primary ENS name.",
-            },
+            to: "0xa58e81fe9b61b5c3fe2afd33cf304c454abfc7cb",
+            value: "0",
+            data: "0x1234",
+            expected_signer: "0x00000000000000000000000000000000000000aa",
+            expires_at: expiresAt,
+            idempotency_key: "idem_ens_primary_1",
+            simulation: { required: false, status: "not_required", block_number: null },
+            risk_copy: "Sets this wallet's primary ENS name.",
           },
-        }),
-        {
-          status: 200,
-          headers: { "content-type": "application/json" },
         },
-      ),
+      }),
+      {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      },
     );
+
+  it("prints the prepared mainnet reverse-name transaction by default", async () => {
+    fetchMock.mockResolvedValue(preparedEnsResponse());
 
     const output = await captureOutput(async () =>
       runCliEntrypoint([
@@ -165,6 +169,31 @@ describe("ENS CLI command group", () => {
         "set-primary",
         "--ens",
         "tempo.regent.eth",
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result).toBe(0);
+    expect(callMock).not.toHaveBeenCalled();
+    expect(estimateGasMock).not.toHaveBeenCalled();
+    expect(sendTransactionMock).not.toHaveBeenCalled();
+    expect(parsePrintedJson(output.stdout)).toMatchObject({
+      ok: true,
+      prepared: { wallet_action: { action_id: "ens_primary_1" } },
+    });
+  });
+
+  it("requests the prepared mainnet reverse-name transaction and submits only with --submit", async () => {
+    fetchMock.mockResolvedValue(preparedEnsResponse());
+
+    const output = await captureOutput(async () =>
+      runCliEntrypoint([
+        "ens",
+        "set-primary",
+        "--ens",
+        "tempo.regent.eth",
+        "--submit",
         "--config",
         configPath,
       ]),
@@ -219,5 +248,27 @@ describe("ENS CLI command group", () => {
       submitted: true,
       tx_hash: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     });
+  });
+
+  it("does not submit expired prepared ENS wallet actions", async () => {
+    fetchMock.mockResolvedValue(preparedEnsResponse("2020-01-01T00:00:00.000Z"));
+
+    const output = await captureOutput(async () =>
+      runCliEntrypoint([
+        "ens",
+        "set-primary",
+        "--ens",
+        "tempo.regent.eth",
+        "--submit",
+        "--config",
+        configPath,
+      ]),
+    );
+
+    expect(output.result).toBe(1);
+    expect(output.stderr).toContain("This prepared wallet action has expired.");
+    expect(callMock).not.toHaveBeenCalled();
+    expect(estimateGasMock).not.toHaveBeenCalled();
+    expect(sendTransactionMock).not.toHaveBeenCalled();
   });
 });

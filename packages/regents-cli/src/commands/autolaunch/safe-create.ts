@@ -131,6 +131,7 @@ export async function runAutolaunchSafeCreate(
     data: deploymentTx.data as `0x${string}`,
     value: deploymentTx.value,
     expected_signer: account.address,
+    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
   }, rpcUrl);
 
   const deployedSafeAddress = protocolKitModule.getSafeAddressFromDeploymentTx(

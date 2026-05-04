@@ -16,6 +16,7 @@ export interface TransactionRequest {
   readonly to: Address;
   readonly data: Hex;
   readonly expected_signer: Address;
+  readonly expires_at: string;
   readonly value?: string | number | bigint | null;
 }
 
@@ -97,6 +98,21 @@ const assertExpectedSigner = (
   }
 };
 
+const assertNotExpired = (txRequest: TransactionRequest): void => {
+  const expiresAt = Date.parse(txRequest.expires_at);
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    throw new Error("This prepared wallet action has expired. Start it again before signing.");
+  }
+};
+
+export const assertSuccessfulReceipt = (
+  receipt: { readonly status?: string | null },
+): void => {
+  if (receipt.status !== "success") {
+    throw new Error("The transaction was not confirmed successfully.");
+  }
+};
+
 export const submitValidatedTransaction = async (
   account: PrivateKeyAccount,
   txRequest: TransactionRequest,
@@ -135,6 +151,7 @@ export const sendValidatedTransaction = async (
   >;
 }> => {
   assertExpectedSigner(account, txRequest);
+  assertNotExpired(txRequest);
 
   const { chain, publicClient, walletClient } = createBaseContractClients(
     account,
@@ -161,5 +178,6 @@ export const sendValidatedTransaction = async (
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  assertSuccessfulReceipt(receipt);
   return { txHash, receipt };
 };

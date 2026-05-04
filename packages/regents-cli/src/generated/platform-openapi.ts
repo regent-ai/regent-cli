@@ -2848,18 +2848,31 @@ export interface components {
         RegentStakingAmountRequest: {
             amount: string;
         };
+        RegentStakingStakeRequest: {
+            amount: string;
+            receiver?: string;
+        };
         WalletAction: {
             action_id: string;
+            /** @enum {string} */
+            owner_product: "platform";
             resource: string;
+            resource_id: string;
             action: string;
             chain_id: number;
             to: string;
             value: string;
             data: string;
-            expected_signer: string | null;
+            expected_signer: string;
             /** Format: date-time */
             expires_at: string;
             idempotency_key: string;
+            simulation: {
+                required: boolean;
+                /** @enum {string} */
+                status: "not_required" | "pending" | "passed" | "failed";
+                block_number?: number | null;
+            };
             risk_copy: string;
         };
         RegentStakingState: {
@@ -4453,7 +4466,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RegentStakingAmountRequest"];
+                "application/json": components["schemas"]["RegentStakingStakeRequest"];
             };
         };
         responses: {

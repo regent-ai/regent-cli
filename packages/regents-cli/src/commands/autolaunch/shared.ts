@@ -36,11 +36,17 @@ export interface RequestOptions {
   readonly chainId?: number;
 }
 
-export interface PreparedTxRequest extends TransactionRequest {}
-
 export interface WalletAction {
   readonly action_id: string;
+  readonly owner_product:
+    | "platform"
+    | "autolaunch"
+    | "techtree"
+    | "shared-services"
+    | "ios"
+    | "regents-cli";
   readonly resource: string;
+  readonly resource_id: string;
   readonly action: string;
   readonly chain_id: SupportedTransactionChainId;
   readonly to: Address;
@@ -49,6 +55,11 @@ export interface WalletAction {
   readonly expected_signer: Address;
   readonly expires_at: string;
   readonly idempotency_key: string;
+  readonly simulation: {
+    readonly required: boolean;
+    readonly status: "not_required" | "pending" | "passed" | "failed";
+    readonly block_number?: number | null;
+  };
   readonly risk_copy: string;
 }
 
@@ -165,13 +176,29 @@ export const configuredPrivateKey = async (
 
 const requirePreparedTxChainId = (
   value: unknown,
-): PreparedTxRequest["chain_id"] => {
+): TransactionRequest["chain_id"] => {
   const chainId = Number(value);
   if (chainId === 1 || chainId === 8453 || chainId === 84532) {
     return chainId;
   }
 
   throw new Error(`unsupported chain for submit mode: ${String(value)}`);
+};
+
+const requireOwnerProduct = (value: unknown): WalletAction["owner_product"] => {
+  const ownerProduct = requireStringField(value, "owner_product");
+  if (
+    ownerProduct === "platform" ||
+    ownerProduct === "autolaunch" ||
+    ownerProduct === "techtree" ||
+    ownerProduct === "shared-services" ||
+    ownerProduct === "ios" ||
+    ownerProduct === "regents-cli"
+  ) {
+    return ownerProduct;
+  }
+
+  throw new Error("prepared wallet_action.owner_product is missing or invalid");
 };
 
 const requireStringField = (
@@ -207,6 +234,44 @@ const requireHexField = (
   return value;
 };
 
+const requireSimulation = (value: unknown): WalletAction["simulation"] => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("prepared wallet_action.simulation is missing or invalid");
+  }
+
+  const simulation = value as Record<string, unknown>;
+  if (typeof simulation.required !== "boolean") {
+    throw new Error("prepared wallet_action.simulation.required is missing or invalid");
+  }
+
+  const status = simulation.status;
+  if (
+    status !== "not_required" &&
+    status !== "pending" &&
+    status !== "passed" &&
+    status !== "failed"
+  ) {
+    throw new Error("prepared wallet_action.simulation.status is missing or invalid");
+  }
+
+  const blockNumber = simulation.block_number;
+  if (
+    blockNumber !== undefined &&
+    blockNumber !== null &&
+    (typeof blockNumber !== "number" ||
+      !Number.isInteger(blockNumber) ||
+      blockNumber < 0)
+  ) {
+    throw new Error("prepared wallet_action.simulation.block_number is missing or invalid");
+  }
+
+  return {
+    required: simulation.required,
+    status,
+    ...(blockNumber === undefined ? {} : { block_number: blockNumber }),
+  };
+};
+
 export const extractWalletAction = (
   value: unknown,
 ): WalletAction | null => {
@@ -218,7 +283,9 @@ export const extractWalletAction = (
 
   return {
     action_id: requireStringField(walletAction.action_id, "action_id"),
+    owner_product: requireOwnerProduct(walletAction.owner_product),
     resource: requireStringField(walletAction.resource, "resource"),
+    resource_id: requireStringField(walletAction.resource_id, "resource_id"),
     action: requireStringField(walletAction.action, "action"),
     chain_id: requirePreparedTxChainId(walletAction.chain_id),
     to: requireAddressField(walletAction.to, "to"),
@@ -227,6 +294,7 @@ export const extractWalletAction = (
     expected_signer: requireAddressField(walletAction.expected_signer, "expected_signer"),
     expires_at: requireStringField(walletAction.expires_at, "expires_at"),
     idempotency_key: requireStringField(walletAction.idempotency_key, "idempotency_key"),
+    simulation: requireSimulation(walletAction.simulation),
     risk_copy: requireStringField(walletAction.risk_copy, "risk_copy"),
   };
 };
@@ -245,51 +313,12 @@ export const txRequestFromWalletAction = (
     value: walletAction.value,
     data: walletAction.data,
     expected_signer: walletAction.expected_signer,
-  };
-};
-
-export const extractPreparedTxRequest = (
-  value: unknown,
-  expectedSignerValue: unknown,
-): PreparedTxRequest | null => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  const txRequest = value as Record<string, unknown>;
-  const to = txRequest.to;
-  const data = txRequest.data;
-
-  if (typeof to !== "string" || !isAddress(to)) {
-    throw new Error("prepared tx_request.to is missing or invalid");
-  }
-
-  if (typeof data !== "string" || !isHex(data)) {
-    throw new Error("prepared tx_request.data is missing or invalid");
-  }
-
-  if (
-    !(
-      typeof txRequest.value === "string" ||
-      typeof txRequest.value === "number" ||
-      typeof txRequest.value === "bigint" ||
-      txRequest.value == null
-    )
-  ) {
-    throw new Error("prepared tx_request.value is invalid");
-  }
-
-  return {
-    chain_id: requirePreparedTxChainId(txRequest.chain_id),
-    to,
-    data,
-    value: txRequest.value,
-    expected_signer: requireAddressField(expectedSignerValue, "expected_signer"),
+    expires_at: walletAction.expires_at,
   };
 };
 
 export const submitPreparedTxRequest = async (
-  txRequest: PreparedTxRequest,
+  txRequest: TransactionRequest,
   configPath?: string,
 ): Promise<`0x${string}`> => {
   const account = privateKeyToAccount(await configuredPrivateKey(configPath));

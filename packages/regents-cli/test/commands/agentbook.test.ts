@@ -135,7 +135,7 @@ describe("agentbook CLI command group", () => {
                 signature: "0xsig",
               },
             },
-            tx_request: null,
+            wallet_action: null,
             trust: {
               connected: false,
               world_human_id: null,
@@ -185,7 +185,7 @@ describe("agentbook CLI command group", () => {
               deep_link_uri: null,
               error_text: null,
               frontend_request: null,
-              tx_request: null,
+              wallet_action: null,
               trust: {
                 connected: false,
                 world_human_id: null,
@@ -217,7 +217,7 @@ describe("agentbook CLI command group", () => {
               deep_link_uri: null,
               error_text: "waiting on registration",
               frontend_request: null,
-              tx_request: null,
+              wallet_action: null,
               trust: {
                 connected: false,
                 world_human_id: null,
@@ -249,7 +249,7 @@ describe("agentbook CLI command group", () => {
               deep_link_uri: null,
               error_text: null,
               frontend_request: null,
-              tx_request: null,
+              wallet_action: null,
               trust: {
                 connected: true,
                 world_human_id: "0x1234",
@@ -403,7 +403,7 @@ describe("agentbook CLI command group", () => {
             deep_link_uri: null,
             error_text: null,
             frontend_request: null,
-            tx_request: null,
+            wallet_action: null,
             trust: {
               connected: true,
               world_human_id: "0x1234",

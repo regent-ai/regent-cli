@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/prelaunch-assets/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPrelaunchAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/internal/xmtp/shards": {
         parameters: {
             query?: never;
@@ -1983,6 +1999,28 @@ export interface components {
         /** Format: date-time */
         DateTime: string;
         HexData: string;
+        WalletAction: {
+            action_id: string;
+            /** @enum {string} */
+            owner_product: "autolaunch";
+            resource: string;
+            resource_id: string;
+            action: string;
+            chain_id: components["schemas"]["AutolaunchChainId"];
+            to: components["schemas"]["Address"];
+            value: string;
+            data: components["schemas"]["HexData"];
+            expected_signer: components["schemas"]["Address"];
+            expires_at: components["schemas"]["DateTime"];
+            idempotency_key: string;
+            simulation: {
+                required: boolean;
+                /** @enum {string} */
+                status: "not_required" | "pending" | "passed" | "failed";
+                block_number?: number | null;
+            };
+            risk_copy: string;
+        };
         LooseObject: {
             [key: string]: unknown;
         };
@@ -2108,6 +2146,10 @@ export interface components {
         AmountRequest: {
             amount: components["schemas"]["DecimalString"];
         };
+        StakeRequest: {
+            amount: components["schemas"]["DecimalString"];
+            receiver?: components["schemas"]["Address"];
+        };
         RegentStakingDepositPrepareRequest: {
             amount: components["schemas"]["DecimalString"];
             source_tag: string;
@@ -2148,15 +2190,14 @@ export interface components {
         PreparedAction: {
             action_id: string;
             resource: string;
+            resource_id: string;
             action: string;
             chain_id: components["schemas"]["AutolaunchChainId"];
-            target?: components["schemas"]["Address"];
-            calldata?: components["schemas"]["HexData"];
-            expected_signer: components["schemas"]["Address"] | null;
+            expected_signer: components["schemas"]["Address"];
             expires_at: components["schemas"]["DateTime"];
             idempotency_key: string;
             risk_copy: string;
-            tx_request: components["schemas"]["TxRequest"];
+            wallet_action: components["schemas"]["WalletAction"];
         } & {
             [key: string]: unknown;
         };
@@ -2174,12 +2215,6 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             prepared: components["schemas"]["PreparedAction"];
-        };
-        TxRequest: {
-            chain_id: components["schemas"]["AutolaunchChainId"];
-            to: components["schemas"]["Address"];
-            value: components["schemas"]["HexData"];
-            data: components["schemas"]["HexData"];
         };
         PrelaunchMetadataDraft: {
             title?: string | null;
@@ -2847,6 +2882,35 @@ export interface operations {
             };
         };
     };
+    getPrelaunchAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Prelaunch asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Prelaunch asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     autolaunchInternalXmtpListShards: {
         parameters: {
             query?: never;
@@ -3335,7 +3399,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AmountRequest"];
+                "application/json": components["schemas"]["StakeRequest"];
             };
         };
         responses: {
@@ -4560,7 +4624,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AmountRequest"];
+                "application/json": components["schemas"]["StakeRequest"];
             };
         };
         responses: {
@@ -5122,7 +5186,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AmountRequest"];
+                "application/json": components["schemas"]["StakeRequest"];
             };
         };
         responses: {

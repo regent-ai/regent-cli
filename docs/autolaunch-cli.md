@@ -216,7 +216,7 @@ Use it when Regent income has already reached Base USDC:
 ```bash
 regents regent-staking show
 regents regent-staking account <wallet-address>
-regents regent-staking stake --amount <regent-amount>
+regents regent-staking stake --amount <regent-amount> [--receiver <0xaddress>]
 regents regent-staking unstake --amount <regent-amount>
 regents regent-staking claim-usdc
 ```
@@ -346,7 +346,7 @@ regents autolaunch bids claim <bid-id> --tx-hash <hash> [--json]
 ```bash
 regents autolaunch subjects show <subject-id> [--json]
 regents autolaunch subjects ingress <subject-id> [--json]
-regents autolaunch subjects stake <subject-id> --amount <token-amount> [--json]
+regents autolaunch subjects stake <subject-id> --amount <token-amount> [--receiver <0xaddress>] [--json]
 regents autolaunch subjects unstake <subject-id> --amount <token-amount> [--json]
 regents autolaunch subjects claim-usdc <subject-id> [--json]
 regents autolaunch subjects sweep-ingress <subject-id> --address <ingress-address> [--json]
