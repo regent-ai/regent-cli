@@ -104,14 +104,14 @@ trap cleanup EXIT
 
 cd "${ROOT}"
 pnpm build >/dev/null
-pnpm --filter @regentslabs/cli deploy --prod "${STAGE_DIR}" >/dev/null
+pnpm --filter @regentslabs/cli deploy --prod --legacy "${STAGE_DIR}" >/dev/null
 pack_workspace_package "${STAGE_DIR}"
 
 cat > "${WORK_DIR}/package.json" <<'EOF'
 {
   "name": "regent-packed-install-smoke",
   "private": true,
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@10.28.0"
 }
 EOF
 

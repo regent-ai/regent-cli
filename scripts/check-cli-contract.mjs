@@ -198,6 +198,11 @@ const expectedByOwner = {
   "shared-services": extractOwnershipGroups(ownershipSource, "sharedServicesApiCommandGroups"),
 };
 
+const flattenOwnershipGroups = (groups) => ({
+  commands: new Set(groups.flatMap((group) => group.commands)),
+  paths: new Set(groups.flatMap((group) => group.pathTemplates)),
+});
+
 const contracts = Object.fromEntries(
   Object.entries(cliContractFiles).map(([owner, file]) => [owner, parseYaml(file)]),
 );
@@ -235,7 +240,12 @@ const shippedContractCommands = new Set([
 ]);
 const commandMetadataCheck = checkCliCommandMetadata();
 if (!commandMetadataCheck.ok) {
-  fail(`Generated CLI command metadata is out of date: ${commandMetadataCheck.outputPath}`);
+  if (!commandMetadataCheck.metadataOk) {
+    fail(`Generated CLI command metadata is out of date: ${commandMetadataCheck.outputPath}`);
+  }
+  if (!commandMetadataCheck.commandListOk) {
+    fail(`Generated CLI command list is out of date: ${commandMetadataCheck.commandListPath}`);
+  }
 }
 
 const registryCommands = readCommandRegistry(fs.readFileSync(commandMetadataPath, "utf8"));
@@ -270,6 +280,18 @@ for (const [owner, groups] of Object.entries(expectedByOwner)) {
         fail(`CLI contract ${owner} is missing shipped path binding: ${path}`);
       }
     }
+  }
+}
+
+const techtreeOwnership = flattenOwnershipGroups(expectedByOwner.techtree);
+for (const command of flattenedContracts.techtree.commands) {
+  if (!techtreeOwnership.commands.has(command)) {
+    fail(`Techtree API ownership registry is missing CLI contract command: ${command}`);
+  }
+}
+for (const path of flattenedContracts.techtree.paths) {
+  if (!techtreeOwnership.paths.has(path)) {
+    fail(`Techtree API ownership registry is missing CLI contract path binding: ${path}`);
   }
 }
 

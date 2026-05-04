@@ -1,2 +1,9 @@
 packages:
   - "packages/regents-cli"
+
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+strictDepBuilds: true
+
+onlyBuiltDependencies:
+  - esbuild

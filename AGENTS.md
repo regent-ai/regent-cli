@@ -1,5 +1,17 @@
 This repository owns the standalone Regents CLI workspace.
 
+## Regent Dependency Skills
+
+The Regent dependency skills are installed in `/Users/sean/Documents/regent/.agents/skills` and `/Users/sean/.codex/skills`. Open the matching skill before touching these areas:
+
+- `contract-first-cli-api`: command contracts, OpenAPI inputs, generated clients, command routing, and cross-product CLI/backend alignment.
+- `shared-siwa`: identity login, SIWA receipts, signed request envelopes, nonce/replay handling, and saved auth state.
+- `ens-agent-identity`: ENS, Basenames, ERC-8004 identity, resolver reads, and wallet-ready identity actions.
+- `agentbook-agentworld`: AgentBook, World ID trust evidence, and proof lookup/registration commands.
+- `xmtp-rooms`: room commands, XMTP inbox state, public room mirrors, and message sync behavior.
+- `safe-viem-wallet-actions`: Safe Protocol Kit, viem, prepared transactions, wallet action envelopes, preflight, and chain confirmation.
+- `rich-terminal-output`: terminal UI output, tables, panels, progress, and structured command results.
+
 ## Core Rules
 
 - Hard cutover only. Do not add backwards compatibility shims, migration glue, or dual paths unless explicitly requested.

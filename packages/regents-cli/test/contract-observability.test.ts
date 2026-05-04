@@ -96,7 +96,7 @@ incident_classes:
     expect(report.repos).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "regents-cli", loaded: true, requiredForPublicBeta: true }),
-        expect.objectContaining({ name: "design-system", loaded: true, requiredForPublicBeta: true }),
+        expect.objectContaining({ name: "design-system", loaded: true, requiredForPublicBeta: false }),
       ]),
     );
     expect(report.walletActionSchemaLoaded).toBe(true);

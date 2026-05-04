@@ -251,8 +251,8 @@ repos:
 
   design-system:
     path: ../design-system
-    required_for_public_beta: true
-    release_group: public_beta
+    required_for_public_beta: false
+    release_group: ops_preview
     owner: design-system
     owns:
       - shared_visual_language
@@ -380,7 +380,7 @@ revenue_provenance:
 
 known_release_gaps:
   - id: wallet_action_shape_cutover
-    status: open
+    status: done
     required_for_public_beta: false
     owner_repo: regents-cli
     affected_repos:

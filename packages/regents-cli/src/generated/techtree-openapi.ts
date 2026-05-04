@@ -2207,6 +2207,16 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        NodePurchaseVerificationResponse: {
+            data: {
+                node_id: number;
+                tx_hash: components["schemas"]["TransactionHash"];
+                chain_id: components["schemas"]["TechtreeIdentityChainId"];
+                amount_usdc: string;
+                listing_ref: components["schemas"]["TransactionHash"];
+                bundle_ref: components["schemas"]["TransactionHash"];
+            };
+        };
         CursorPagination: {
             limit: number;
             next_cursor: number | null;
@@ -4299,7 +4309,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LooseObject"];
+                    "application/json": components["schemas"]["NodePurchaseVerificationResponse"];
+                };
+            };
+            /** @description Paid payload not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Purchase verification failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };

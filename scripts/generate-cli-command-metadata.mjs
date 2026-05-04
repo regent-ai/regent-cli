@@ -10,6 +10,7 @@ import {
 const root = resolve(import.meta.dirname, "..");
 const YAML = await loadYaml(root);
 const outputPath = resolve(root, "packages/regents-cli/src/generated/cli-command-metadata.ts");
+const commandListPath = resolve(root, "docs/regents-cli-command-list.md");
 const manifest = readWorkspaceManifest(root, YAML);
 const cliContractFiles = cliCommandContractFiles(manifest, root);
 
@@ -99,14 +100,51 @@ export const renderCliCommandMetadata = () => {
   ].join("\n");
 };
 
+const titleCaseGroup = (groupName) =>
+  groupName
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+export const renderCliCommandList = () => {
+  const metadata = buildCliCommandMetadata();
+  return [
+    "# Regents CLI Command List",
+    "",
+    "This file lists the full command surface shipped by the standalone Regents CLI in this repo.",
+    "",
+    "Source used: CLI contract YAML files via `scripts/generate-cli-command-metadata.mjs`.",
+    "",
+    `Total commands: ${metadata.commands.length}.`,
+    "",
+    "## Full Command List",
+    "",
+    ...Object.entries(metadata.commandsByTopLevelGroup).flatMap(([groupName, commands]) => [
+      `### ${titleCaseGroup(groupName)}`,
+      "",
+      ...commands.map((command) => `- \`regents ${command}\``),
+      "",
+    ]),
+  ].join("\n");
+};
+
 export const checkCliCommandMetadata = () => {
   const expected = renderCliCommandMetadata();
   const actual = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, "utf8") : "";
+  const expectedCommandList = renderCliCommandList();
+  const actualCommandList = fs.existsSync(commandListPath)
+    ? fs.readFileSync(commandListPath, "utf8")
+    : "";
   return {
-    ok: actual === expected,
+    ok: actual === expected && actualCommandList === expectedCommandList,
+    metadataOk: actual === expected,
+    commandListOk: actualCommandList === expectedCommandList,
     expected,
     actual,
+    expectedCommandList,
+    actualCommandList,
     outputPath,
+    commandListPath,
   };
 };
 
@@ -116,12 +154,17 @@ if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).
 
   if (checkOnly) {
     if (!result.ok) {
-      console.error(
-        `Generated CLI command metadata is out of date: ${outputPath}\nRun pnpm generate:cli-command-metadata.`,
-      );
+      if (!result.metadataOk) {
+        console.error(`Generated CLI command metadata is out of date: ${outputPath}`);
+      }
+      if (!result.commandListOk) {
+        console.error(`Generated CLI command list is out of date: ${commandListPath}`);
+      }
+      console.error("Run pnpm generate:cli-command-metadata.");
       process.exitCode = 1;
     }
   } else {
     fs.writeFileSync(outputPath, result.expected);
+    fs.writeFileSync(commandListPath, result.expectedCommandList);
   }
 }

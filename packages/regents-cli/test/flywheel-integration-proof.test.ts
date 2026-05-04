@@ -228,11 +228,12 @@ describe("Regent flywheel integration proof", () => {
     const manifest = loadYaml<WorkspaceManifest>(files.workspaceManifest);
     const repos = manifest.repos ?? {};
 
-    for (const owner of ["platform", "techtree", "autolaunch", "ios", "regents-cli", "design-system"] as const) {
+    for (const owner of ["platform", "techtree", "autolaunch", "ios", "regents-cli"] as const) {
       expect(repos[owner], owner).toBeDefined();
       expect(repos[owner]?.required_for_public_beta, owner).toBe(true);
       expect(repos[owner]?.acceptance_commands?.length ?? 0, owner).toBeGreaterThan(0);
     }
+    expect(repos["design-system"]?.required_for_public_beta).toBe(false);
 
     expect(repos.platform?.api_contracts?.[0]).toEqual(expect.objectContaining({ path: "api-contract.openapiv3.yaml" }));
     expect(repos.platform?.cli_contracts?.[0]).toEqual(expect.objectContaining({ path: "cli-contract.yaml" }));

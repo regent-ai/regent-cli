@@ -1,7 +1,7 @@
 {
   "name": "regents-cli-workspace",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
     "build": "pnpm --filter @regentslabs/cli build",
     "typecheck": "pnpm --filter @regentslabs/cli typecheck",
